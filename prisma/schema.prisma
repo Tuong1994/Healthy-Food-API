@@ -1,0 +1,243 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id       String @id @default(uuid())
+  account  String @unique
+  password String
+  role     Int
+
+  email     String? @unique
+  phone     String?
+  firstName String?
+  lastName  String?
+  fullName  String?
+  gender    Int?
+  birthday  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  address  CustomerAddress?
+  image    Image?
+  cart     Cart?
+  auth     Auth?
+  orders   Order[]
+  comments Comment[]
+  rates    Rate[]
+}
+
+model CustomerAddress {
+  id           String   @id @default(uuid())
+  address      String
+  wardCode     String
+  districtCode String
+  cityCode     String
+  fullAddress  String
+  langCode     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  customerId String   @unique
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
+
+model Auth {
+  id        String   @id @default(uuid())
+  token     String   @db.VarChar(3000)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  customerId String   @unique
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String
+  langCode  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  subCategories SubCategory[]
+}
+
+model SubCategory {
+  id        String   @id @default(uuid())
+  name      String
+  langCode  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  products Product[]
+}
+
+model Product {
+  id              String @id @default(uuid())
+  name            String
+  description     String @db.VarChar(3000)
+  langCode        String
+  costPrice       Int
+  profit          Int
+  totalPrice      Int
+  status          Int
+  inventory       Int
+  inventoryStatus Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  subCategoryId String
+  subCategory   SubCategory @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
+
+  cartItem  CartItem?
+  orderItem OrderItem?
+  images    Image[]
+  comments  Comment[]
+  rates     Rate[]
+}
+
+model Cart {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  customerId String   @unique
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  cartItems CartItem[]
+}
+
+model CartItem {
+  id        String   @id @default(uuid())
+  quanity   Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String  @unique
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Order {
+  id            String   @id @default(uuid())
+  orderNumber   String
+  status        Int
+  paymentType   Int
+  paymentStatus Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  shipment   Shipment?
+  orderItems OrderItem[]
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  quanity   Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String  @unique
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Shipment {
+  id        String   @id @default(uuid())
+  fullName  String
+  phone     String
+  email     String
+  address   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orderId String @unique
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model City {
+  id        String   @id @default(uuid())
+  name      String
+  code      String
+  langCode  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model District {
+  id        String   @id @default(uuid())
+  name      String
+  code      String
+  cityCode  String
+  langCode  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Ward {
+  id           String   @id @default(uuid())
+  name         String
+  code         String
+  districtCode String
+  langCode     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  parentId  String
+  content   String   @db.VarChar(3000)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Rate {
+  id        String   @id @default(uuid())
+  point     Int
+  note      String   @db.VarChar(3000)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Image {
+  id        String   @id @default(uuid())
+  path      String
+  size      Int
+  publicId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  customerId String?   @unique
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  productId  String?
+  product    Product?  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
