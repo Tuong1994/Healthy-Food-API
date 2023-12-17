@@ -1,13 +1,13 @@
 import { IsNotEmpty, IsNumber } from 'class-validator';
 import { ELang } from 'src/common/enum/base';
-import { EInventoryStatus, EProductStatus } from './product.enum';
+import { EInventoryStatus, EProductStatus, EProductUnit } from './product.enum';
 
 export class ProductDto {
   @IsNotEmpty()
   name: string;
 
   @IsNotEmpty()
-  description: string;
+  unit: EProductUnit;
 
   @IsNotEmpty()
   langCode: ELang;

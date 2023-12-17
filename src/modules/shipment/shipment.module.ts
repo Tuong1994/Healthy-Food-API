@@ -12,8 +12,7 @@ export class ShipmentModule implements NestModule {
   constructor(private prisma: PrismaService) {}
 
   configure(consumer: MiddlewareConsumer) {
-    const model = this.prisma.shipment;
-    consumer.apply(new CheckIdMiddleware(model).use).forRoutes(
+    consumer.apply(new CheckIdMiddleware(this.prisma, 'shipment').use).forRoutes(
       {
         path: 'api/shipment/detail',
         method: RequestMethod.GET,

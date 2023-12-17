@@ -12,8 +12,7 @@ export class CityModule implements NestModule {
   constructor(private prisma: PrismaService) {}
 
   configure(consumer: MiddlewareConsumer) {
-    const model = this.prisma.city;
-    consumer.apply(new CheckIdMiddleware(model).use).forRoutes(
+    consumer.apply(new CheckIdMiddleware(this.prisma, 'city').use).forRoutes(
       {
         path: 'api/city/detail',
         method: RequestMethod.GET,

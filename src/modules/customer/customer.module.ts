@@ -12,8 +12,7 @@ export class CustomerModule implements NestModule {
   constructor(private prisma: PrismaService) {}
 
   configure(consumer: MiddlewareConsumer) {
-    const model = this.prisma.customer;
-    consumer.apply(new CheckIdMiddleware(model).use).forRoutes(
+    consumer.apply(new CheckIdMiddleware(this.prisma, 'customer').use).forRoutes(
       {
         path: 'api/customer/detail',
         method: RequestMethod.GET,

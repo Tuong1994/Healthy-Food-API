@@ -12,8 +12,7 @@ export class DistrictModule implements NestModule {
   constructor(private prisma: PrismaService) {}
 
   configure(consumer: MiddlewareConsumer) {
-    const model = this.prisma.district;
-    consumer.apply(new CheckIdMiddleware(model).use).forRoutes(
+    consumer.apply(new CheckIdMiddleware(this.prisma, 'district').use).forRoutes(
       {
         path: 'api/district/detail',
         method: RequestMethod.GET,

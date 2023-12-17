@@ -12,8 +12,7 @@ export class CategoryModule implements NestModule {
   constructor(private prisma: PrismaService) {}
 
   configure(consumer: MiddlewareConsumer) {
-    const model = this.prisma.category;
-    consumer.apply(new CheckIdMiddleware(model).use).forRoutes(
+    consumer.apply(new CheckIdMiddleware(this.prisma, 'category').use).forRoutes(
       {
         path: 'api/category/detail',
         method: RequestMethod.GET,

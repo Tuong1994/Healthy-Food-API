@@ -6,7 +6,7 @@ const FILE_SIZE = 1024 * 1024 * 2;
 
 export const multerOption = (destination: string): multer.Options => {
   return {
-    limits: { fileSize: FILE_SIZE },
+    limits: { fileSize: FILE_SIZE, files: 5 },
     fileFilter(req, file, callback) {
       if (file && ACCEPT_FILE_TYPE.includes(file.mimetype)) return callback(null, true);
       callback(null, false);

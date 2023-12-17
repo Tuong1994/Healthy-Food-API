@@ -38,7 +38,7 @@ export class UploadService {
   async productUpload(query: QueryDto, files: Express.Multer.File[]) {
     const { productId } = query;
     if (!productId) throw new HttpException('Product ID is missing', HttpStatus.BAD_REQUEST);
-    if (!files.length) throw new HttpException('Files are not provided', HttpStatus.NOT_FOUND);
+    if (!files || !files.length) throw new HttpException('Files are not provided', HttpStatus.NOT_FOUND);
 
     const product = await this.prisma.product.findUnique({
       where: { id: productId },
@@ -51,7 +51,7 @@ export class UploadService {
         return utils.generateImage(result, { productId });
       }),
     );
-    
+
     files.forEach((file) => utils.removeFile(file.path));
 
     if (product.images && product.images.length > 5) {
@@ -62,5 +62,17 @@ export class UploadService {
     await this.prisma.image.createMany({ data: images });
 
     throw new HttpException('Uploaded success', HttpStatus.OK);
+  }
+
+  async removeImages(query: QueryDto) {
+    const { ids } = query;
+    const listIds = ids.split(',');
+    const images = await this.prisma.image.findMany({ where: { id: { in: listIds } } });
+    if (images && images.length > 0) {
+      await Promise.all(images.map((image) => this.cloudinary.destroy(image.publicId)));
+      await this.prisma.image.deleteMany({ where: { id: { in: listIds } } });
+      throw new HttpException('Removed success', HttpStatus.OK);
+    }
+    throw new HttpException('Image not found', HttpStatus.NOT_FOUND);
   }
 }

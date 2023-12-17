@@ -28,6 +28,7 @@ export class AuthController {
   }
 
   @Post('logout')
+  @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
   logout(@Query() query: QueryDto) {
     return this.authService.logout(query);

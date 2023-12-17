@@ -12,8 +12,7 @@ export class WardModule implements NestModule {
   constructor(private prisma: PrismaService) {}
 
   configure(consumer: MiddlewareConsumer) {
-    const model = this.prisma.ward;
-    consumer.apply(new CheckIdMiddleware(model).use).forRoutes(
+    consumer.apply(new CheckIdMiddleware(this.prisma, 'ward').use).forRoutes(
       {
         path: 'api/ward/detail',
         method: RequestMethod.GET,

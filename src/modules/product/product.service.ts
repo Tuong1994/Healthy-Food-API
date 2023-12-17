@@ -73,17 +73,8 @@ export class ProductService {
 
   async createProduct(query: QueryDto, product: ProductDto) {
     const { langCode } = query;
-    const {
-      name,
-      costPrice,
-      profit,
-      totalPrice,
-      description,
-      status,
-      inventory,
-      inventoryStatus,
-      subCategoryId,
-    } = product;
+    const { name, costPrice, profit, totalPrice, unit, status, inventory, inventoryStatus, subCategoryId } =
+      product;
 
     const newProduct = await this.prisma.product.create({
       data: {
@@ -91,7 +82,7 @@ export class ProductService {
         costPrice,
         profit,
         totalPrice,
-        description,
+        unit,
         status,
         inventory,
         inventoryStatus,
@@ -105,17 +96,8 @@ export class ProductService {
 
   async updateProduct(query: QueryDto, product: ProductDto) {
     const { langCode, productId } = query;
-    const {
-      name,
-      costPrice,
-      profit,
-      totalPrice,
-      description,
-      status,
-      inventory,
-      inventoryStatus,
-      subCategoryId,
-    } = product;
+    const { name, costPrice, profit, totalPrice, unit, status, inventory, inventoryStatus, subCategoryId } =
+      product;
 
     await this.prisma.product.update({
       where: { id: productId },
@@ -124,7 +106,7 @@ export class ProductService {
         costPrice,
         profit,
         totalPrice,
-        description,
+        unit,
         status,
         inventory,
         inventoryStatus,

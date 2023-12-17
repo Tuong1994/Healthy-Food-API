@@ -12,8 +12,7 @@ export class CartModule implements NestModule {
   constructor(private prisma: PrismaService) {}
 
   configure(consumer: MiddlewareConsumer) {
-    const model = this.prisma.cart;
-    consumer.apply(new CheckIdMiddleware(model).use).forRoutes(
+    consumer.apply(new CheckIdMiddleware(this.prisma, 'cart').use).forRoutes(
       {
         path: 'api/cart/detail',
         method: RequestMethod.GET,

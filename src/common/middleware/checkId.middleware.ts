@@ -1,9 +1,15 @@
 import { HttpException, HttpStatus, Injectable, NestMiddleware } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
 import { NextFunction, Request, Response } from 'express';
 
 @Injectable()
 export class CheckIdMiddleware implements NestMiddleware {
-  constructor(private readonly model: any) {}
+  constructor(
+    private readonly prisma: PrismaClient,
+    private readonly model: string,
+  ) {
+    this.use = this.use.bind(this);
+  }
 
   async use(req: Request, res: Response, next: NextFunction) {
     const {
@@ -46,7 +52,7 @@ export class CheckIdMiddleware implements NestMiddleware {
 
     if (ids) return next();
 
-    const record = await this.model.findUnique({
+    const record = await this.prisma[this.model].findUnique({
       where: {
         id: String(
           customerId ||

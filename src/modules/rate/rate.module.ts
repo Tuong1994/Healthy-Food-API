@@ -12,8 +12,7 @@ export class RateModule implements NestModule {
   constructor(private prisma: PrismaService) {}
 
   configure(consumer: MiddlewareConsumer) {
-    const model = this.prisma.rate;
-    consumer.apply(new CheckIdMiddleware(model).use).forRoutes(
+    consumer.apply(new CheckIdMiddleware(this.prisma, 'rate').use).forRoutes(
       {
         path: 'api/rate/detail',
         method: RequestMethod.GET,

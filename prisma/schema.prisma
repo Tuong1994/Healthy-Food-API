@@ -87,8 +87,8 @@ model SubCategory {
 model Product {
   id              String @id @default(uuid())
   name            String
-  description     String @db.VarChar(3000)
   langCode        String
+  unit            Int
   costPrice       Int
   profit          Int
   totalPrice      Int

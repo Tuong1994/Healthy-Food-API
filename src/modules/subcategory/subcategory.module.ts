@@ -12,8 +12,7 @@ export class SubCategoryModule implements NestModule {
   constructor(private prisma: PrismaService) {}
 
   configure(consumer: MiddlewareConsumer) {
-    const model = this.prisma.subCategory;
-    consumer.apply(new CheckIdMiddleware(model).use).forRoutes(
+    consumer.apply(new CheckIdMiddleware(this.prisma, 'subCategory').use).forRoutes(
       {
         path: 'api/subcategory/detail',
         method: RequestMethod.GET,
