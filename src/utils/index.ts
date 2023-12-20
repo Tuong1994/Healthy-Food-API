@@ -46,6 +46,12 @@ const utils = {
     };
   },
 
+  getFileUrl: (file: Express.Multer.File) => {
+    const b64 = Buffer.from(file.buffer).toString("base64");
+    let dataURL = "data:" + file.mimetype + ";base64," + b64;
+    return dataURL
+  },
+
   removeFile: (path: string, message = 'Filed is deleted') => {
     if (!path) return;
     return fs.unlink(path, (error) => {

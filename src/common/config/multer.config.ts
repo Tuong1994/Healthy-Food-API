@@ -1,10 +1,10 @@
-import multer, { diskStorage } from 'multer';
+import multer, { diskStorage, memoryStorage } from 'multer';
 import { HttpException, HttpStatus } from '@nestjs/common';
 
 const ACCEPT_FILE_TYPE = ['image/png', 'image/jpg', 'image/jpeg'];
 const FILE_SIZE = 1024 * 1024 * 2;
 
-export const multerOption = (destination: string): multer.Options => {
+export const multerOption = (): multer.Options => {
   return {
     limits: { fileSize: FILE_SIZE, files: 5 },
     fileFilter(req, file, callback) {
@@ -17,13 +17,6 @@ export const multerOption = (destination: string): multer.Options => {
         ),
       );
     },
-    storage: diskStorage({
-      destination(req, file, callback) {
-        callback(null, destination);
-      },
-      filename(req, file, callback) {
-        callback(null, `${Date.now()}_${file.originalname}`);
-      },
-    }),
+    storage:memoryStorage()
   };
 };

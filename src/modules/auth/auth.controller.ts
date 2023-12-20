@@ -1,8 +1,7 @@
-import { Controller, Post, Body, Query, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthDto } from './auth.dto';
 import { QueryDto } from 'src/common/dto/query.dto';
-import { JwtGuard } from 'src/common/guard/jwt.guard';
 
 @Controller('api/auth')
 export class AuthController {
@@ -21,14 +20,12 @@ export class AuthController {
   }
 
   @Post('refresh')
-  @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
   refresh(@Query() query: QueryDto) {
     return this.authService.refresh(query);
   }
 
   @Post('logout')
-  @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
   logout(@Query() query: QueryDto) {
     return this.authService.logout(query);

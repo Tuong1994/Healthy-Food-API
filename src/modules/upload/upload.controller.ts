@@ -25,7 +25,7 @@ export class UploadController {
 
   @Post('customer')
   @UseGuards(JwtGuard)
-  @UseInterceptors(FileInterceptor('image', multerOption('./assets/image/customer')))
+  @UseInterceptors(FileInterceptor('image', multerOption()))
   @HttpCode(HttpStatus.OK)
   customerUpload(@Query() query: QueryDto, @UploadedFile() file: Express.Multer.File) {
     return this.uploadService.customerUpload(query, file);
@@ -34,7 +34,7 @@ export class UploadController {
   @Post('product')
   @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
   @UseGuards(JwtGuard, RoleGuard)
-  @UseInterceptors(FilesInterceptor('images', 5, multerOption('./assets/image/product')))
+  @UseInterceptors(FilesInterceptor('images', 5, multerOption()))
   @HttpCode(HttpStatus.OK)
   productUpload(@Query() query: QueryDto, @UploadedFiles() files: Express.Multer.File[]) {
     return this.uploadService.productUpload(query, files);

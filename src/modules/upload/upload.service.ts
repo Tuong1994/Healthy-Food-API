@@ -21,9 +21,8 @@ export class UploadService {
       select: { image: true },
     });
 
-    const result = await this.cloudinary.upload(file.path);
+    const result = await this.cloudinary.upload(utils.getFileUrl(file));
     const image = utils.generateImage(result, { customerId });
-    utils.removeFile(file.path);
 
     if (customer && customer.image) {
       await this.cloudinary.destroy(customer.image.publicId);
@@ -47,12 +46,10 @@ export class UploadService {
 
     const images = await Promise.all(
       files.map(async (file) => {
-        const result = await this.cloudinary.upload(file.path);
+        const result = await this.cloudinary.upload(utils.getFileUrl(file));
         return utils.generateImage(result, { productId });
       }),
     );
-
-    files.forEach((file) => utils.removeFile(file.path));
 
     if (product.images && product.images.length > 5) {
       await Promise.all(product.images.map((image) => this.cloudinary.destroy(image.publicId)));
