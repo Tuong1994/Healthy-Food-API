@@ -176,7 +176,7 @@ model Shipment {
 model City {
   id        String   @id @default(uuid())
   name      String
-  code      String
+  code      Int
   langCode  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -185,8 +185,8 @@ model City {
 model District {
   id        String   @id @default(uuid())
   name      String
-  code      String
-  cityCode  String
+  code      Int
+  cityCode  Int
   langCode  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -195,8 +195,8 @@ model District {
 model Ward {
   id           String   @id @default(uuid())
   name         String
-  code         String
-  districtCode String
+  code         Int
+  districtCode Int
   langCode     String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

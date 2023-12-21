@@ -15,6 +15,7 @@ const items = [
   { name: 'Fresh Drink', parentId: 'CATE_3' },
   { name: 'Juice', parentId: 'CATE_3' },
   { name: 'Coffee', parentId: 'CATE_3' },
+  { name: 'Tea', parentId: 'CATE_3' },
   { name: 'Noodles', parentId: 'CATE_4' },
   { name: 'Powder', parentId: 'CATE_4' },
   { name: 'Rice', parentId: 'CATE_4' },

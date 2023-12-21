@@ -5,10 +5,12 @@ export enum EProductStatus {
 
 export enum EProductUnit {
   KG = 1,
-  PACKAGE = 2,
+  PACK = 2,
   BOX = 3,
   BIN = 4,
   PIECE = 5,
+  BOTTLE = 6,
+  CAN = 7,
 }
 
 export enum EInventoryStatus {

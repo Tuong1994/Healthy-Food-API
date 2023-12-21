@@ -1,4 +1,4 @@
-import multer, { diskStorage, memoryStorage } from 'multer';
+import multer, { memoryStorage } from 'multer';
 import { HttpException, HttpStatus } from '@nestjs/common';
 
 const ACCEPT_FILE_TYPE = ['image/png', 'image/jpg', 'image/jpeg'];

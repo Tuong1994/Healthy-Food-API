@@ -15,6 +15,7 @@ const items = [
   { name: 'Nước Ngọt', parentId: 'CATE_3' },
   { name: 'Nước Ép', parentId: 'CATE_3' },
   { name: 'Cà Phê', parentId: 'CATE_3' },
+  { name: 'Trà', parentId: 'CATE_3' },
   { name: 'Mì', parentId: 'CATE_4' },
   { name: 'Bột', parentId: 'CATE_4' },
   { name: 'Gạo', parentId: 'CATE_4' },
