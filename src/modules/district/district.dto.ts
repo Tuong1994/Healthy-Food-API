@@ -6,10 +6,10 @@ export class DistrictDto {
   name: string;
 
   @IsNotEmpty()
-  code: string;
+  code: number;
 
   @IsNotEmpty()
-  cityCode: string;
+  cityCode: number;
 
   @IsNotEmpty()
   langCode: ELang;

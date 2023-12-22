@@ -14,9 +14,9 @@ const helper = {
 
   getFullAddress: async (
     address: string,
-    cityCode: string,
-    districtCode: string,
-    wardCode: string,
+    cityCode: number,
+    districtCode: number,
+    wardCode: number,
     langCode: ELang,
   ) => {
     const city = await prisma.city.findFirst({ where: { code: cityCode, langCode } });

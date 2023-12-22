@@ -1,5 +1,5 @@
 import { City } from '@prisma/client';
-import { ELang } from 'src/common/enum/base';
+import { ELang } from '../../../src/common/enum/base';
 
 const items = [
   {
@@ -448,7 +448,7 @@ const items = [
 const covertItems = [...items].map(({ name, code }) => ({ name, code }));
 
 const city_vn: City[] = [...covertItems].map((item, idx) => ({
-  id: `CITY_${idx}`,
+  id: `CITY_VN_${idx}`,
   name: item.name,
   code: item.code,
   langCode: ELang.VN,

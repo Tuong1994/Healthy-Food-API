@@ -6,7 +6,7 @@ export class CityDto {
   name: string;
 
   @IsNotEmpty()
-  code: string;
+  code: number;
 
   @IsNotEmpty()
   langCode: ELang;

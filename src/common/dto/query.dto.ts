@@ -27,8 +27,8 @@ export class QueryDto {
   wardId?: string;
 
   gender?: EGender;
-  cityCode?: string;
-  districtCode?: string;
+  cityCode?: number;
+  districtCode?: number;
   hasSub?: boolean;
 
   role?: ERole;

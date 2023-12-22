@@ -1,5 +1,5 @@
 import { Ward } from '@prisma/client';
-import { ELang } from 'src/common/enum/base';
+import { ELang } from '../../../src/common/enum/base';
 
 const items = [
   {
@@ -74197,7 +74197,7 @@ const convertItems = [...items].map(({ name, code, district_code }) => ({
 }));
 
 const wards_vn: Ward[] = [...convertItems].map((item, idx) => ({
-  id: `WARD_${idx}`,
+  id: `WARD_VN_${idx}`,
   name: item.name,
   code: item.code,
   districtCode: item.districtCode,

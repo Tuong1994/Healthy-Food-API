@@ -1,5 +1,5 @@
 import { Category } from '@prisma/client';
-import { ELang } from 'src/common/enum/base';
+import { ELang } from '../../../src/common/enum/base';
 
 const items = [
   'Vegetables',
@@ -13,7 +13,7 @@ const items = [
 ];
 
 const categories_en: Category[] = [...items].map((item, idx) => ({
-  id: `CATE_${idx + 1}`,
+  id: `CATE_EN_${idx + 1}`,
   name: item,
   langCode: ELang.EN,
   createdAt: new Date(),

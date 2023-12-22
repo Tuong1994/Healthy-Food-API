@@ -44,6 +44,7 @@ export class CityService {
 
   async createCity(city: CityDto) {
     const { name, code, langCode } = city;
+    Number(code)
     const newCity = await this.prisma.city.create({ data: { name, code, langCode } });
     return newCity;
   }

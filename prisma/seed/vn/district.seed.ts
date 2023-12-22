@@ -1,5 +1,5 @@
 import { District } from '@prisma/client';
-import { ELang } from 'src/common/enum/base';
+import { ELang } from '../../../src/common/enum/base';
 
 const items = [
   {
@@ -4946,7 +4946,7 @@ const convertItems = [...items].map(({ name, code, province_code }) => ({
 }));
 
 const districts_vn: District[] = [...convertItems].map((item, idx) => ({
-  id: `DISTRICT_${idx}`,
+  id: `DISTRICT_VN_${idx}`,
   name: item.name,
   code: item.code,
   cityCode: item.cityCode,

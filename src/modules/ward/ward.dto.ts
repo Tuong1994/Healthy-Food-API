@@ -6,10 +6,10 @@ export class WardDto {
   name: string;
 
   @IsNotEmpty()
-  code: string;
+  code: number;
 
   @IsNotEmpty()
-  districtCode: string;
+  districtCode: number;
 
   @IsNotEmpty()
   langCode: ELang;

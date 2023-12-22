@@ -47,7 +47,9 @@ export class DistrictService {
 
   async createDistrict(district: DistrictDto) {
     const { name, code, cityCode, langCode } = district;
-    const newDistrict = await this.prisma.district.create({ data: { name, code, cityCode, langCode } });
+    const newDistrict = await this.prisma.district.create({
+      data: { name, code: Number(code), cityCode: Number(cityCode), langCode },
+    });
     return newDistrict;
   }
 
