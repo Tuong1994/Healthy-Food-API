@@ -73386,7 +73386,7 @@ const convertItems = [...items].map(({ name, code, district_code }) => ({
   districtCode: district_code,
 }));
 
-const wards_en: Ward[] = [...convertItems].map((item, idx) => ({
+const wards_en = [...convertItems].map((item, idx) => ({
   id: `WARD_EN_${idx}`,
   name: item.name,
   code: item.code,

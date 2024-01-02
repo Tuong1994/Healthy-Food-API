@@ -19,16 +19,20 @@ export class AuthService {
     private config: ConfigService,
   ) {}
 
-  private getAccessToken(payload: TokenPayload) {
-    const token = this.jwt.signAsync(payload, {
+  private async getAccessToken(payload: TokenPayload) {
+    const expiresIn = '30m';
+
+    const expirationTimeInSeconds = Math.floor(Date.now() / 1000) + parseInt(expiresIn, 10);
+
+    const token = await this.jwt.signAsync(payload, {
       secret: this.config.get('ACCESS_TOKEN_SECRET'),
-      expiresIn: '30m',
+      expiresIn,
     });
-    return token;
+    return { token, expirationTimeInSeconds };
   }
 
-  private getRefreshToken(payload: TokenPayload) {
-    const token = this.jwt.signAsync(payload, {
+  private async getRefreshToken(payload: TokenPayload) {
+    const token = await this.jwt.signAsync(payload, {
       secret: this.config.get('REFRESH_TOKEN_SECRET'),
       expiresIn: '24h',
     });
@@ -36,23 +40,23 @@ export class AuthService {
   }
 
   async signUp(auth: AuthDto) {
-    const { account, password, phone, email } = auth;
+    const { email, password, phone } = auth;
 
-    const exist = await this.prisma.customer.findUnique({ where: { account } });
-    if (exist) throw new ForbiddenException('Account is already exist');
+    const exist = await this.prisma.customer.findUnique({ where: { email } });
+    if (exist) throw new ForbiddenException('Email is already exist');
 
     const hashPass = utils.bcryptHash(password);
     const newAccount = await this.prisma.customer.create({
-      data: { account, password: hashPass, phone, email, role: ERole.CUSTOMER },
+      data: { email, password: hashPass, phone, isDelete: false, role: ERole.CUSTOMER },
     });
     return newAccount;
   }
 
   async signIn(auth: AuthDto) {
-    const { account, password } = auth;
+    const { email, password } = auth;
 
-    const login = await this.prisma.customer.findUnique({ where: { account } });
-    if (!login) throw new ForbiddenException('Account is not correct');
+    const login = await this.prisma.customer.findUnique({ where: { email } });
+    if (!login) throw new ForbiddenException('Email is not correct');
 
     const isAuth = bcryptjs.compareSync(password, login.password);
     if (!isAuth) throw new ForbiddenException('Password is not correct');
@@ -63,13 +67,22 @@ export class AuthService {
     delete info.updatedAt;
     const payload: TokenPayload = {
       id: login.id,
-      account: login.account,
+      email: login.email,
       role: login.role,
     };
     const accessToken = await this.getAccessToken(payload);
     const refreshToken = await this.getRefreshToken(payload);
-    await this.prisma.auth.create({ data: { token: refreshToken, customerId: login.id } });
-    return { accessToken, info, expired: EXPIRED_TIME, isAuth: true };
+    await this.prisma.auth.upsert({
+      where: { customerId: login.id },
+      create: { token: refreshToken, customerId: login.id },
+      update: { token: refreshToken },
+    });
+    return {
+      accessToken: accessToken.token,
+      expired: accessToken.expirationTimeInSeconds,
+      info,
+      isAuth: true,
+    };
   }
 
   async refresh(query: QueryDto) {
@@ -83,7 +96,7 @@ export class AuthService {
       if (decode) {
         const payload: TokenPayload = {
           id: decode.id,
-          account: decode.account,
+          email: decode.email,
           role: decode.role,
         };
         const accessToken = await this.getAccessToken(payload);

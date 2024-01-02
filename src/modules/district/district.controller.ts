@@ -64,4 +64,12 @@ export class DistrictController {
   removeDistricts(@Query() query: QueryDto) {
     return this.districtService.removeDistricts(query);
   }
+
+  @Delete('removePermanent')
+  @Roles(ERole.SUPER_ADMIN)
+  @UseGuards(JwtGuard, RoleGuard)
+  @HttpCode(HttpStatus.OK)
+  removeDistrictsPermanent(@Query() query: QueryDto) {
+    return this.districtService.removeDistrictsPermanent(query);
+  }
 }

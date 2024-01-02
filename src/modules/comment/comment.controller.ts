@@ -15,6 +15,9 @@ import { QueryDto } from 'src/common/dto/query.dto';
 import { JwtGuard } from 'src/common/guard/jwt.guard';
 import { CommentDto } from './comment.dto';
 import { QueryPaging } from 'src/common/decorator/query.decorator';
+import { RoleGuard } from 'src/common/guard/role.guard';
+import { Roles } from 'src/common/decorator/role.decorator';
+import { ERole } from 'src/common/enum/base';
 
 @Controller('api/comment')
 export class CommentController {
@@ -24,6 +27,13 @@ export class CommentController {
   @HttpCode(HttpStatus.OK)
   getComments(@QueryPaging() query: QueryDto) {
     return this.commentService.getComments(query);
+  }
+
+  @Get('listByCustomer')
+  @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.OK)
+  getCommentsByCustomer(@QueryPaging() query: QueryDto) {
+    return this.commentService.getCommentsByCustomer(query);
   }
 
   @Get('detail')
@@ -51,5 +61,21 @@ export class CommentController {
   @HttpCode(HttpStatus.OK)
   removeComments(@Query() query: QueryDto) {
     return this.commentService.removeComments(query);
+  }
+
+  @Delete('removePermanent')
+  @Roles(ERole.SUPER_ADMIN)
+  @UseGuards(JwtGuard, RoleGuard)
+  @HttpCode(HttpStatus.OK)
+  removeCommentsPermanent(@Query() query: QueryDto) {
+    return this.commentService.removeCommentsPermanent(query);
+  }
+
+  @Post('restore')
+  @Roles(ERole.SUPER_ADMIN)
+  @UseGuards(JwtGuard, RoleGuard)
+  @HttpCode(HttpStatus.OK)
+  restoreComment() {
+    return this.commentService.restoreComments();
   }
 }

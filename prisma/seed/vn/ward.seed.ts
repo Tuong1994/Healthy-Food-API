@@ -74196,7 +74196,7 @@ const convertItems = [...items].map(({ name, code, district_code }) => ({
   districtCode: district_code,
 }));
 
-const wards_vn: Ward[] = [...convertItems].map((item, idx) => ({
+const wards_vn = [...convertItems].map((item, idx) => ({
   id: `WARD_VN_${idx}`,
   name: item.name,
   code: item.code,

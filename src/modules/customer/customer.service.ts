@@ -4,27 +4,52 @@ import { QueryDto } from 'src/common/dto/query.dto';
 import { Paging } from 'src/common/type/base';
 import { Customer } from '@prisma/client';
 import { CustomerDto } from 'src/modules/customer/customer.dto';
-import utils from 'src/utils';
+import { ELang } from 'src/common/enum/base';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import helper from 'src/helper';
+import utils from 'src/utils';
+
+const getSelectFields = (langCode: ELang) => ({
+  id: true,
+  addressEn: langCode === ELang.EN,
+  addressVn: langCode === ELang.VN,
+  fullAddressEn: langCode === ELang.EN,
+  fullAddressVn: langCode === ELang.VN,
+  cityCode: true,
+  districtCode: true,
+  wardCode: true,
+  isDelete: true,
+  createdAt: true,
+  updatedAt: true,
+});
 
 @Injectable()
 export class CustomerService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private cloudinary: CloudinaryService,
+  ) {}
 
   async getCustomers(query: QueryDto) {
     const { page, limit, langCode, keywords, sortBy, gender, role } = query;
     let collection: Paging<Customer> = utils.defaultCollection();
     const customers = await this.prisma.customer.findMany({
       where: {
-        AND: [{ gender }, { role }],
+        AND: [
+          { gender: gender && Number(gender) },
+          { role: role && Number(role) },
+          { isDelete: { equals: false } },
+        ],
       },
-      include: { address: { where: { langCode } } },
+      include: {
+        address: { select: { ...getSelectFields(langCode) } },
+        image: true,
+      },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
     });
     if (keywords) {
       const filterCustomers = customers.filter(
         (customer) =>
-          customer.account.toLowerCase().includes(keywords.toLowerCase()) ||
           customer.firstName.toLowerCase().includes(keywords.toLowerCase()) ||
           customer.lastName.toLowerCase().includes(keywords.toLowerCase()) ||
           customer.fullName.toLowerCase().includes(keywords.toLowerCase()) ||
@@ -39,82 +64,119 @@ export class CustomerService {
   async getCustomer(query: QueryDto) {
     const { customerId, langCode } = query;
     const customer = await this.prisma.customer.findUnique({
-      where: { id: customerId },
-      include: { address: { where: { langCode } } },
+      where: { id: customerId, isDelete: { equals: false } },
+      include: {
+        address: { select: { ...getSelectFields(langCode) } },
+        image: true,
+      },
     });
     return customer;
   }
 
-  async createCustomer(query: QueryDto, customer: CustomerDto) {
+  async createCustomer(query: QueryDto, file: Express.Multer.File, customer: CustomerDto) {
     const { langCode } = query;
     const {
-      account,
+      email,
       password,
       role,
       firstName,
       lastName,
       phone,
-      email,
       gender,
       birthday,
-      address,
+      addressEn,
+      addressVn,
       cityCode,
       districtCode,
       wardCode,
     } = customer;
 
     const fullName = helper.getFullName(firstName, lastName, langCode);
-    const fullAddress = await helper.getFullAddress(address, cityCode, districtCode, wardCode, langCode);
     const newCustomer = await this.prisma.customer.create({
       data: {
-        account,
+        email,
         password: utils.bcryptHash(password),
-        role: Number(role),
         firstName,
         lastName,
         fullName,
         phone,
-        email,
-        gender,
         birthday,
+        role: role && Number(role),
+        gender: gender && Number(gender),
+        isDelete: false,
+      },
+      include: {
+        address: true,
+        image: true,
       },
     });
 
     if (newCustomer) {
-      await this.prisma.customerAddress.create({
-        data: {
-          address,
-          cityCode,
-          districtCode,
-          wardCode,
-          langCode,
-          fullAddress,
-          customerId: newCustomer.id,
-        },
-      });
-    }
+      let resCustomer: any;
+      if (addressEn && addressVn && cityCode && districtCode && wardCode) {
+        const fullAddressEn = await helper.getFullAddress(
+          addressEn,
+          Number(cityCode),
+          Number(districtCode),
+          Number(wardCode),
+          ELang.EN,
+        );
+        const fullAddressVn = await helper.getFullAddress(
+          addressEn,
+          Number(cityCode),
+          Number(districtCode),
+          Number(wardCode),
+          ELang.VN,
+        );
+        await this.prisma.customerAddress.create({
+          data: {
+            addressEn,
+            addressVn,
+            fullAddressEn,
+            fullAddressVn,
+            cityCode: cityCode && Number(cityCode),
+            districtCode: districtCode && Number(districtCode),
+            wardCode: wardCode && Number(wardCode),
+            customerId: newCustomer.id,
+            isDelete: false,
+          },
+        });
+        resCustomer = await this.prisma.customer.findUnique({
+          where: { id: newCustomer.id },
+          include: { address: true },
+        });
+      }
 
-    return newCustomer;
+      if (file) {
+        const result = await this.cloudinary.upload(utils.getFileUrl(file));
+        const image = utils.generateImage(result, { customerId: newCustomer.id });
+        await this.prisma.image.create({ data: image });
+        resCustomer = await this.prisma.customer.findUnique({
+          where: { id: newCustomer.id },
+          include: { address: true, image: true },
+        });
+      }
+      return resCustomer ? resCustomer : newCustomer;
+    }
   }
 
-  async updateCustomer(query: QueryDto, customer: CustomerDto) {
+  async updateCustomer(query: QueryDto, file: Express.Multer.File, customer: CustomerDto) {
     const { customerId, langCode } = query;
     const {
       role,
       firstName,
       lastName,
       phone,
-      email,
       gender,
       birthday,
-      address,
+      addressVn,
+      addressEn,
       cityCode,
       districtCode,
       wardCode,
     } = customer;
 
     const fullName = helper.getFullName(firstName, lastName, langCode);
-    const fullAddress = await helper.getFullAddress(address, cityCode, districtCode, wardCode, langCode);
     await this.prisma.customer.update({
       where: { id: customerId },
       data: {
@@ -122,18 +184,63 @@ export class CustomerService {
         lastName,
         fullName,
         phone,
-        email,
-        gender,
         birthday,
-        role: Number(role),
-        address: {
-          update: {
-            where: { customerId },
-            data: { address, fullAddress, cityCode, districtCode, wardCode, langCode },
-          },
-        },
+        gender: gender && Number(gender),
+        role: role && Number(role),
       },
     });
+
+    if (addressEn && addressVn && cityCode && districtCode && wardCode) {
+      const fullAddressEn = await helper.getFullAddress(
+        addressEn,
+        Number(cityCode),
+        Number(districtCode),
+        Number(wardCode),
+        ELang.EN,
+      );
+      const fullAddressVn = await helper.getFullAddress(
+        addressVn,
+        Number(cityCode),
+        Number(districtCode),
+        Number(wardCode),
+        ELang.VN,
+      );
+      const customerAddress = await this.prisma.customerAddress.findUnique({ where: { customerId } });
+      const data = {
+        addressEn,
+        addressVn,
+        fullAddressEn,
+        fullAddressVn,
+        customerId,
+        isDelete: false,
+        cityCode: cityCode && Number(cityCode),
+        districtCode: districtCode && Number(districtCode),
+        wardCode: wardCode && Number(wardCode),
+      };
+      if (!customerAddress) {
+        await this.prisma.customerAddress.create({ data });
+      } else {
+        await this.prisma.customerAddress.update({
+          where: { customerId },
+          data,
+        });
+      }
+    }
+
+    if (file) {
+      const updateCustomer = await this.prisma.customer.findUnique({
+        where: { id: customerId },
+        select: { image: true },
+      });
+      const result = await this.cloudinary.upload(utils.getFileUrl(file));
+      const image = utils.generateImage(result, { customerId });
+      if (updateCustomer.image) {
+        await this.cloudinary.destroy(updateCustomer.image.publicId);
+        await this.prisma.image.update({ where: { customerId }, data: image });
+      } else {
+        await this.prisma.image.create({ data: image });
+      }
+    }
 
     throw new HttpException('Updated success', HttpStatus.OK);
   }
@@ -141,11 +248,45 @@ export class CustomerService {
   async removeCustomers(query: QueryDto) {
     const { ids } = query;
     const listIds = ids.split(',');
-    const customers = await this.prisma.customer.findMany({ where: { id: { in: listIds } } });
+    const customers = await this.prisma.customer.findMany({
+      where: { id: { in: listIds } },
+      select: { id: true, image: true },
+    });
     if (customers && customers.length > 0) {
-      await this.prisma.customer.deleteMany({ where: { id: { in: listIds } } });
+      await this.prisma.customer.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
+      await Promise.all(
+        customers.map(async (customer) => {
+          if (!customer.image) return;
+          await this.prisma.image.update({ where: { customerId: customer.id }, data: { isDelete: true } });
+        }),
+      );
       throw new HttpException('Removed success', HttpStatus.OK);
     }
     throw new HttpException('Customers not found', HttpStatus.NOT_FOUND);
+  }
+
+  async removeCustomersPermanent(query: QueryDto) {
+    const { ids } = query;
+    const listIds = ids.split(',');
+    const customers = await this.prisma.customer.findMany({
+      where: { id: { in: listIds } },
+      include: { image: true },
+    });
+    if (customers && customers.length > 0) {
+      await this.prisma.customer.deleteMany({ where: { id: { in: listIds } } });
+      await Promise.all(
+        customers.map(async (customer) => {
+          if (!customer.image) return;
+          await this.cloudinary.destroy(customer.image.publicId);
+        }),
+      );
+      throw new HttpException('Removed success', HttpStatus.OK);
+    }
+    throw new HttpException('Customers not found', HttpStatus.NOT_FOUND);
+  }
+
+  async restoreCustomers() {
+    await this.prisma.customer.updateMany({ data: { isDelete: false } });
+    throw new HttpException('Restored success', HttpStatus.OK);
   }
 }

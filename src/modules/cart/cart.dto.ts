@@ -3,7 +3,7 @@ import { IsArray, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 class CartItemDto {
   @IsNotEmpty()
   @IsNumber()
-  quanity: number;
+  quantity: number;
 
   @IsNotEmpty()
   productId: string;

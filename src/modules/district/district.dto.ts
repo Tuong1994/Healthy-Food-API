@@ -3,14 +3,14 @@ import { ELang } from 'src/common/enum/base';
 
 export class DistrictDto {
   @IsNotEmpty()
-  name: string;
+  nameEn: string;
+
+  @IsNotEmpty()
+  nameVn: string;
 
   @IsNotEmpty()
   code: number;
 
   @IsNotEmpty()
   cityCode: number;
-
-  @IsNotEmpty()
-  langCode: ELang;
 }

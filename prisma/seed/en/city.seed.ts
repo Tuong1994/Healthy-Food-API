@@ -444,9 +444,10 @@ const items = [
     phone_code: 290,
   },
 ];
+
 const covertItems = [...items].map(({ name, code }) => ({ name, code }));
 
-const city_en: City[] = [...covertItems].map((item, idx) => ({
+const city_en = [...covertItems].map((item, idx) => ({
   id: `CITY_EN_${idx}`,
   name: item.name,
   code: item.code,

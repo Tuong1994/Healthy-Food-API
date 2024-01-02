@@ -1,6 +1,7 @@
 export enum EProductStatus {
   DRAFT = 1,
   ACTIVE = 2,
+  ALL = 3,
 }
 
 export enum EProductUnit {
@@ -16,4 +17,8 @@ export enum EProductUnit {
 export enum EInventoryStatus {
   IN_STOCK = 1,
   OUT_OF_STOCK = 2,
+}
+
+export enum EProductOrigin {
+  VN = 1,
 }

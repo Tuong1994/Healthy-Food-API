@@ -12,18 +12,18 @@ datasource db {
 
 model Customer {
   id       String @id @default(uuid())
-  account  String @unique
+  email    String @unique
   password String
+  phone    String
   role     Int
 
-  email     String? @unique
-  phone     String?
   firstName String?
   lastName  String?
   fullName  String?
   gender    Int?
   birthday  String?
 
+  isDelete  Boolean?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -37,15 +37,18 @@ model Customer {
 }
 
 model CustomerAddress {
-  id           String   @id @default(uuid())
-  address      String
-  wardCode     String
-  districtCode String
-  cityCode     String
-  fullAddress  String
-  langCode     String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String  @id @default(uuid())
+  addressEn     String?
+  addressVn     String?
+  fullAddressEn String?
+  fullAddressVn String?
+  cityCode      Int?
+  districtCode  Int?
+  wardCode      Int?
+
+  isDelete  Boolean?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   customerId String   @unique
   customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
@@ -62,32 +65,39 @@ model Auth {
 }
 
 model Category {
-  id        String   @id @default(uuid())
-  name      String
-  langCode  String
+  id     String @id @default(uuid())
+  nameEn String
+  nameVn String
+
+  isDelete  Boolean?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  image         Image?
   subCategories SubCategory[]
+  products      Product[]
 }
 
 model SubCategory {
-  id        String   @id @default(uuid())
-  name      String
-  langCode  String
+  id     String @id @default(uuid())
+  nameEn String
+  nameVn String
+
+  isDelete  Boolean?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
+  image    Image?
   products Product[]
 }
 
 model Product {
-  id              String @id @default(uuid())
-  name            String
-  langCode        String
+  id              String  @id @default(uuid())
+  nameEn          String
+  nameVn          String
   unit            Int
   costPrice       Int
   profit          Int
@@ -95,16 +105,22 @@ model Product {
   status          Int
   inventory       Int
   inventoryStatus Int
+  origin          Int
+  supplier        String
+  isNew           Boolean
 
+  isDelete  Boolean?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  categoryId    String
+  category      Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   subCategoryId String
   subCategory   SubCategory @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
 
   cartItem  CartItem?
   orderItem OrderItem?
-  images    Image[]
+  image     Image?
   comments  Comment[]
   rates     Rate[]
 }
@@ -117,12 +133,12 @@ model Cart {
   customerId String   @unique
   customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
-  cartItems CartItem[]
+  items CartItem[]
 }
 
 model CartItem {
   id        String   @id @default(uuid())
-  quanity   Int
+  quantity  Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -133,24 +149,28 @@ model CartItem {
 }
 
 model Order {
-  id            String   @id @default(uuid())
+  id            String @id @default(uuid())
   orderNumber   String
   status        Int
-  paymentType   Int
+  paymentMethod Int
   paymentStatus Int
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+
+  isDelete  Boolean?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   customerId String
   customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
-  shipment   Shipment?
-  orderItems OrderItem[]
+  shipment Shipment?
+  items    OrderItem[]
 }
 
 model OrderItem {
-  id        String   @id @default(uuid())
-  quanity   Int
+  id       String @id @default(uuid())
+  quantity Int
+
+  isDelete  Boolean?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -161,11 +181,13 @@ model OrderItem {
 }
 
 model Shipment {
-  id        String   @id @default(uuid())
-  fullName  String
-  phone     String
-  email     String
-  address   String
+  id       String @id @default(uuid())
+  fullName String
+  phone    String
+  email    String
+  address  String
+
+  isDelete  Boolean?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -174,38 +196,46 @@ model Shipment {
 }
 
 model City {
-  id        String   @id @default(uuid())
-  name      String
-  code      Int
-  langCode  String
+  id     String @id @default(uuid())
+  nameEn String
+  nameVn String
+  code   Int
+
+  isDelete  Boolean?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model District {
-  id        String   @id @default(uuid())
-  name      String
-  code      Int
-  cityCode  Int
-  langCode  String
+  id       String @id @default(uuid())
+  nameEn   String
+  nameVn   String
+  code     Int
+  cityCode Int
+
+  isDelete  Boolean?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Ward {
-  id           String   @id @default(uuid())
-  name         String
+  id           String @id @default(uuid())
+  nameEn       String
+  nameVn       String
   code         Int
   districtCode Int
-  langCode     String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+
+  isDelete  Boolean?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Comment {
-  id        String   @id @default(uuid())
-  parentId  String
-  content   String   @db.VarChar(3000)
+  id       String @id @default(uuid())
+  parentId String
+  content  String @db.VarChar(3000)
+
+  isDelete  Boolean?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -216,9 +246,11 @@ model Comment {
 }
 
 model Rate {
-  id        String   @id @default(uuid())
-  point     Int
-  note      String   @db.VarChar(3000)
+  id    String @id @default(uuid())
+  point Int
+  note  String @db.VarChar(3000)
+
+  isDelete  Boolean?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -229,15 +261,21 @@ model Rate {
 }
 
 model Image {
-  id        String   @id @default(uuid())
-  path      String
-  size      Int
-  publicId  String
+  id       String @id @default(uuid())
+  path     String
+  size     Int
+  publicId String
+
+  isDelete  Boolean?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  customerId String?   @unique
-  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  productId  String?
-  product    Product?  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customerId    String?      @unique
+  customer      Customer?    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  categoryId    String?      @unique
+  category      Category?    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  subCategoryId String?      @unique
+  subCategory   SubCategory? @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
+  productId     String?      @unique
+  product       Product?     @relation(fields: [productId], references: [id], onDelete: Cascade)
 }

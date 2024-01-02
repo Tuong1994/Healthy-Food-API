@@ -38,7 +38,7 @@ export class WardController {
   @Get('detail')
   @HttpCode(HttpStatus.OK)
   getWard(@Query() query: QueryDto) {
-    return this.wardService.getWad(query);
+    return this.wardService.getWard(query);
   }
 
   @Post('create')
@@ -58,10 +58,26 @@ export class WardController {
   }
 
   @Delete('remove')
-  @Roles(ERole.SUPER_ADMIN)
+  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeWards(@Query() query: QueryDto) {
     return this.wardService.removeWards(query);
+  }
+
+  @Delete('removePermenant')
+  @Roles(ERole.SUPER_ADMIN)
+  @UseGuards(JwtGuard, RoleGuard)
+  @HttpCode(HttpStatus.OK)
+  removeWardsPermanent(@Query() query: QueryDto) {
+    return this.wardService.removeWardsPermanent(query);
+  }
+
+  @Post('restore')
+  @Roles(ERole.SUPER_ADMIN)
+  @UseGuards(JwtGuard, RoleGuard)
+  @HttpCode(HttpStatus.OK)
+  restoreWards() {
+    return this.wardService.restoreWards();
   }
 }

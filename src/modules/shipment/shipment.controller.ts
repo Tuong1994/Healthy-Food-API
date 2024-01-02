@@ -52,10 +52,26 @@ export class ShipmentController {
   }
 
   @Delete('remove')
-  @Roles(ERole.SUPER_ADMIN)
+  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeShipments(@Query() query: QueryDto) {
     return this.shipmentService.removeShipments(query);
+  }
+
+  @Delete('removePermenant')
+  @Roles(ERole.SUPER_ADMIN)
+  @UseGuards(JwtGuard, RoleGuard)
+  @HttpCode(HttpStatus.OK)
+  removeShipmentsPermanent(@Query() query: QueryDto) {
+    return this.shipmentService.removeShipmentsPermanent(query);
+  }
+
+  @Post('restore')
+  @Roles(ERole.SUPER_ADMIN)
+  @UseGuards(JwtGuard, RoleGuard)
+  @HttpCode(HttpStatus.OK)
+  restoreShipments() {
+    return this.shipmentService.restoreShipments();
   }
 }

@@ -14,6 +14,10 @@ export class CommentModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(new CheckIdMiddleware(this.prisma, 'comment').use).forRoutes(
       {
+        path: 'api/comment/listByCustomer',
+        method: RequestMethod.GET,
+      },
+      {
         path: 'api/comment/detail',
         method: RequestMethod.GET,
       },

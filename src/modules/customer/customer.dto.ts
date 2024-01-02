@@ -1,19 +1,20 @@
-import { IsNotEmpty, IsOptional, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsOptional } from 'class-validator';
+import { ERole } from 'src/common/enum/base';
+import { EGender } from './customer.enum';
 
 export class CustomerDto {
+  @IsOptional()
   @IsNotEmpty()
-  account: string;
+  email: string;
 
+  @IsOptional()
   @IsNotEmpty()
   password: string;
 
   @IsNotEmpty()
-  role: string;
+  role: ERole;
 
-  @IsOptional()
-  email: string;
-
-  @IsOptional()
+  @IsNotEmpty()
   phone: string;
 
   @IsOptional()
@@ -23,14 +24,16 @@ export class CustomerDto {
   lastName: string;
 
   @IsOptional()
-  @IsNumber()
-  gender: number;
+  gender: EGender;
 
   @IsOptional()
   birthday: string;
 
   @IsOptional()
-  address: string;
+  addressEn: string;
+
+  @IsOptional()
+  addressVn: string
 
   @IsOptional()
   cityCode: string;

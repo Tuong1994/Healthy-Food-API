@@ -2,7 +2,10 @@ import { IsNotEmpty } from 'class-validator';
 
 export class SubCategoryDto {
   @IsNotEmpty()
-  name: string;
+  nameEn: string;
+
+  @IsNotEmpty()
+  nameVn: string;
 
   @IsNotEmpty()
   categoryId: string;

@@ -70,6 +70,7 @@ export class CheckIdMiddleware implements NestMiddleware {
             districtId ||
             wardId,
         ),
+        isDelete: { equals: false },
       },
     });
 

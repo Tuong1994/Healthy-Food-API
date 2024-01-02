@@ -1,7 +1,7 @@
-import { EInventoryStatus, EProductStatus } from 'src/modules/product/product.enum';
+import { EInventoryStatus, EProductOrigin, EProductStatus } from 'src/modules/product/product.enum';
 import { ELang, ERole } from '../enum/base';
 import { EGender } from 'src/modules/customer/customer.enum';
-import { EOrderPaymentStatus, EOrderPaymentType, EOrderStatus } from 'src/modules/order/order.enum';
+import { EOrderPaymentStatus, EOrderPaymentMethod, EOrderStatus } from 'src/modules/order/order.enum';
 
 export class QueryDto {
   page?: string;
@@ -35,7 +35,8 @@ export class QueryDto {
   langCode?: ELang;
   productStatus?: EProductStatus;
   inventoryStatus?: EInventoryStatus;
+  origin?: EProductOrigin;
   orderStatus?: EOrderStatus;
-  paymentType?: EOrderPaymentType;
+  paymentMethod?: EOrderPaymentMethod;
   paymentStatus?: EOrderPaymentStatus;
 }

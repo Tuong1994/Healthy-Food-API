@@ -58,10 +58,26 @@ export class CityController {
   }
 
   @Delete('remove')
-  @Roles(ERole.SUPER_ADMIN)
+  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeCities(@Query() query: QueryDto) {
     return this.cityService.removeCities(query);
+  }
+
+  @Delete('removePermanent')
+  @Roles(ERole.SUPER_ADMIN)
+  @UseGuards(JwtGuard, RoleGuard)
+  @HttpCode(HttpStatus.OK)
+  removeCitiesPermanent(@Query() query: QueryDto) {
+    return this.cityService.removeCities(query);
+  }
+
+  @Post('restore')
+  @Roles(ERole.SUPER_ADMIN)
+  @UseGuards(JwtGuard, RoleGuard)
+  @HttpCode(HttpStatus.OK)
+  restoreCities() {
+    return this.cityService.restoreCities();
   }
 }

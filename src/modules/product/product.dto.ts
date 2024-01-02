@@ -1,39 +1,46 @@
-import { IsNotEmpty, IsNumber } from 'class-validator';
-import { ELang } from 'src/common/enum/base';
-import { EInventoryStatus, EProductStatus, EProductUnit } from './product.enum';
+import { IsNotEmpty, IsOptional } from 'class-validator';
+import { EInventoryStatus, EProductOrigin, EProductStatus, EProductUnit } from './product.enum';
 
 export class ProductDto {
   @IsNotEmpty()
-  name: string;
+  nameEn: string;
+
+  @IsNotEmpty()
+  nameVn: string;
 
   @IsNotEmpty()
   unit: EProductUnit;
 
   @IsNotEmpty()
-  langCode: ELang;
+  costPrice: string;
 
   @IsNotEmpty()
-  @IsNumber()
-  costPrice: number;
+  profit: string;
 
   @IsNotEmpty()
-  @IsNumber()
-  profit: number;
-
-  @IsNotEmpty()
-  @IsNumber()
-  totalPrice: number;
+  totalPrice: string;
 
   @IsNotEmpty()
   status: EProductStatus;
 
   @IsNotEmpty()
-  @IsNumber()
-  inventory: number;
+  inventory: string;
 
   @IsNotEmpty()
   inventoryStatus: EInventoryStatus;
 
   @IsNotEmpty()
+  origin: EProductOrigin;
+
+  @IsNotEmpty()
+  supplier: string;
+
+  @IsNotEmpty()
+  categoryId: string;
+
+  @IsNotEmpty()
   subCategoryId: string;
+
+  @IsOptional()
+  isNew: boolean;
 }

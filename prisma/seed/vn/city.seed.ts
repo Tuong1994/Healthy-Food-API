@@ -447,7 +447,7 @@ const items = [
 
 const covertItems = [...items].map(({ name, code }) => ({ name, code }));
 
-const city_vn: City[] = [...covertItems].map((item, idx) => ({
+const city_vn = [...covertItems].map((item, idx) => ({
   id: `CITY_VN_${idx}`,
   name: item.name,
   code: item.code,

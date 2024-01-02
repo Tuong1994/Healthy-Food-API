@@ -2,5 +2,8 @@ import { IsNotEmpty } from 'class-validator';
 
 export class CategoryDto {
   @IsNotEmpty()
-  name: string;
+  nameEn: string;
+
+  @IsNotEmpty()
+  nameVn: string;
 }

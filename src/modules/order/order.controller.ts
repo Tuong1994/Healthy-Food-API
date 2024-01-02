@@ -29,6 +29,13 @@ export class OrderController {
     return this.orderService.getOrders(query);
   }
 
+  @Get('listByCustomer')
+  @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.OK)
+  getOrdersByCustomer(@QueryPaging() query: QueryDto) {
+    return this.orderService.getOrdersByCustomer(query);
+  }
+
   @Get('detail')
   @HttpCode(HttpStatus.OK)
   getOrder(@Query() query: QueryDto) {
@@ -51,10 +58,26 @@ export class OrderController {
   }
 
   @Delete('remove')
-  @Roles(ERole.SUPER_ADMIN)
+  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeOrders(@Query() query: QueryDto) {
     return this.orderService.removeOrders(query);
+  }
+
+  @Delete('removePermanent')
+  @Roles(ERole.SUPER_ADMIN)
+  @UseGuards(JwtGuard, RoleGuard)
+  @HttpCode(HttpStatus.OK)
+  removeOrdersPermanent(@Query() query: QueryDto) {
+    return this.orderService.removeOrdersPermanent(query);
+  }
+
+  @Post('restore')
+  @Roles(ERole.SUPER_ADMIN)
+  @UseGuards(JwtGuard, RoleGuard)
+  @HttpCode(HttpStatus.OK)
+  restoreOrders() {
+    return this.orderService.restoreOrders();
   }
 }

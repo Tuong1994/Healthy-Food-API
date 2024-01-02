@@ -6,6 +6,8 @@ import { UploadApiResponse } from 'cloudinary';
 type ImageOption = {
   customerId?: string;
   productId?: string;
+  categoryId?: string;
+  subCategoryId?: string
 };
 
 const utils = {

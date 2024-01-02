@@ -13,21 +13,29 @@ export class RateService {
   async getRates(query: QueryDto) {
     const { page, limit } = query;
     let collection: Paging<Rate> = utils.defaultCollection();
-    const rates = await this.prisma.rate.findMany();
+    const rates = await this.prisma.rate.findMany({ where: { isDelete: { equals: false } } });
+    if (rates && rates.length > 0) collection = utils.paging<Rate>(rates, page, limit);
+    return collection;
+  }
+
+  async getRatesByCustomer(query: QueryDto) {
+    const { page, limit, customerId } = query;
+    let collection: Paging<Rate> = utils.defaultCollection();
+    const rates = await this.prisma.rate.findMany({ where: { customerId, isDelete: { equals: false } } });
     if (rates && rates.length > 0) collection = utils.paging<Rate>(rates, page, limit);
     return collection;
   }
 
   async getRate(query: QueryDto) {
     const { rateId } = query;
-    const rate = await this.prisma.rate.findUnique({ where: { id: rateId } });
+    const rate = await this.prisma.rate.findUnique({ where: { id: rateId, isDelete: { equals: false } } });
     return rate;
   }
 
   async createRate(rate: RateDto) {
     const { point, customerId, productId, note } = rate;
     const newRate = await this.prisma.rate.create({
-      data: { point, customerId, productId, note },
+      data: { point, customerId, productId, note, isDelete: false },
     });
     return newRate;
   }
@@ -47,9 +55,25 @@ export class RateService {
     const listIds = ids.split(',');
     const rates = await this.prisma.rate.findMany({ where: { id: { in: listIds } } });
     if (rates && rates.length > 0) {
+      await this.prisma.rate.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
+      throw new HttpException('Removed success', HttpStatus.OK);
+    }
+    throw new HttpException('Rate not found', HttpStatus.NOT_FOUND);
+  }
+
+  async removeRatesPermanent(query: QueryDto) {
+    const { ids } = query;
+    const listIds = ids.split(',');
+    const rates = await this.prisma.rate.findMany({ where: { id: { in: listIds } } });
+    if (rates && rates.length > 0) {
       await this.prisma.rate.deleteMany({ where: { id: { in: listIds } } });
       throw new HttpException('Removed success', HttpStatus.OK);
     }
     throw new HttpException('Rate not found', HttpStatus.NOT_FOUND);
+  }
+
+  async restoreRates() {
+    await this.prisma.rate.updateMany({ data: { isDelete: false } });
+    throw new HttpException('Restored success', HttpStatus.OK);
   }
 }

@@ -13,21 +13,33 @@ export class CommentService {
   async getComments(query: QueryDto) {
     const { page, limit } = query;
     let collection: Paging<Comment> = utils.defaultCollection();
-    const comments = await this.prisma.comment.findMany();
+    const comments = await this.prisma.comment.findMany({ where: { isDelete: { equals: false } } });
+    if (comments && comments.length > 0) collection = utils.paging<Comment>(comments, page, limit);
+    return collection;
+  }
+
+  async getCommentsByCustomer(query: QueryDto) {
+    const { page, limit, customerId } = query;
+    let collection: Paging<Comment> = utils.defaultCollection();
+    const comments = await this.prisma.comment.findMany({
+      where: { customerId, isDelete: { equals: false } },
+    });
     if (comments && comments.length > 0) collection = utils.paging<Comment>(comments, page, limit);
     return collection;
   }
 
   async getComment(query: QueryDto) {
     const { commentId } = query;
-    const comment = await this.prisma.comment.findUnique({ where: { id: commentId } });
+    const comment = await this.prisma.comment.findUnique({
+      where: { id: commentId, isDelete: { equals: false } },
+    });
     return comment;
   }
 
   async createComment(comment: CommentDto) {
     const { content, customerId, productId, parentId } = comment;
     const newComment = await this.prisma.comment.create({
-      data: { content, customerId, productId, parentId },
+      data: { content, customerId, productId, parentId, isDelete: false },
     });
     return newComment;
   }
@@ -47,9 +59,25 @@ export class CommentService {
     const listIds = ids.split(',');
     const comments = await this.prisma.comment.findMany({ where: { id: { in: listIds } } });
     if (comments && comments.length > 0) {
+      await this.prisma.comment.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
+      throw new HttpException('Removed success', HttpStatus.OK);
+    }
+    throw new HttpException('Comment not found', HttpStatus.NOT_FOUND);
+  }
+
+  async removeCommentsPermanent(query: QueryDto) {
+    const { ids } = query;
+    const listIds = ids.split(',');
+    const comments = await this.prisma.comment.findMany({ where: { id: { in: listIds } } });
+    if (comments && comments.length > 0) {
       await this.prisma.comment.deleteMany({ where: { id: { in: listIds } } });
       throw new HttpException('Removed success', HttpStatus.OK);
     }
     throw new HttpException('Comment not found', HttpStatus.NOT_FOUND);
+  }
+
+  async restoreComments() {
+    await this.prisma.comment.updateMany({ data: { isDelete: false } });
+    throw new HttpException('Restored success', HttpStatus.OK);
   }
 }

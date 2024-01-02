@@ -4,7 +4,7 @@ export enum EOrderStatus {
   DELIVERED = 3,
 }
 
-export enum EOrderPaymentType {
+export enum EOrderPaymentMethod {
   TRANSFER = 1,
   COD = 2,
   CASH = 3,

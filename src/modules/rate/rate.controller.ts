@@ -15,6 +15,9 @@ import { QueryDto } from 'src/common/dto/query.dto';
 import { JwtGuard } from 'src/common/guard/jwt.guard';
 import { RateDto } from './rate.dto';
 import { QueryPaging } from 'src/common/decorator/query.decorator';
+import { Roles } from 'src/common/decorator/role.decorator';
+import { ERole } from 'src/common/enum/base';
+import { RoleGuard } from 'src/common/guard/role.guard';
 
 @Controller('api/rate')
 export class RateController {
@@ -24,6 +27,13 @@ export class RateController {
   @HttpCode(HttpStatus.OK)
   getRates(@QueryPaging() query: QueryDto) {
     return this.rateService.getRates(query);
+  }
+
+  @Get('listByCustomer')
+  @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.OK)
+  getRatesByCustomer(@QueryPaging() query: QueryDto) {
+    return this.rateService.getRatesByCustomer(query);
   }
 
   @Get('detail')
@@ -47,9 +57,26 @@ export class RateController {
   }
 
   @Delete('remove')
-  @UseGuards(JwtGuard)
+  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
+  @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeRates(@Query() query: QueryDto) {
     return this.rateService.removeRates(query);
+  }
+
+  @Delete('removePermanent')
+  @Roles(ERole.SUPER_ADMIN)
+  @UseGuards(JwtGuard, RoleGuard)
+  @HttpCode(HttpStatus.OK)
+  removeRatesPermanent(@Query() query: QueryDto) {
+    return this.rateService.removeRatesPermanent(query);
+  }
+
+  @Post('restore')
+  @Roles(ERole.SUPER_ADMIN)
+  @UseGuards(JwtGuard, RoleGuard)
+  @HttpCode(HttpStatus.OK)
+  restoreRates() {
+    return this.rateService.restoreRates();
   }
 }

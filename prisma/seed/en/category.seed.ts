@@ -12,7 +12,7 @@ const items = [
   'Beer and alcohol',
 ];
 
-const categories_en: Category[] = [...items].map((item, idx) => ({
+const categories_en = [...items].map((item, idx) => ({
   id: `CATE_EN_${idx + 1}`,
   name: item,
   langCode: ELang.EN,

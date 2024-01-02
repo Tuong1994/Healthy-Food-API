@@ -9,6 +9,8 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { QueryDto } from 'src/common/dto/query.dto';
@@ -18,6 +20,8 @@ import { ERole } from 'src/common/enum/base';
 import { JwtGuard } from 'src/common/guard/jwt.guard';
 import { RoleGuard } from 'src/common/guard/role.guard';
 import { ProductDto } from './product.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { multerOption } from 'src/common/config/multer.config';
 
 @Controller('api/product')
 export class ProductController {
@@ -44,24 +48,46 @@ export class ProductController {
   @Post('create')
   @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
   @UseGuards(JwtGuard, RoleGuard)
+  @UseInterceptors(FileInterceptor('image', multerOption()))
   @HttpCode(HttpStatus.CREATED)
-  createProduct(@Query() query: QueryDto, @Body() product: ProductDto) {
-    return this.productService.createProduct(query, product);
+  createProduct(@UploadedFile() file: Express.Multer.File, @Body() product: ProductDto) {
+    return this.productService.createProduct(file, product);
   }
 
   @Put('update')
   @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
   @UseGuards(JwtGuard, RoleGuard)
+  @UseInterceptors(FileInterceptor('image', multerOption()))
   @HttpCode(HttpStatus.OK)
-  updateProduct(@Query() query: QueryDto, @Body() product: ProductDto) {
-    return this.productService.updateProduct(query, product);
+  updateProduct(
+    @Query() query: QueryDto,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() product: ProductDto,
+  ) {
+    return this.productService.updateProduct(query, file, product);
   }
 
   @Delete('remove')
-  @Roles(ERole.SUPER_ADMIN)
+  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeProducts(@Query() query: QueryDto) {
     return this.productService.removeProducts(query);
+  }
+
+  @Delete('removePermanent')
+  @Roles(ERole.SUPER_ADMIN)
+  @UseGuards(JwtGuard, RoleGuard)
+  @HttpCode(HttpStatus.OK)
+  removeProductsPermanent(@Query() query: QueryDto) {
+    return this.productService.removeProductsPermanent(query);
+  }
+
+  @Post('restore')
+  @Roles(ERole.SUPER_ADMIN)
+  @UseGuards(JwtGuard, RoleGuard)
+  @HttpCode(HttpStatus.OK)
+  restoreProducts() {
+    return this.productService.restoreProducts();
   }
 }

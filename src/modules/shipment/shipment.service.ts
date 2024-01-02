@@ -15,6 +15,7 @@ export class ShipmentService {
     const { page, limit, keywords, sortBy } = query;
     let collection: Paging<Shipment> = utils.defaultCollection();
     const shipments = await this.prisma.shipment.findMany({
+      where: { isDelete: { equals: false } },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
     });
     if (keywords) {
@@ -31,14 +32,16 @@ export class ShipmentService {
 
   async getShipment(query: QueryDto) {
     const { shipmentId } = query;
-    const shipment = await this.prisma.shipment.findUnique({ where: { id: shipmentId } });
+    const shipment = await this.prisma.shipment.findUnique({
+      where: { id: shipmentId, isDelete: { equals: false } },
+    });
     return shipment;
   }
 
   async createShipment(shipment: ShipmentDto) {
     const { fullName, phone, email, address, orderId } = shipment;
     const newShipment = await this.prisma.shipment.create({
-      data: { fullName, phone, email, address, orderId },
+      data: { fullName, phone, email, address, orderId, isDelete: false },
     });
     return newShipment;
   }
@@ -58,9 +61,25 @@ export class ShipmentService {
     const listIds = ids.split(',');
     const shipments = await this.prisma.shipment.findMany({ where: { id: { in: listIds } } });
     if (shipments && shipments.length > 0) {
+      await this.prisma.shipment.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
+      throw new HttpException('Removed success', HttpStatus.OK);
+    }
+    throw new HttpException('Shipment not found', HttpStatus.NOT_FOUND);
+  }
+
+  async removeShipmentsPermanent(query: QueryDto) {
+    const { ids } = query;
+    const listIds = ids.split(',');
+    const shipments = await this.prisma.shipment.findMany({ where: { id: { in: listIds } } });
+    if (shipments && shipments.length > 0) {
       await this.prisma.shipment.deleteMany({ where: { id: { in: listIds } } });
       throw new HttpException('Removed success', HttpStatus.OK);
     }
     throw new HttpException('Shipment not found', HttpStatus.NOT_FOUND);
+  }
+
+  async restoreShipments() {
+    await this.prisma.shipment.updateMany({ data: { isDelete: false } });
+    throw new HttpException('Restored success', HttpStatus.OK);
   }
 }

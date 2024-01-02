@@ -3,11 +3,11 @@ import { ELang } from 'src/common/enum/base';
 
 export class CityDto {
   @IsNotEmpty()
-  name: string;
+  nameEn: string;
+
+  @IsNotEmpty()
+  nameVn: string;
 
   @IsNotEmpty()
   code: number;
-
-  @IsNotEmpty()
-  langCode: ELang;
 }
