@@ -34,17 +34,18 @@ model Customer {
   orders   Order[]
   comments Comment[]
   rates    Rate[]
+  likes    Like[]
 }
 
 model CustomerAddress {
-  id            String  @id @default(uuid())
-  addressEn     String?
-  addressVn     String?
-  fullAddressEn String?
-  fullAddressVn String?
-  cityCode      Int?
-  districtCode  Int?
-  wardCode      Int?
+  id            String @id @default(uuid())
+  addressEn     String
+  addressVn     String
+  fullAddressEn String
+  fullAddressVn String
+  cityCode      Int
+  districtCode  Int
+  wardCode      Int
 
   isDelete  Boolean?
   createdAt DateTime @default(now())
@@ -123,6 +124,7 @@ model Product {
   image     Image?
   comments  Comment[]
   rates     Rate[]
+  likes     Like[]
 }
 
 model Cart {
@@ -155,6 +157,7 @@ model Order {
   paymentMethod Int
   paymentStatus Int
 
+  note      String?  @db.VarChar(3000)
   isDelete  Boolean?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -187,9 +190,10 @@ model Shipment {
   email    String
   address  String
 
-  isDelete  Boolean?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  shipmentNumber String?
+  isDelete       Boolean?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   orderId String @unique
   order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -250,6 +254,18 @@ model Rate {
   point Int
   note  String @db.VarChar(3000)
 
+  isDelete  Boolean?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Like {
+  id        String   @id @default(uuid())
   isDelete  Boolean?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -21,6 +21,7 @@ export class QueryDto {
   shipmentId?: string;
   commentId?: string;
   rateId?: string;
+  likeId?: string;
   imageId?: string;
   cityId?: string;
   districtId?: string;

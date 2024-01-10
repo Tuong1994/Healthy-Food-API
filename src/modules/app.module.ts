@@ -15,6 +15,7 @@ import { DistrictModule } from './district/district.module';
 import { CommentModule } from './comment/comment.module';
 import { RateModule } from './rate/rate.module';
 import { UploadModule } from './upload/upload.module';
+import { LikeModule } from './like/like.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { UploadModule } from './upload/upload.module';
     DistrictModule,
     CommentModule,
     RateModule,
+    LikeModule,
     UploadModule,
   ],
 })

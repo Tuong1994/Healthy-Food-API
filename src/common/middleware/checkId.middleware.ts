@@ -24,6 +24,7 @@ export class CheckIdMiddleware implements NestMiddleware {
       orderItemId,
       commentId,
       rateId,
+      likeId,
       imageId,
       cityId,
       districtId,
@@ -42,6 +43,7 @@ export class CheckIdMiddleware implements NestMiddleware {
       !orderItemId &&
       !commentId &&
       !rateId &&
+      !likeId &&
       !imageId &&
       !cityId &&
       !districtId &&
@@ -65,6 +67,7 @@ export class CheckIdMiddleware implements NestMiddleware {
             orderItemId ||
             commentId ||
             rateId ||
+            likeId ||
             imageId ||
             cityId ||
             districtId ||

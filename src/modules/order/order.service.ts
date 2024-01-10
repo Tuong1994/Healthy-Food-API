@@ -98,7 +98,7 @@ export class OrderService {
         paymentStatus,
         paymentMethod,
         customerId,
-        orderNumber: `#${Date.now()}`,
+        orderNumber: `#O_${Date.now()}`,
         isDelete: false,
       },
     });

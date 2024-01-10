@@ -1,0 +1,98 @@
+import { OrderItem } from '@prisma/client';
+
+const orderItems: OrderItem[] = [
+  {
+    id: 'OI_1',
+    quantity: 5,
+    productId: 'PRO_1',
+    orderId: 'O_1',
+    isDelete: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    id: 'OI_2',
+    quantity: 11,
+    productId: 'PRO_39',
+    orderId: 'O_1',
+    isDelete: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+
+  {
+    id: 'OI_3',
+    quantity: 3,
+    productId: 'PRO_45',
+    orderId: 'O_2',
+    isDelete: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    id: 'OI_4',
+    quantity: 4,
+    productId: 'PRO_30',
+    orderId: 'O_2',
+    isDelete: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    id: 'OI_5',
+    quantity: 4,
+    productId: 'PRO_11',
+    orderId: 'O_2',
+    isDelete: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    id: 'OI_6',
+    quantity: 4,
+    productId: 'PRO_2',
+    orderId: 'O_1',
+    isDelete: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+
+  {
+    id: 'OI_7',
+    quantity: 5,
+    productId: 'PRO_4',
+    orderId: 'O_3',
+    isDelete: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    id: 'OI_8',
+    quantity: 4,
+    productId: 'PRO_7',
+    orderId: 'O_3',
+    isDelete: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    id: 'OI_9',
+    quantity: 10,
+    productId: 'PRO_16',
+    orderId: 'O_3',
+    isDelete: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    id: 'OI_10',
+    quantity: 10,
+    productId: 'PRO_20',
+    orderId: 'O_3',
+    isDelete: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+];
+
+export default orderItems

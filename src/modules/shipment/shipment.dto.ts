@@ -1,4 +1,4 @@
-import { IsNotEmpty } from 'class-validator';
+import { IsNotEmpty, IsOptional } from 'class-validator';
 
 export class ShipmentDto {
   @IsNotEmpty()
@@ -15,4 +15,7 @@ export class ShipmentDto {
 
   @IsNotEmpty()
   orderId: string;
+
+  @IsOptional()
+  shipmentNumber: string;
 }

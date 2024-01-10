@@ -41,17 +41,17 @@ export class ShipmentService {
   async createShipment(shipment: ShipmentDto) {
     const { fullName, phone, email, address, orderId } = shipment;
     const newShipment = await this.prisma.shipment.create({
-      data: { fullName, phone, email, address, orderId, isDelete: false },
+      data: { shipmentNumber: `#S_${Date.now()}`, fullName, phone, email, address, orderId, isDelete: false },
     });
     return newShipment;
   }
 
   async updateShipment(query: QueryDto, shipment: ShipmentDto) {
     const { shipmentId } = query;
-    const { fullName, phone, email, address, orderId } = shipment;
+    const { fullName, phone, email, address, orderId, shipmentNumber } = shipment;
     await this.prisma.shipment.update({
       where: { id: shipmentId },
-      data: { fullName, phone, email, address, orderId },
+      data: { fullName, phone, email, address, orderId, shipmentNumber },
     });
     throw new HttpException('Updated success', HttpStatus.OK);
   }
