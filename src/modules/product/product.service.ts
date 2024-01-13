@@ -9,28 +9,7 @@ import { ProductDto } from './product.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import helper from 'src/helper';
 import utils from 'src/utils';
-
-const getSelectFields = (langCode: ELang) => ({
-  id: true,
-  nameEn: langCode === ELang.EN,
-  nameVn: langCode === ELang.VN,
-  image: true,
-  costPrice: true,
-  profit: true,
-  totalPrice: true,
-  unit: true,
-  status: true,
-  inventoryStatus: true,
-  inventory: true,
-  supplier: true,
-  origin: true,
-  subCategoryId: true,
-  categoryId: true,
-  isNew: true,
-  isDelete: true,
-  createdAt: true,
-  updatedAt: true,
-});
+import { utimesSync } from 'fs';
 
 @Injectable()
 export class ProductService {
@@ -38,6 +17,36 @@ export class ProductService {
     private prisma: PrismaService,
     private cloudinary: CloudinaryService,
   ) {}
+
+  private getSelectFields(langCode: ELang) {
+    return {
+      id: true,
+      nameEn: langCode === ELang.EN,
+      nameVn: langCode === ELang.VN,
+      image: true,
+      costPrice: true,
+      profit: true,
+      totalPrice: true,
+      unit: true,
+      status: true,
+      inventoryStatus: true,
+      inventory: true,
+      supplier: true,
+      origin: true,
+      subCategoryId: true,
+      categoryId: true,
+      isNew: true,
+      isDelete: true,
+      createdAt: true,
+      updatedAt: true,
+    };
+  }
+
+  private convertCollection(products: Product[], langCode: ELang) {
+    return products.map((product) => ({
+      ...utils.convertRecordsName<Product>(product, langCode),
+    }));
+  }
 
   async getProducts(query: QueryDto) {
     const { langCode, categoryId, subCategoryId, productStatus, inventoryStatus, origin, sortBy, keywords } =
@@ -62,16 +71,17 @@ export class ProductService {
         { totalPrice: helper.getSortBy(sortBy) ?? 'asc' },
         { updatedAt: helper.getSortBy(sortBy) ?? 'asc' },
       ],
-      select: { ...getSelectFields(langCode) },
+      select: { ...this.getSelectFields(langCode) },
     });
-
+    let filterProducts: Product[] = [];
     if (keywords)
-      return products.filter(
-        (product) =>
-          product.nameEn.toLowerCase().includes(keywords.toLowerCase()) ||
-          product.nameVn.toLowerCase().includes(keywords.toLowerCase()),
+      filterProducts = products.filter((product) =>
+        ELang.EN
+          ? product.nameEn.toLowerCase().includes(keywords.toLowerCase())
+          : product.nameVn.toLowerCase().includes(keywords.toLowerCase()),
       );
-    return { totalItems: products.length, data: products };
+    const items = this.convertCollection(keywords ? filterProducts : products, langCode);
+    return { totalItems: keywords ? filterProducts.length : products.length, items };
   }
 
   async getProductsPaging(query: QueryDto) {
@@ -108,30 +118,30 @@ export class ProductService {
         { updatedAt: helper.getSortBy(sortBy) ?? 'desc' },
         { totalPrice: helper.getSortBy(sortBy) ?? 'asc' },
       ],
-      select: { ...getSelectFields(langCode) },
+      select: { ...this.getSelectFields(langCode) },
     });
 
     if (keywords) {
-      const filterProducts = products.filter(
-        (product) =>
-          product.nameEn.toLowerCase().includes(keywords.toLowerCase()) ||
-          product.nameVn.toLowerCase().includes(keywords.toLowerCase()),
+      const filterProducts = products.filter((product) =>
+        langCode === ELang.EN
+          ? product.nameEn.toLowerCase().includes(keywords.toLowerCase())
+          : product.nameVn.toLowerCase().includes(keywords.toLowerCase()),
       );
       collection = utils.paging<Product>(filterProducts, page, limit);
     } else collection = utils.paging<Product>(products, page, limit);
-
-    return collection;
+    const items = this.convertCollection(collection.items, langCode);
+    return { ...collection, items };
   }
 
   async getProduct(query: QueryDto) {
     const { productId, langCode } = query;
     const product = await this.prisma.product.findUnique({
       where: { id: productId, isDelete: { equals: false } },
-      select: { ...getSelectFields(langCode), rates: true },
+      select: { ...this.getSelectFields(langCode), rates: true },
     });
-    const resProduct = { ...product, point: helper.getRatePoints(product.rates) };
-    delete resProduct.rates;
-    return resProduct;
+    const response = { ...product, point: helper.getRatePoints(product.rates) };
+    delete response.rates;
+    return utils.convertRecordsName<Product>(response, langCode);
   }
 
   async createProduct(file: Express.Multer.File, product: ProductDto) {

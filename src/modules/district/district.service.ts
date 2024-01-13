@@ -8,35 +8,45 @@ import { ELang } from 'src/common/enum/base';
 import helper from 'src/helper';
 import utils from 'src/utils';
 
-const getSelectFields = (langCode: ELang) => ({
-  id: true,
-  nameEn: langCode === ELang.EN,
-  nameVn: langCode === ELang.VN,
-  code: true,
-  cityCode: true,
-  isDelete: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
 @Injectable()
 export class DistrictService {
   constructor(private prisma: PrismaService) {}
+
+  private getSelectFields(langCode: ELang) {
+    return {
+      id: true,
+      nameEn: langCode === ELang.EN,
+      nameVn: langCode === ELang.VN,
+      code: true,
+      cityCode: true,
+      isDelete: true,
+      createdAt: true,
+      updatedAt: true,
+    };
+  }
+
+  private convertCollection(districts: District[], langCode: ELang) {
+    return districts.map((district) => ({
+      ...utils.convertRecordsName<District>(district, langCode),
+    }));
+  }
 
   async getDistricts(query: QueryDto) {
     const { keywords, sortBy, langCode } = query;
     const districts = await this.prisma.district.findMany({
       where: { isDelete: { equals: false } },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
-      select: { ...getSelectFields(langCode) },
+      select: { ...this.getSelectFields(langCode) },
     });
+    let filterDistricts: District[] = [];
     if (keywords)
-      return districts.filter(
-        (district) =>
-          district.nameEn.toLowerCase().includes(keywords.toLowerCase()) ||
-          district.nameVn.toLowerCase().includes(keywords.toLowerCase()),
+      filterDistricts = districts.filter((district) =>
+        langCode === ELang.EN
+          ? district.nameEn.toLowerCase().includes(keywords.toLowerCase())
+          : district.nameVn.toLowerCase().includes(keywords.toLowerCase()),
       );
-    return districts;
+    const items = this.convertCollection(keywords ? filterDistricts : districts, langCode);
+    return { totalItems: keywords ? filterDistricts.length : districts.length, items };
   }
 
   async getDistrictsPaging(query: QueryDto) {
@@ -45,27 +55,27 @@ export class DistrictService {
     const districts = await this.prisma.district.findMany({
       where: { isDelete: { equals: false } },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
-      select: { ...getSelectFields(langCode) },
+      select: { ...this.getSelectFields(langCode) },
     });
     if (keywords) {
-      const filterDistricts = districts.filter(
-        (district) =>
-          district.nameEn.toLowerCase().includes(keywords.toLowerCase()) ||
-          district.nameVn.toLowerCase().includes(keywords.toLowerCase()),
+      const filterDistricts = districts.filter((district) =>
+        langCode === ELang.EN
+          ? district.nameEn.toLowerCase().includes(keywords.toLowerCase())
+          : district.nameVn.toLowerCase().includes(keywords.toLowerCase()),
       );
       collection = utils.paging<District>(filterDistricts, page, limit);
     } else collection = utils.paging<District>(districts, page, limit);
-
-    return collection;
+    const items = this.convertCollection(collection.items, langCode);
+    return { ...collection, items };
   }
 
   async getDistrict(query: QueryDto) {
     const { districtId, langCode } = query;
     const district = await this.prisma.district.findUnique({
       where: { id: districtId, isDelete: { equals: false } },
-      select: { ...getSelectFields(langCode) },
+      select: { ...this.getSelectFields(langCode) },
     });
-    return district;
+    return utils.convertRecordsName<District>(district, langCode);
   }
 
   async createDistrict(district: DistrictDto) {

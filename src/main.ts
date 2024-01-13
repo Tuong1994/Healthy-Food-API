@@ -9,7 +9,7 @@ import cookieParser = require('cookie-parser');
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const corsOptions: CorsOptions = {
-    origin: ['*'],
+    origin: ['http://localhost:3000'],
     credentials: true,
     exposedHeaders: ['set-cookie'],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -17,6 +17,6 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   app.use(cookieParser());
   app.use(cors(corsOptions));
-  await app.listen(3000);
+  await app.listen(5000);
 }
 bootstrap();

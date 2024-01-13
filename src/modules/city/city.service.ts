@@ -8,34 +8,44 @@ import { ELang } from 'src/common/enum/base';
 import helper from 'src/helper';
 import utils from 'src/utils';
 
-const getSelectFields = (langCode: ELang) => ({
-  id: true,
-  nameEn: langCode === ELang.EN,
-  nameVn: langCode === ELang.VN,
-  code: true,
-  isDelete: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
 @Injectable()
 export class CityService {
   constructor(private prisma: PrismaService) {}
+
+  private getSelectFields(langCode: ELang) {
+    return {
+      id: true,
+      nameEn: langCode === ELang.EN,
+      nameVn: langCode === ELang.VN,
+      code: true,
+      isDelete: true,
+      createdAt: true,
+      updatedAt: true,
+    };
+  }
+
+  private convertCollection(cities: City[], langCode: ELang) {
+    return cities.map((city) => ({
+      ...utils.convertRecordsName<City>(city, langCode),
+    }));
+  }
 
   async getCities(query: QueryDto) {
     const { keywords, sortBy, langCode } = query;
     const cities = await this.prisma.city.findMany({
       where: { isDelete: { equals: false } },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
-      select: { ...getSelectFields(langCode) },
+      select: { ...this.getSelectFields(langCode) },
     });
+    let filterCities: City[] = [];
     if (keywords)
-      return cities.filter(
-        (city) =>
-          city.nameEn.toLowerCase().includes(keywords.toLowerCase()) ||
-          city.nameVn.toLowerCase().includes(keywords.toLowerCase()),
+      return cities.filter((city) =>
+        langCode === ELang.EN
+          ? city.nameEn.toLowerCase().includes(keywords.toLowerCase())
+          : city.nameVn.toLowerCase().includes(keywords.toLowerCase()),
       );
-    return cities;
+    const items = this.convertCollection(keywords ? filterCities : cities, langCode);
+    return { totalItems: keywords ? filterCities.length : cities.length, items };
   }
 
   async getCitiesPaging(query: QueryDto) {
@@ -44,27 +54,27 @@ export class CityService {
     const cities = await this.prisma.city.findMany({
       where: { isDelete: { equals: false } },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
-      select: { ...getSelectFields(langCode) },
+      select: { ...this.getSelectFields(langCode) },
     });
     if (keywords) {
-      const filterCities = cities.filter(
-        (city) =>
-          city.nameEn.toLowerCase().includes(keywords.toLowerCase()) ||
-          city.nameVn.toLowerCase().includes(keywords.toLowerCase()),
+      const filterCities = cities.filter((city) =>
+        langCode === ELang.EN
+          ? city.nameEn.toLowerCase().includes(keywords.toLowerCase())
+          : city.nameVn.toLowerCase().includes(keywords.toLowerCase()),
       );
       collection = utils.paging<City>(filterCities, page, limit);
     } else collection = utils.paging<City>(cities, page, limit);
-
-    return collection;
+    const items = this.convertCollection(collection.items, langCode);
+    return { ...collection, items };
   }
 
   async getCity(query: QueryDto) {
     const { cityId, langCode } = query;
     const city = await this.prisma.city.findUnique({
       where: { id: cityId, isDelete: { equals: false } },
-      select: { ...getSelectFields(langCode) },
+      select: { ...this.getSelectFields(langCode) },
     });
-    return city;
+    return utils.convertRecordsName<City>(city, langCode);
   }
 
   async createCity(city: CityDto) {

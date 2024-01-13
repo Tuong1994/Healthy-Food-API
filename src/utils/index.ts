@@ -2,12 +2,13 @@ import * as bcryptjs from 'bcryptjs';
 import * as fs from 'fs';
 import { Image } from '@prisma/client';
 import { UploadApiResponse } from 'cloudinary';
+import { ELang } from 'src/common/enum/base';
 
 type ImageOption = {
   customerId?: string;
   productId?: string;
   categoryId?: string;
-  subCategoryId?: string
+  subCategoryId?: string;
 };
 
 const utils = {
@@ -24,13 +25,13 @@ const utils = {
 
     const start = (page - 1) * limit;
     const end = start + limit;
-    const data = records.slice(start, end);
+    const items = records.slice(start, end);
 
-    return { totalItems, page, limit, data };
+    return { totalItems, page, limit, items };
   },
 
   defaultCollection: () => {
-    return { totalItems: 0, page: 0, limit: 0, data: [] };
+    return { totalItems: 0, page: 0, limit: 0, items: [] };
   },
 
   generateImage: (result: UploadApiResponse, option?: ImageOption) => {
@@ -49,9 +50,9 @@ const utils = {
   },
 
   getFileUrl: (file: Express.Multer.File) => {
-    const b64 = Buffer.from(file.buffer).toString("base64");
-    let dataURL = "data:" + file.mimetype + ";base64," + b64;
-    return dataURL
+    const b64 = Buffer.from(file.buffer).toString('base64');
+    let dataURL = 'data:' + file.mimetype + ';base64,' + b64;
+    return dataURL;
   },
 
   removeFile: (path: string, message = 'Filed is deleted') => {
@@ -60,6 +61,14 @@ const utils = {
       if (error) throw error;
       console.log(message);
     });
+  },
+
+  convertRecordsName: <M>(record: M, langCode: ELang) => {
+    const recordClone = { ...record };
+    delete record['nameEn'];
+    delete record['nameVn'];
+    const data = { name: langCode === ELang.EN ? recordClone['nameEn'] : recordClone['nameVn'], ...record };
+    return data;
   },
 };
 

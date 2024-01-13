@@ -9,17 +9,6 @@ import { ELang } from 'src/common/enum/base';
 import utils from 'src/utils';
 import helper from 'src/helper';
 
-const getSelectFields = (langCode: ELang) => ({
-  id: true,
-  image: true,
-  nameVn: langCode === ELang.VN,
-  nameEn: langCode === ELang.EN,
-  categoryId: true,
-  isDelete: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
 @Injectable()
 export class SubCategoryService {
   constructor(
@@ -27,20 +16,41 @@ export class SubCategoryService {
     private cloudinary: CloudinaryService,
   ) {}
 
+  private getSelectFields(langCode: ELang) {
+    return {
+      id: true,
+      image: true,
+      nameVn: langCode === ELang.VN,
+      nameEn: langCode === ELang.EN,
+      categoryId: true,
+      isDelete: true,
+      createdAt: true,
+      updatedAt: true,
+    };
+  }
+
+  private convertCollection(subCategories: SubCategory[], langCode: ELang) {
+    return subCategories.map((subCategory) => ({
+      ...utils.convertRecordsName<SubCategory>(subCategory, langCode),
+    }));
+  }
+
   async getSubCategories(query: QueryDto) {
     const { keywords, sortBy, categoryId, langCode } = query;
     const subCategories = await this.prisma.subCategory.findMany({
       where: { AND: [{ categoryId }, { isDelete: { equals: false } }] },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
-      select: { ...getSelectFields(langCode) },
+      select: { ...this.getSelectFields(langCode) },
     });
+    let filterSubCategories: SubCategory[] = [];
     if (keywords)
-      return subCategories.filter(
-        (subCategory) =>
-          subCategory.nameEn.toLowerCase().includes(keywords.toLowerCase()) ||
-          subCategory.nameVn.toLowerCase().includes(keywords.toLowerCase()),
+      filterSubCategories = subCategories.filter((subCategory) =>
+        langCode === ELang.EN
+          ? subCategory.nameEn.toLowerCase().includes(keywords.toLowerCase())
+          : subCategory.nameVn.toLowerCase().includes(keywords.toLowerCase()),
       );
-    return { totalItems: subCategories.length, data: subCategories };
+    const items = this.convertCollection(keywords ? filterSubCategories : subCategories, langCode);
+    return { totalItems: keywords ? filterSubCategories.length : subCategories.length, items };
   }
 
   async getSubCategoriesPaging(query: QueryDto) {
@@ -49,26 +59,27 @@ export class SubCategoryService {
     const subCategories = await this.prisma.subCategory.findMany({
       where: { AND: [{ categoryId }, { isDelete: { equals: false } }] },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
-      select: { ...getSelectFields(langCode) },
+      select: { ...this.getSelectFields(langCode) },
     });
     if (keywords) {
-      const filterSubCategories = subCategories.filter(
-        (subCategory) =>
-          subCategory.nameEn.toLowerCase().includes(keywords.toLowerCase()) ||
-          subCategory.nameVn.toLowerCase().includes(keywords.toLowerCase()),
+      const filterSubCategories = subCategories.filter((subCategory) =>
+        langCode === ELang.EN
+          ? subCategory.nameEn.toLowerCase().includes(keywords.toLowerCase())
+          : subCategory.nameVn.toLowerCase().includes(keywords.toLowerCase()),
       );
       collection = utils.paging<SubCategory>(filterSubCategories, page, limit);
     } else collection = utils.paging<SubCategory>(subCategories, page, limit);
-    return collection;
+    const items = this.convertCollection(collection.items, langCode);
+    return { ...collection, items };
   }
 
   async getSubCategory(query: QueryDto) {
     const { subCategoryId, langCode } = query;
     const subCategory = await this.prisma.subCategory.findUnique({
       where: { id: subCategoryId, isDelete: { equals: false } },
-      select: { ...getSelectFields(langCode) },
+      select: { ...this.getSelectFields(langCode) },
     });
-    return subCategory;
+    return utils.convertRecordsName<SubCategory>(subCategory, langCode);
   }
 
   async createSubCategory(file: Express.Multer.File, subCategory: SubCategoryDto) {

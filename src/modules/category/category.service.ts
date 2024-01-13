@@ -2,35 +2,12 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueryDto } from 'src/common/dto/query.dto';
 import { Paging } from 'src/common/type/base';
-import { Category } from '@prisma/client';
+import { Category, SubCategory } from '@prisma/client';
 import { CategoryDto } from './category.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { ELang } from 'src/common/enum/base';
 import utils from 'src/utils';
 import helper from 'src/helper';
-
-const getSelectFields = (langCode: ELang, hasSub: boolean) => ({
-  id: true,
-  image: true,
-  nameVn: langCode === ELang.VN,
-  nameEn: langCode === ELang.EN,
-  isDelete: true,
-  createdAt: true,
-  updatedAt: true,
-  subCategories: hasSub
-    ? {
-        select: {
-          id: true,
-          image: true,
-          nameVn: langCode === ELang.VN,
-          nameEn: langCode === ELang.EN,
-          isDelete: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      }
-    : false,
-});
 
 @Injectable()
 export class CategoryService {
@@ -39,20 +16,59 @@ export class CategoryService {
     private cloudinary: CloudinaryService,
   ) {}
 
+  private getSelectFields(langCode: ELang, hasSub: boolean) {
+    return {
+      id: true,
+      image: true,
+      nameVn: langCode === ELang.VN,
+      nameEn: langCode === ELang.EN,
+      isDelete: true,
+      createdAt: true,
+      updatedAt: true,
+      subCategories: hasSub
+        ? {
+            select: {
+              id: true,
+              image: true,
+              nameVn: langCode === ELang.VN,
+              nameEn: langCode === ELang.EN,
+              isDelete: true,
+              createdAt: true,
+              updatedAt: true,
+            },
+          }
+        : false,
+    };
+  }
+
+  private convertCollection(categories: Category[], langCode: ELang) {
+    return categories.map((category) => ({
+      ...utils.convertRecordsName<Category>(category, langCode),
+      subCategories:
+        'subCategories' in category
+          ? (category.subCategories as SubCategory[])?.map((subCategory) => ({
+              ...utils.convertRecordsName<SubCategory>(subCategory, langCode),
+            }))
+          : null,
+    }));
+  }
+
   async getCategories(query: QueryDto) {
     const { keywords, sortBy, langCode, hasSub } = query;
     const categories = await this.prisma.category.findMany({
       where: { isDelete: false },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
-      select: { ...getSelectFields(langCode, hasSub) },
+      select: { ...this.getSelectFields(langCode, hasSub) },
     });
+    let filterCategories: Category[] = [];
     if (keywords)
-      return categories.filter(
-        (category) =>
-          category.nameEn.toLowerCase().includes(keywords.toLowerCase()) ||
-          category.nameVn.toLowerCase().includes(keywords.toLowerCase()),
+      filterCategories = categories.filter((category) =>
+        langCode === ELang.EN
+          ? category.nameEn.toLowerCase().includes(keywords.toLowerCase())
+          : category.nameVn.toLowerCase().includes(keywords.toLowerCase()),
       );
-    return { totalItems: categories.length, data: categories };
+    const items = this.convertCollection(keywords ? filterCategories : categories, langCode);
+    return { totalItems: keywords ? filterCategories.length : categories.length, items };
   }
 
   async getCategoriesPaging(query: QueryDto) {
@@ -61,26 +77,27 @@ export class CategoryService {
     const categories = await this.prisma.category.findMany({
       where: { isDelete: false },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
-      select: { ...getSelectFields(langCode, hasSub) },
+      select: { ...this.getSelectFields(langCode, hasSub) },
     });
     if (keywords) {
-      const filterCategories = categories.filter(
-        (category) =>
-          category.nameEn.toLowerCase().includes(keywords.toLowerCase()) ||
-          category.nameVn.toLowerCase().includes(keywords.toLowerCase()),
+      const filterCategories = categories.filter((category) =>
+        langCode === ELang.EN
+          ? category.nameEn.toLowerCase().includes(keywords.toLowerCase())
+          : category.nameVn.toLowerCase().includes(keywords.toLowerCase()),
       );
       collection = utils.paging<Category>(filterCategories, page, limit);
     } else collection = utils.paging<Category>(categories, page, limit);
-    return collection;
+    const items = this.convertCollection(collection.items, langCode);
+    return { ...collection, items };
   }
 
   async getCategory(query: QueryDto) {
     const { categoryId, langCode, hasSub } = query;
     const category = await this.prisma.category.findUnique({
       where: { id: categoryId, isDelete: false },
-      select: { ...getSelectFields(langCode, hasSub) },
+      select: { ...this.getSelectFields(langCode, hasSub) },
     });
-    return category;
+    return utils.convertRecordsName(category, langCode);
   }
 
   async createCategory(file: Express.Multer.File, category: CategoryDto) {

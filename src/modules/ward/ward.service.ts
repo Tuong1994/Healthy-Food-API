@@ -8,35 +8,45 @@ import { ELang } from 'src/common/enum/base';
 import helper from 'src/helper';
 import utils from 'src/utils';
 
-const getSelectFields = (langCode: ELang) => ({
-  id: true,
-  nameEn: langCode === ELang.EN,
-  nameVn: langCode === ELang.VN,
-  code: true,
-  districtCode: true,
-  isDelete: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
 @Injectable()
 export class WardService {
   constructor(private prisma: PrismaService) {}
+
+  private getSelectFields(langCode: ELang) {
+    return {
+      id: true,
+      nameEn: langCode === ELang.EN,
+      nameVn: langCode === ELang.VN,
+      code: true,
+      districtCode: true,
+      isDelete: true,
+      createdAt: true,
+      updatedAt: true,
+    };
+  }
+
+  private convertCollection(wards: Ward[], langCode: ELang) {
+    return wards.map((ward) => ({
+      ...utils.convertRecordsName<Ward>(ward, langCode),
+    }));
+  }
 
   async getWards(query: QueryDto) {
     const { keywords, sortBy, langCode } = query;
     const wards = await this.prisma.ward.findMany({
       where: { isDelete: { equals: false } },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
-      select: { ...getSelectFields(langCode) },
+      select: { ...this.getSelectFields(langCode) },
     });
+    let filterWards: Ward[] = [];
     if (keywords)
-      return wards.filter(
-        (ward) =>
-          ward.nameEn.toLowerCase().includes(keywords.toLowerCase()) ||
-          ward.nameVn.toLowerCase().includes(keywords.toLowerCase()),
+      filterWards = wards.filter((ward) =>
+        langCode === ELang.EN
+          ? ward.nameEn.toLowerCase().includes(keywords.toLowerCase())
+          : ward.nameVn.toLowerCase().includes(keywords.toLowerCase()),
       );
-    return wards;
+    const items = this.convertCollection(keywords ? filterWards : wards, langCode);
+    return { totalItems: keywords ? filterWards.length : wards.length, items };
   }
 
   async getWardsPaging(query: QueryDto) {
@@ -45,27 +55,27 @@ export class WardService {
     const wards = await this.prisma.ward.findMany({
       where: { isDelete: { equals: false } },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
-      select: { ...getSelectFields(langCode) },
+      select: { ...this.getSelectFields(langCode) },
     });
     if (keywords) {
-      const filterWards = wards.filter(
-        (ward) =>
-          ward.nameEn.toLowerCase().includes(keywords.toLowerCase()) ||
-          ward.nameVn.toLowerCase().includes(keywords.toLowerCase()),
+      const filterWards = wards.filter((ward) =>
+        langCode === ELang.EN
+          ? ward.nameEn.toLowerCase().includes(keywords.toLowerCase())
+          : ward.nameVn.toLowerCase().includes(keywords.toLowerCase()),
       );
       collection = utils.paging<Ward>(filterWards, page, limit);
     } else collection = utils.paging<Ward>(wards, page, limit);
-
-    return collection;
+    const items = this.convertCollection(collection.items, langCode);
+    return { ...collection, items };
   }
 
   async getWard(query: QueryDto) {
     const { wardId, langCode } = query;
     const ward = await this.prisma.ward.findUnique({
       where: { id: wardId, isDelete: { equals: false } },
-      select: { ...getSelectFields(langCode) },
+      select: { ...this.getSelectFields(langCode) },
     });
-    return ward;
+    return utils.convertRecordsName<Ward>(ward, langCode);
   }
 
   async createWard(ward: WardDto) {
