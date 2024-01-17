@@ -4,12 +4,11 @@ import { QueryDto } from 'src/common/dto/query.dto';
 import { ELang } from 'src/common/enum/base';
 import { EInventoryStatus, EProductStatus } from './product.enum';
 import { Paging } from 'src/common/type/base';
-import { Product } from '@prisma/client';
+import { Category, Product } from '@prisma/client';
 import { ProductDto } from './product.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import helper from 'src/helper';
 import utils from 'src/utils';
-import { utimesSync } from 'fs';
 
 @Injectable()
 export class ProductService {
@@ -39,12 +38,23 @@ export class ProductService {
       isDelete: true,
       createdAt: true,
       updatedAt: true,
+      category: {
+        select: {
+          id: true,
+          nameEn: langCode === ELang.EN,
+          nameVn: langCode === ELang.VN,
+        },
+      },
     };
   }
 
   private convertCollection(products: Product[], langCode: ELang) {
     return products.map((product) => ({
       ...utils.convertRecordsName<Product>(product, langCode),
+      category:
+        'category' in product
+          ? { ...utils.convertRecordsName<Category>(product.category as Category, langCode) }
+          : null,
     }));
   }
 
@@ -141,7 +151,13 @@ export class ProductService {
     });
     const response = { ...product, point: helper.getRatePoints(product.rates) };
     delete response.rates;
-    return utils.convertRecordsName<Product>(response, langCode);
+    return {
+      ...utils.convertRecordsName<Product>(response, langCode),
+      category:
+        'category' in response
+          ? { ...utils.convertRecordsName<Category>(response.category as Category, langCode) }
+          : null,
+    };
   }
 
   async createProduct(file: Express.Multer.File, product: ProductDto) {
