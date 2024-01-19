@@ -2,7 +2,7 @@ import * as bcryptjs from 'bcryptjs';
 import * as fs from 'fs';
 import { Image } from '@prisma/client';
 import { UploadApiResponse } from 'cloudinary';
-import { ELang } from 'src/common/enum/base';
+import { ELang } from '../common/enum/base';
 
 type ImageOption = {
   customerId?: string;

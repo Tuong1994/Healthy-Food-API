@@ -9,8 +9,6 @@ import { ERole } from 'src/common/enum/base';
 import { QueryDto } from 'src/common/dto/query.dto';
 import utils from 'src/utils';
 
-const EXPIRED_TIME = 1800000;
-
 @Injectable()
 export class AuthService {
   constructor(
@@ -19,10 +17,24 @@ export class AuthService {
     private config: ConfigService,
   ) {}
 
+  private parseDurationToMilliseconds(duration: string) {
+    const match = duration.match(/^(\d+)([hm])$/);
+
+    if (!match) throw new Error('Invalid duration format');
+
+    const value = parseInt(match[1], 10);
+    const unit = match[2];
+
+    if (unit === 'm') return value * 60 * 1000; // Convert minutes to milliseconds
+    if (unit === 'h') return value * 60 * 60 * 1000; // Convert hours to milliseconds
+
+    throw new Error('Invalid duration unit');
+  }
+
   private async getAccessToken(payload: TokenPayload) {
     const expiresIn = '30m';
 
-    const expirationTimeInSeconds = Math.floor(Date.now() / 1000) + parseInt(expiresIn, 10);
+    const expirationTimeInSeconds = Date.now() + this.parseDurationToMilliseconds(expiresIn);
 
     const token = await this.jwt.signAsync(payload, {
       secret: this.config.get('ACCESS_TOKEN_SECRET'),
@@ -56,7 +68,7 @@ export class AuthService {
     const { email, password } = auth;
 
     const login = await this.prisma.customer.findUnique({ where: { email } });
-    if (!login) throw new ForbiddenException('Email is not correct');
+    if (!login) throw new HttpException('Email is not correct', HttpStatus.NOT_FOUND);
 
     const isAuth = bcryptjs.compareSync(password, login.password);
     if (!isAuth) throw new ForbiddenException('Password is not correct');
@@ -99,8 +111,8 @@ export class AuthService {
           email: decode.email,
           role: decode.role,
         };
-        const accessToken = await this.getAccessToken(payload);
-        return { accessToken, expired: EXPIRED_TIME };
+        const { token, expirationTimeInSeconds } = await this.getAccessToken(payload);
+        return { accessToken: token, expired: expirationTimeInSeconds };
       }
     } catch (error) {
       if (error instanceof TokenExpiredError) throw new ForbiddenException('Token is expired');

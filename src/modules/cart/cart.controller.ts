@@ -42,8 +42,8 @@ export class CartController {
   @Put('update')
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
-  updateCart(@Body() cart: CartDto) {
-    return this.cartService.updateCart(cart);
+  updateCart(@Query() query: QueryDto, @Body() cart: CartDto) {
+    return this.cartService.updateCart(query, cart);
   }
 
   @Delete('remove')

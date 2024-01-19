@@ -132,6 +132,8 @@ model Cart {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  isDelete Boolean?
+
   customerId String   @unique
   customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
@@ -143,6 +145,8 @@ model CartItem {
   quantity  Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  isDelete Boolean?
 
   cartId    String
   cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)

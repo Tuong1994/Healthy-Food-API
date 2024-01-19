@@ -16,6 +16,7 @@ class CartItemDto {
 }
 
 export class CartDto {
+  @IsOptional()
   @IsNotEmpty()
   customerId: string;
 

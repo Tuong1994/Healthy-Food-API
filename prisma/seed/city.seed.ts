@@ -1,5 +1,4 @@
 import { City } from '@prisma/client';
-import { ELang } from '../../src/common/enum/base';
 
 const items = [
   {

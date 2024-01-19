@@ -9,55 +9,77 @@ import utils from 'src/utils';
 
 type CartItems = Array<Omit<CartItem, 'createdAt' | 'updatedAt'>>;
 
-const getSelectFields = (langCode: ELang) => ({
-  id: true,
-  nameEn: langCode === ELang.EN,
-  nameVn: langCode === ELang.VN,
-  image: true,
-  totalPrice: true,
-});
-
 @Injectable()
 export class CartService {
   constructor(private prisma: PrismaService) {}
+
+  private getSelectFields(langCode: ELang) {
+    return {
+      id: true,
+      quantity: true,
+      productId: true,
+      product: {
+        select: {
+          id: true,
+          nameEn: langCode === ELang.EN,
+          nameVn: langCode === ELang.VN,
+          image: true,
+          totalPrice: true,
+        },
+      },
+    };
+  }
 
   async getCarts(query: QueryDto) {
     const { page, limit, langCode } = query;
     let collection: Paging<Cart> = utils.defaultCollection();
     const carts = await this.prisma.cart.findMany({
-      include: { items: { select: { ...getSelectFields(langCode) } } },
+      where: { isDelete: { equals: false } },
+      include: {
+        items: { select: { ...this.getSelectFields(langCode) } },
+      },
     });
-    if (carts && carts.length > 0) collection = utils.paging<Cart>(carts, page, limit);
+    const convertCollection = carts.map((cart) => ({
+      ...cart,
+      items: cart.items.map((item) => ({
+        ...item,
+        product: { ...utils.convertRecordsName(item.product, langCode) },
+      })),
+    }));
+    if (convertCollection && convertCollection.length > 0)
+      collection = utils.paging<Cart>(convertCollection, page, limit);
     return collection;
   }
 
   async getCart(query: QueryDto) {
-    const { cartId, langCode } = query;
+    const { customerId, langCode } = query;
     const cart = await this.prisma.cart.findUnique({
-      where: { id: cartId },
+      where: { customerId, isDelete: { equals: false } },
       include: {
         items: {
-          select: {
-            quantity: true,
-            product: {
-              select: { ...getSelectFields(langCode) },
-            },
-          },
+          select: { ...this.getSelectFields(langCode) },
         },
       },
     });
-    return cart;
+    if (!cart) throw new HttpException('Id not match', HttpStatus.NOT_FOUND);
+    return {
+      ...cart,
+      items: cart.items.map((item) => ({
+        ...item,
+        product: { ...utils.convertRecordsName(item.product, langCode) },
+      })),
+    };
   }
 
   async createCart(cart: CartDto) {
     const { customerId, items } = cart;
 
-    const newCart = await this.prisma.cart.create({ data: { customerId } });
+    const newCart = await this.prisma.cart.create({ data: { customerId, isDelete: false } });
     if (newCart) {
-      const cartItems: CartItems = items.map((item) => ({ ...item, cartId: newCart.id }));
+      const cartItems: CartItems = items.map((item) => ({ ...item, cartId: newCart.id, isDelete: false }));
 
       await this.prisma.cartItem.createMany({ data: cartItems });
-      const resCart = await this.prisma.cart.findUnique({
+      const responseCart = await this.prisma.cart.findUnique({
         where: { id: newCart.id },
         include: {
           items: {
@@ -70,13 +92,26 @@ export class CartService {
           },
         },
       });
-      return resCart;
+      return {
+        ...responseCart,
+        items: responseCart.items.map((item) => ({
+          ...utils.convertRecordsName(item, ELang.EN),
+        })),
+      };
     }
   }
 
-  async updateCart(cart: CartDto) {
+  async updateCart(query: QueryDto, cart: CartDto) {
+    const { cartId } = query;
     const { items } = cart;
-    await this.prisma.cartItem.updateMany({ data: items });
+    await Promise.all(
+      items.map(async (item) => {
+        if (item.id) {
+          if (item.quantity === 0) await this.prisma.cartItem.delete({ where: { id: item.id } });
+          else await this.prisma.cartItem.update({ where: { id: item.id }, data: { ...item } });
+        } else await this.prisma.cartItem.create({ data: { ...item, cartId } });
+      }),
+    );
     throw new HttpException('Updated success', HttpStatus.OK);
   }
 
