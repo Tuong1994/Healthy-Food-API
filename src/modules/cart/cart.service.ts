@@ -52,7 +52,7 @@ export class CartService {
   }
 
   async getCart(query: QueryDto) {
-    const { customerId, langCode } = query;
+    const { page, limit, customerId, langCode } = query;
     const cart = await this.prisma.cart.findUnique({
       where: { customerId, isDelete: { equals: false } },
       include: {
@@ -62,13 +62,16 @@ export class CartService {
       },
     });
     if (!cart) throw new HttpException('Id not match', HttpStatus.NOT_FOUND);
-    return {
-      ...cart,
-      items: cart.items.map((item) => ({
+    const collection = utils.paging(
+      cart.items.map((item) => ({
         ...item,
         product: { ...utils.convertRecordsName(item.product, langCode) },
       })),
-    };
+      page,
+      limit,
+    );
+    const responseCart = { ...cart, items: collection.items };
+    return { totalItems: collection.totalItems, data: responseCart };
   }
 
   async createCart(cart: CartDto) {
@@ -113,6 +116,17 @@ export class CartService {
       }),
     );
     throw new HttpException('Updated success', HttpStatus.OK);
+  }
+
+  async removeCartItems(query: QueryDto) {
+    const { ids } = query;
+    const listIds = ids.split(',');
+    const cartItems = await this.prisma.cartItem.findMany({ where: { id: { in: listIds } } });
+    if (cartItems && cartItems.length > 0) {
+      await this.prisma.cartItem.deleteMany({ where: { id: { in: listIds } } });
+      throw new HttpException('Removed success', HttpStatus.OK);
+    }
+    throw new HttpException('Cart item not found', HttpStatus.NOT_FOUND);
   }
 
   async removeCarts(query: QueryDto) {

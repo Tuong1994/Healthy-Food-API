@@ -46,6 +46,13 @@ export class CartController {
     return this.cartService.updateCart(query, cart);
   }
 
+  @Delete('removeItem')
+  @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.OK)
+  removeCartItems(@Query() query: QueryDto) {
+    return this.cartService.removeCartItems(query);
+  }
+
   @Delete('remove')
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
