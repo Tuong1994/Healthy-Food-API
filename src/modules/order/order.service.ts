@@ -10,45 +10,82 @@ import helper from 'src/helper';
 
 type OrderItems = Array<Omit<OrderItem, 'createdAt' | 'updatedAt'>>;
 
-const getSelectFields = (langCode: ELang) => ({
-  id: true,
-  nameEn: langCode === ELang.EN,
-  nameVn: langCode === ELang.VN,
-  image: true,
-  totalPrice: true,
-});
-
 @Injectable()
 export class OrderService {
   constructor(private prisma: PrismaService) {}
 
+  private getSelectFields = (langCode: ELang) => {
+    return {
+      id: true,
+      quantity: true,
+      productId: true,
+      product: {
+        select: {
+          id: true,
+          nameEn: langCode === ELang.EN,
+          nameVn: langCode === ELang.VN,
+          image: true,
+          totalPrice: true,
+        },
+      },
+    };
+  };
+
   async getOrders(query: QueryDto) {
-    const { page, limit, langCode, keywords, sortBy, orderStatus, paymentStatus, paymentMethod } = query;
+    const {
+      page,
+      limit,
+      langCode,
+      keywords,
+      sortBy,
+      orderStatus,
+      paymentStatus,
+      paymentMethod,
+      recievedType,
+    } = query;
     let collection: Paging<Order> = utils.defaultCollection();
     const orders = await this.prisma.order.findMany({
       where: {
         AND: [
           { paymentMethod: paymentMethod && Number(paymentMethod) },
           { paymentStatus: paymentStatus && Number(paymentStatus) },
+          { recievedType: recievedType && Number(recievedType) },
           { status: orderStatus && Number(orderStatus) },
           { isDelete: { equals: false } },
         ],
       },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
-      include: { items: { select: { ...getSelectFields(langCode) } } },
+      include: { shipment: true, items: { select: { ...this.getSelectFields(langCode) } } },
     });
+    const convertOrders = orders.map((order) => ({
+      ...order,
+      items: order.items.map((item) => ({
+        ...item,
+        product: { ...utils.convertRecordsName(item.product, langCode) },
+      })),
+    }));
     if (keywords) {
-      const filterOrders = orders.filter((order) =>
+      const filterOrders = convertOrders.filter((order) =>
         order.orderNumber.toLowerCase().includes(keywords.toLowerCase()),
       );
       collection = utils.paging<Order>(filterOrders, page, limit);
-    } else collection = utils.paging<Order>(orders, page, limit);
+    } else collection = utils.paging<Order>(convertOrders, page, limit);
     return collection;
   }
 
   async getOrdersByCustomer(query: QueryDto) {
-    const { page, limit, langCode, keywords, sortBy, orderStatus, paymentStatus, paymentMethod, customerId } =
-      query;
+    const {
+      page,
+      limit,
+      langCode,
+      keywords,
+      sortBy,
+      orderStatus,
+      paymentStatus,
+      paymentMethod,
+      recievedType,
+      customerId,
+    } = query;
     let collection: Paging<Order> = utils.defaultCollection();
     const orders = await this.prisma.order.findMany({
       where: {
@@ -56,19 +93,27 @@ export class OrderService {
           { customerId },
           { paymentMethod: paymentMethod && Number(paymentMethod) },
           { paymentStatus: paymentStatus && Number(paymentStatus) },
+          { recievedType: recievedType && Number(recievedType) },
           { status: orderStatus && Number(orderStatus) },
           { isDelete: { equals: false } },
         ],
       },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
-      include: { items: { select: { ...getSelectFields(langCode) } } },
+      include: { items: { select: { ...this.getSelectFields(langCode) } } },
     });
+    const convertOrders = orders.map((order) => ({
+      ...order,
+      items: order.items.map((item) => ({
+        ...item,
+        product: { ...utils.convertRecordsName(item.product, langCode) },
+      })),
+    }));
     if (keywords) {
-      const filterOrders = orders.filter((order) =>
+      const filterOrders = convertOrders.filter((order) =>
         order.orderNumber.toLowerCase().includes(keywords.toLowerCase()),
       );
       collection = utils.paging<Order>(filterOrders, page, limit);
-    } else collection = utils.paging<Order>(orders, page, limit);
+    } else collection = utils.paging<Order>(convertOrders, page, limit);
     return collection;
   }
 
@@ -76,30 +121,42 @@ export class OrderService {
     const { orderId, langCode } = query;
     const order = await this.prisma.order.findUnique({
       where: { id: orderId, isDelete: { equals: false } },
-      include: {
-        items: {
-          select: {
-            quantity: true,
-            product: {
-              select: { ...getSelectFields(langCode) },
-            },
-          },
-        },
-      },
+      include: { shipment: true, items: { select: { ...this.getSelectFields(langCode) } } },
     });
-    return order;
+    return {
+      ...order,
+      items: order.items.map((item) => ({
+        ...item,
+        product: { ...utils.convertRecordsName(item.product, langCode) },
+      })),
+    };
   }
 
   async createOrder(order: OrderDto) {
-    const { status, paymentStatus, paymentMethod, customerId, items } = order;
+    const {
+      status,
+      paymentStatus,
+      paymentMethod,
+      recievedType,
+      shipmentFee,
+      totalPayment,
+      customerId,
+      note,
+      items,
+      shipment,
+    } = order;
     const newOrder = await this.prisma.order.create({
       data: {
         status,
         paymentStatus,
         paymentMethod,
+        recievedType,
+        shipmentFee,
+        totalPayment,
         customerId,
-        orderNumber: `#O_${Date.now()}`,
+        note,
         isDelete: false,
+        orderNumber: `#O_${Date.now()}`,
       },
     });
     if (newOrder) {
@@ -109,9 +166,15 @@ export class OrderService {
         orderId: newOrder.id,
       }));
       await this.prisma.orderItem.createMany({ data: orderItems });
-      const resOrder = await this.prisma.order.findUnique({
+      if (shipment) {
+        await this.prisma.shipment.create({
+          data: { ...shipment, orderId: newOrder.id, shipmentNumber: `#S_${Date.now()}`, isDelete: false },
+        });
+      }
+      const responseOrder = await this.prisma.order.findUnique({
         where: { id: newOrder.id },
         include: {
+          shipment: true,
           items: {
             select: {
               quantity: true,
@@ -122,16 +185,43 @@ export class OrderService {
           },
         },
       });
-      return resOrder;
+      return {
+        ...responseOrder,
+        items: responseOrder.items.map((item) => ({
+          ...item,
+          product: { ...utils.convertRecordsName(item.product, ELang.EN) },
+        })),
+      };
     }
   }
 
   async updateOrder(query: QueryDto, order: OrderDto) {
     const { orderId } = query;
-    const { status, paymentStatus, paymentMethod, customerId, orderNumber, items } = order;
+    const {
+      status,
+      paymentStatus,
+      paymentMethod,
+      recievedType,
+      shipmentFee,
+      totalPayment,
+      customerId,
+      orderNumber,
+      note,
+      items,
+    } = order;
     await this.prisma.order.update({
       where: { id: orderId },
-      data: { status, paymentStatus, paymentMethod, customerId, orderNumber },
+      data: {
+        status,
+        paymentStatus,
+        paymentMethod,
+        recievedType,
+        shipmentFee,
+        totalPayment,
+        customerId,
+        orderNumber,
+        note,
+      },
     });
     await this.prisma.orderItem.updateMany({ data: items });
     throw new HttpException('Updated success', HttpStatus.OK);

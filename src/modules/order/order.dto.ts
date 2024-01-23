@@ -1,5 +1,5 @@
 import { IsArray, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
-import { EOrderPaymentStatus, EOrderPaymentMethod, EOrderStatus } from './order.enum';
+import { EOrderPaymentStatus, EOrderPaymentMethod, EOrderStatus, ERecievedType } from './order.enum';
 
 class OrderItemDto {
   @IsNotEmpty()
@@ -16,6 +16,20 @@ class OrderItemDto {
   orderId: string;
 }
 
+class ShipmentDto {
+  @IsNotEmpty()
+  fullName: string;
+
+  @IsNotEmpty()
+  phone: string;
+
+  @IsNotEmpty()
+  email: string;
+
+  @IsNotEmpty()
+  address: string;
+}
+
 export class OrderDto {
   @IsOptional()
   orderNumber: string;
@@ -30,8 +44,25 @@ export class OrderDto {
   paymentStatus: EOrderPaymentStatus;
 
   @IsNotEmpty()
+  recievedType: ERecievedType;
+
+  @IsNotEmpty()
+  @IsNumber()
+  shipmentFee: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  totalPayment: number;
+
+  @IsNotEmpty()
   customerId: string;
+
+  @IsOptional()
+  note: string;
 
   @IsArray()
   items: OrderItemDto[];
+
+  @IsOptional()
+  shipment: ShipmentDto;
 }

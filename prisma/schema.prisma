@@ -119,12 +119,12 @@ model Product {
   subCategoryId String
   subCategory   SubCategory @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
 
-  cartItem  CartItem?
-  orderItem OrderItem?
-  image     Image?
-  comments  Comment[]
-  rates     Rate[]
-  likes     Like[]
+  image    Image?
+  items    OrderItem[]
+  cartItem CartItem[]
+  comments Comment[]
+  rates    Rate[]
+  likes    Like[]
 }
 
 model Cart {
@@ -150,7 +150,7 @@ model CartItem {
 
   cartId    String
   cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  productId String  @unique
+  productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
@@ -160,6 +160,9 @@ model Order {
   status        Int
   paymentMethod Int
   paymentStatus Int
+  recievedType  Int
+  shipmentFee   Int
+  totalPayment  Int
 
   note      String?  @db.VarChar(3000)
   isDelete  Boolean?
@@ -183,8 +186,11 @@ model OrderItem {
 
   orderId   String
   order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId String  @unique
+  productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([productId])
 }
 
 model Shipment {

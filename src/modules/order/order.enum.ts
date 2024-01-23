@@ -14,3 +14,8 @@ export enum EOrderPaymentStatus {
   UNPAID = 1,
   PAID = 2,
 }
+
+export enum ERecievedType {
+  STORE = 1,
+  DELIVERY = 2,
+}

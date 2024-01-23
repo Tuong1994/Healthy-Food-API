@@ -35,19 +35,16 @@ export class CartService {
     let collection: Paging<Cart> = utils.defaultCollection();
     const carts = await this.prisma.cart.findMany({
       where: { isDelete: { equals: false } },
-      include: {
-        items: { select: { ...this.getSelectFields(langCode) } },
-      },
+      include: { items: { select: { ...this.getSelectFields(langCode) } } },
     });
-    const convertCollection = carts.map((cart) => ({
+    const convertCarts = carts.map((cart) => ({
       ...cart,
       items: cart.items.map((item) => ({
         ...item,
         product: { ...utils.convertRecordsName(item.product, langCode) },
       })),
     }));
-    if (convertCollection && convertCollection.length > 0)
-      collection = utils.paging<Cart>(convertCollection, page, limit);
+    if (convertCarts && convertCarts.length > 0) collection = utils.paging<Cart>(convertCarts, page, limit);
     return collection;
   }
 
@@ -55,11 +52,7 @@ export class CartService {
     const { page, limit, customerId, langCode } = query;
     const cart = await this.prisma.cart.findUnique({
       where: { customerId, isDelete: { equals: false } },
-      include: {
-        items: {
-          select: { ...this.getSelectFields(langCode) },
-        },
-      },
+      include: { items: { select: { ...this.getSelectFields(langCode) } } },
     });
     if (!cart) throw new HttpException('Id not match', HttpStatus.NOT_FOUND);
     const collection = utils.paging(
@@ -71,7 +64,7 @@ export class CartService {
       limit,
     );
     const responseCart = { ...cart, items: collection.items };
-    return { totalItems: collection.totalItems, data: responseCart };
+    return { totalItems: collection.totalItems, detail: responseCart };
   }
 
   async createCart(cart: CartDto) {
@@ -98,7 +91,8 @@ export class CartService {
       return {
         ...responseCart,
         items: responseCart.items.map((item) => ({
-          ...utils.convertRecordsName(item, ELang.EN),
+          ...item,
+          product: { ...utils.convertRecordsName(item.product, ELang.EN) },
         })),
       };
     }
@@ -119,11 +113,16 @@ export class CartService {
   }
 
   async removeCartItems(query: QueryDto) {
-    const { ids } = query;
+    const { cartId, ids } = query;
     const listIds = ids.split(',');
     const cartItems = await this.prisma.cartItem.findMany({ where: { id: { in: listIds } } });
     if (cartItems && cartItems.length > 0) {
       await this.prisma.cartItem.deleteMany({ where: { id: { in: listIds } } });
+      const cart = await this.prisma.cart.findUnique({
+        where: { id: cartId },
+        select: { id: true, items: true },
+      });
+      if (cart && cart.items.length === 0) await this.prisma.cart.delete({ where: { id: cart.id } });
       throw new HttpException('Removed success', HttpStatus.OK);
     }
     throw new HttpException('Cart item not found', HttpStatus.NOT_FOUND);
