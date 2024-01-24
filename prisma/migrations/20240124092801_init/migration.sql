@@ -152,8 +152,6 @@ CREATE TABLE `OrderItem` (
     `orderId` VARCHAR(191) NOT NULL,
     `productId` VARCHAR(191) NOT NULL,
 
-    INDEX `OrderItem_orderId_idx`(`orderId`),
-    INDEX `OrderItem_productId_idx`(`productId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -218,8 +216,8 @@ CREATE TABLE `Ward` (
 -- CreateTable
 CREATE TABLE `Comment` (
     `id` VARCHAR(191) NOT NULL,
-    `parentId` VARCHAR(191) NOT NULL,
     `content` VARCHAR(3000) NOT NULL,
+    `parentId` VARCHAR(191) NULL,
     `isDelete` BOOLEAN NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,

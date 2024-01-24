@@ -11,9 +11,11 @@ export class RateService {
   constructor(private prisma: PrismaService) {}
 
   async getRates(query: QueryDto) {
-    const { page, limit } = query;
+    const { page, limit, customerId, productId } = query;
     let collection: Paging<Rate> = utils.defaultCollection();
-    const rates = await this.prisma.rate.findMany({ where: { isDelete: { equals: false } } });
+    const rates = await this.prisma.rate.findMany({
+      where: { AND: [{ customerId }, { productId }, { isDelete: { equals: false } }] },
+    });
     if (rates && rates.length > 0) collection = utils.paging<Rate>(rates, page, limit);
     return collection;
   }

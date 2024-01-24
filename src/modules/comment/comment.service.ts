@@ -5,15 +5,20 @@ import { Paging } from 'src/common/type/base';
 import { Comment } from '@prisma/client';
 import { CommentDto } from './comment.dto';
 import utils from 'src/utils';
+import helper from 'src/helper';
 
 @Injectable()
 export class CommentService {
   constructor(private prisma: PrismaService) {}
 
   async getComments(query: QueryDto) {
-    const { page, limit } = query;
+    const { page, limit, productId, sortBy } = query;
     let collection: Paging<Comment> = utils.defaultCollection();
-    const comments = await this.prisma.comment.findMany({ where: { isDelete: { equals: false } } });
+    const comments = await this.prisma.comment.findMany({
+      where: { AND: [{ productId }, { isDelete: { equals: false } }] },
+      include: { customer: { select: { fullName: true, image: true } } },
+      orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
+    });
     if (comments && comments.length > 0) collection = utils.paging<Comment>(comments, page, limit);
     return collection;
   }

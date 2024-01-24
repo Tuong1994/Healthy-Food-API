@@ -188,9 +188,6 @@ model OrderItem {
   order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  @@index([orderId])
-  @@index([productId])
 }
 
 model Shipment {
@@ -245,10 +242,10 @@ model Ward {
 }
 
 model Comment {
-  id       String @id @default(uuid())
-  parentId String
-  content  String @db.VarChar(3000)
+  id      String @id @default(uuid())
+  content String @db.VarChar(3000)
 
+  parentId  String?
   isDelete  Boolean?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

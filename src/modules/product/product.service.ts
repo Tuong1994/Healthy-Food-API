@@ -149,7 +149,11 @@ export class ProductService {
       where: { id: productId, isDelete: { equals: false } },
       select: { ...this.getSelectFields(langCode), rates: true },
     });
-    const response = { ...product, point: helper.getRatePoints(product.rates) };
+    const response = {
+      ...product,
+      totalVoted: product.rates.length,
+      point: helper.getRatePoints(product.rates),
+    };
     delete response.rates;
     return {
       ...utils.convertRecordsName<Product>(response, langCode),
