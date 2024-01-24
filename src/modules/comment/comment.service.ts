@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueryDto } from 'src/common/dto/query.dto';
-import { Paging } from 'src/common/type/base';
+import { Paging, List } from 'src/common/type/base';
 import { Comment } from '@prisma/client';
 import { CommentDto } from './comment.dto';
 import utils from 'src/utils';
@@ -12,14 +12,18 @@ export class CommentService {
   constructor(private prisma: PrismaService) {}
 
   async getComments(query: QueryDto) {
-    const { page, limit, productId, sortBy } = query;
-    let collection: Paging<Comment> = utils.defaultCollection();
+    const { limit, productId, sortBy } = query;
+    let collection: List<Comment> = utils.defaultList();
     const comments = await this.prisma.comment.findMany({
       where: { AND: [{ productId }, { isDelete: { equals: false } }] },
       include: { customer: { select: { fullName: true, image: true } } },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
     });
-    if (comments && comments.length > 0) collection = utils.paging<Comment>(comments, page, limit);
+    if (comments && comments.length > 0) {
+      const totalItems = comments.length;
+      const items = comments.slice(0, Number(limit));
+      collection = { totalItems, items };
+    }
     return collection;
   }
 

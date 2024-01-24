@@ -25,7 +25,7 @@ export class CommentController {
 
   @Get('list')
   @HttpCode(HttpStatus.OK)
-  getComments(@QueryPaging() query: QueryDto) {
+  getComments(@Query() query: QueryDto) {
     return this.commentService.getComments(query);
   }
 

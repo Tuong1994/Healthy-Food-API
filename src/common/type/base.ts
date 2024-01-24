@@ -4,3 +4,5 @@ export type Paging<M> = {
   limit: number;
   items: M[];
 };
+
+export type List<M> = Omit<Paging<M>, 'page' | 'limit'>;

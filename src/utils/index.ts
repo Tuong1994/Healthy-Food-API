@@ -34,6 +34,10 @@ const utils = {
     return { totalItems: 0, page: 0, limit: 0, items: [] };
   },
 
+  defaultList: () => {
+    return { totalItems: 0, items: [] };
+  },
+
   generateImage: (result: UploadApiResponse, option?: ImageOption) => {
     const defaultImage: Pick<Image, 'path' | 'size' | 'publicId'> = {
       path: '',
