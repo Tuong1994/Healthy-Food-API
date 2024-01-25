@@ -2,22 +2,41 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueryDto } from 'src/common/dto/query.dto';
 import { Paging } from 'src/common/type/base';
-import { Rate } from '@prisma/client';
+import { Product, Rate } from '@prisma/client';
 import { RateDto } from './rate.dto';
+import { ELang } from 'src/common/enum/base';
 import utils from 'src/utils';
 
 @Injectable()
 export class RateService {
   constructor(private prisma: PrismaService) {}
 
+  private getSelectProductFields(langCode: ELang) {
+    return {
+      image: true,
+      nameEn: langCode === ELang.EN,
+      nameVn: langCode === ELang.VN,
+    };
+  }
+
+  private convertCollection(comments: Rate[], langCode: ELang) {
+    return comments.map((comment) => ({
+      ...comment,
+      product:
+        'product' in comment ? utils.convertRecordsName<Product>(comment.product as Product, langCode) : null,
+    }));
+  }
+
   async getRates(query: QueryDto) {
-    const { page, limit, customerId, productId } = query;
+    const { page, limit, customerId, productId, langCode } = query;
     let collection: Paging<Rate> = utils.defaultCollection();
     const rates = await this.prisma.rate.findMany({
       where: { AND: [{ customerId }, { productId }, { isDelete: { equals: false } }] },
+      include: { product: { select: { ...this.getSelectProductFields(langCode) } } },
     });
     if (rates && rates.length > 0) collection = utils.paging<Rate>(rates, page, limit);
-    return collection;
+    const items = this.convertCollection(collection.items, langCode);
+    return { ...collection, items };
   }
 
   async getRatesByCustomer(query: QueryDto) {

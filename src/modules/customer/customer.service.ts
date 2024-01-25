@@ -2,26 +2,13 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueryDto } from 'src/common/dto/query.dto';
 import { Paging } from 'src/common/type/base';
-import { Customer } from '@prisma/client';
+import { CustomerAddress } from '@prisma/client';
+import { CustomerResponse } from './customer.type';
 import { CustomerDto } from 'src/modules/customer/customer.dto';
 import { ELang } from 'src/common/enum/base';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import helper from 'src/helper';
 import utils from 'src/utils';
-
-const getSelectFields = (langCode: ELang) => ({
-  id: true,
-  addressEn: langCode === ELang.EN,
-  addressVn: langCode === ELang.VN,
-  fullAddressEn: langCode === ELang.EN,
-  fullAddressVn: langCode === ELang.VN,
-  cityCode: true,
-  districtCode: true,
-  wardCode: true,
-  isDelete: true,
-  createdAt: true,
-  updatedAt: true,
-});
 
 @Injectable()
 export class CustomerService {
@@ -30,9 +17,50 @@ export class CustomerService {
     private cloudinary: CloudinaryService,
   ) {}
 
+  private getSelectFields() {
+    return {
+      id: true,
+      email: true,
+      phone: true,
+      firstName: true,
+      lastName: true,
+      fullName: true,
+      gender: true,
+      birthday: true,
+      role: true,
+      createdAt: true,
+      updatedAt: true,
+    };
+  }
+
+  private getSelectAddressFields(langCode: ELang) {
+    return {
+      id: true,
+      addressEn: true,
+      addressVn: true,
+      fullAddressEn: langCode === ELang.EN,
+      fullAddressVn: langCode === ELang.VN,
+      cityCode: true,
+      districtCode: true,
+      wardCode: true,
+      createdAt: true,
+      updatedAt: true,
+    };
+  }
+
+  private convertCollection(customers: CustomerResponse[], langCode: ELang) {
+    return customers.map((customer) => ({
+      ...customer,
+      address:
+        'address' in customer
+          ? utils.convertAddress<CustomerAddress>(customer.address as CustomerAddress, langCode)
+          : null,
+    }));
+  }
+
   async getCustomers(query: QueryDto) {
     const { page, limit, langCode, keywords, sortBy, gender, role } = query;
-    let collection: Paging<Customer> = utils.defaultCollection();
+    let collection: Paging<CustomerResponse> = utils.defaultCollection();
     const customers = await this.prisma.customer.findMany({
       where: {
         AND: [
@@ -41,8 +69,9 @@ export class CustomerService {
           { isDelete: { equals: false } },
         ],
       },
-      include: {
-        address: { select: { ...getSelectFields(langCode) } },
+      select: {
+        ...this.getSelectFields(),
+        address: { select: { ...this.getSelectAddressFields(langCode) } },
         image: true,
       },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
@@ -56,21 +85,30 @@ export class CustomerService {
           customer.phone.toLowerCase().includes(keywords.toLowerCase()) ||
           customer.email.toLowerCase().includes(keywords.toLowerCase()),
       );
-      collection = utils.paging<Customer>(filterCustomers, page, limit);
-    } else collection = utils.paging<Customer>(customers, page, limit);
-    return collection;
+      collection = utils.paging<CustomerResponse>(filterCustomers, page, limit);
+    } else collection = utils.paging<CustomerResponse>(customers, page, limit);
+    const items = this.convertCollection(collection.items, langCode);
+    return { ...collection, items };
   }
 
   async getCustomer(query: QueryDto) {
     const { customerId, langCode } = query;
     const customer = await this.prisma.customer.findUnique({
       where: { id: customerId, isDelete: { equals: false } },
-      include: {
-        address: { select: { ...getSelectFields(langCode) } },
+      select: {
+        ...this.getSelectFields(),
+        address: { select: { ...this.getSelectAddressFields(langCode) } },
         image: true,
       },
     });
-    return customer;
+    return {
+      ...customer,
+      address: {
+        addressEn: customer.address.addressEn,
+        addressVn: customer.address.addressVn,
+        ...utils.convertAddress(customer.address, langCode),
+      },
+    };
   }
 
   async createCustomer(query: QueryDto, file: Express.Multer.File, customer: CustomerDto) {

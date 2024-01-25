@@ -53,7 +53,7 @@ export class ProductService {
       ...utils.convertRecordsName<Product>(product, langCode),
       category:
         'category' in product
-          ? { ...utils.convertRecordsName<Category>(product.category as Category, langCode) }
+          ? utils.convertRecordsName<Category>(product.category as Category, langCode)
           : null,
     }));
   }

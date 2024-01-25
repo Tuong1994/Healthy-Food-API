@@ -38,6 +38,7 @@ export class OrderService {
       langCode,
       keywords,
       sortBy,
+      customerId,
       orderStatus,
       paymentStatus,
       paymentMethod,
@@ -47,6 +48,7 @@ export class OrderService {
     const orders = await this.prisma.order.findMany({
       where: {
         AND: [
+          { customerId },
           { paymentMethod: paymentMethod && Number(paymentMethod) },
           { paymentStatus: paymentStatus && Number(paymentStatus) },
           { recievedType: recievedType && Number(recievedType) },

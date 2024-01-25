@@ -2,14 +2,31 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueryDto } from 'src/common/dto/query.dto';
 import { Paging, List } from 'src/common/type/base';
-import { Comment } from '@prisma/client';
+import { Comment, Product } from '@prisma/client';
 import { CommentDto } from './comment.dto';
+import { ELang } from 'src/common/enum/base';
 import utils from 'src/utils';
 import helper from 'src/helper';
 
 @Injectable()
 export class CommentService {
   constructor(private prisma: PrismaService) {}
+
+  private getSelectProductFields(langCode: ELang) {
+    return {
+      image: true,
+      nameEn: langCode === ELang.EN,
+      nameVn: langCode === ELang.VN,
+    };
+  }
+
+  private convertCollection(comments: Comment[], langCode: ELang) {
+    return comments.map((comment) => ({
+      ...comment,
+      product:
+        'product' in comment ? utils.convertRecordsName<Product>(comment.product as Product, langCode) : null,
+    }));
+  }
 
   async getComments(query: QueryDto) {
     const { limit, productId, sortBy } = query;
@@ -28,13 +45,15 @@ export class CommentService {
   }
 
   async getCommentsByCustomer(query: QueryDto) {
-    const { page, limit, customerId } = query;
+    const { page, limit, customerId, langCode } = query;
     let collection: Paging<Comment> = utils.defaultCollection();
     const comments = await this.prisma.comment.findMany({
       where: { customerId, isDelete: { equals: false } },
+      include: { product: { select: { ...this.getSelectProductFields(langCode) } } },
     });
     if (comments && comments.length > 0) collection = utils.paging<Comment>(comments, page, limit);
-    return collection;
+    const items = this.convertCollection(collection.items, langCode);
+    return { ...collection, items };
   }
 
   async getComment(query: QueryDto) {

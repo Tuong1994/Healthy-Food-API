@@ -68,10 +68,26 @@ const utils = {
   },
 
   convertRecordsName: <M>(record: M, langCode: ELang) => {
+    if (!record) return null;
     const recordClone = { ...record };
     delete record['nameEn'];
     delete record['nameVn'];
     const data = { name: langCode === ELang.EN ? recordClone['nameEn'] : recordClone['nameVn'], ...record };
+    return data;
+  },
+
+  convertAddress: <M>(record: M, langCode: ELang) => {
+    if (!record) return null;
+    const recordClone = { ...record };
+    delete record['addressEn'];
+    delete record['addressVn'];
+    delete record['fullAddressEn'];
+    delete record['fullAddressVn'];
+    const data = {
+      address: langCode === ELang.EN ? recordClone['addressEn'] : recordClone['addressVn'],
+      fullAddress: langCode === ELang.EN ? recordClone['fullAddressEn'] : recordClone['fullAddressVn'],
+      ...record,
+    };
     return data;
   },
 };
