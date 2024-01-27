@@ -30,17 +30,5 @@ export class CustomerDto {
   birthday: string;
 
   @IsOptional()
-  addressEn: string;
-
-  @IsOptional()
-  addressVn: string
-
-  @IsOptional()
-  cityCode: string;
-
-  @IsOptional()
-  districtCode: string;
-
-  @IsOptional()
-  wardCode: string;
+  address: string;
 }

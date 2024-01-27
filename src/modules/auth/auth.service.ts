@@ -4,7 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import { JwtService, TokenExpiredError } from '@nestjs/jwt';
 import { TokenPayload } from './auth.type';
-import { AuthDto } from './auth.dto';
+import { AuthDto, AuthPasswordDto } from './auth.dto';
 import { ERole } from 'src/common/enum/base';
 import { QueryDto } from 'src/common/dto/query.dto';
 import utils from 'src/utils';
@@ -67,7 +67,15 @@ export class AuthService {
   async signIn(auth: AuthDto) {
     const { email, password } = auth;
 
-    const login = await this.prisma.customer.findUnique({ where: { email } });
+    const login = await this.prisma.customer.findUnique({
+      where: { email },
+      include: {
+        image: {
+          where: { isDelete: { equals: false } },
+          select: { id: true, path: true, size: true, publicId: true },
+        },
+      },
+    });
     if (!login) throw new HttpException('Email is not correct', HttpStatus.NOT_FOUND);
 
     const isAuth = bcryptjs.compareSync(password, login.password);
@@ -117,6 +125,20 @@ export class AuthService {
     } catch (error) {
       if (error instanceof TokenExpiredError) throw new ForbiddenException('Token is expired');
     }
+  }
+
+  async changePassword(query: QueryDto, password: AuthPasswordDto) {
+    const { customerId } = query;
+    const { oldPassword, newPassword } = password;
+
+    const customer = await this.prisma.customer.findUnique({ where: { id: customerId } });
+    if (!customer) throw new HttpException('Customer not found', HttpStatus.NOT_FOUND);
+    const isAuth = bcryptjs.compareSync(oldPassword, customer.password);
+    if (!isAuth) throw new ForbiddenException('Old password is not correct');
+
+    const hash = utils.bcryptHash(newPassword);
+    await this.prisma.customer.update({ where: { id: customerId }, data: { password: hash } });
+    throw new HttpException('Password has successfully changed', HttpStatus.OK);
   }
 
   async logout(query: QueryDto) {

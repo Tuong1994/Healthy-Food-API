@@ -72,7 +72,7 @@ export class CustomerService {
       select: {
         ...this.getSelectFields(),
         address: { select: { ...this.getSelectAddressFields(langCode) } },
-        image: true,
+        image: { select: { id: true, path: true, size: true, publicId: true } },
       },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
     });
@@ -98,7 +98,7 @@ export class CustomerService {
       select: {
         ...this.getSelectFields(),
         address: { select: { ...this.getSelectAddressFields(langCode) } },
-        image: true,
+        image: { select: { id: true, path: true, size: true, publicId: true } },
       },
     });
     return {
@@ -113,21 +113,7 @@ export class CustomerService {
 
   async createCustomer(query: QueryDto, file: Express.Multer.File, customer: CustomerDto) {
     const { langCode } = query;
-    const {
-      email,
-      password,
-      role,
-      firstName,
-      lastName,
-      phone,
-      gender,
-      birthday,
-      addressEn,
-      addressVn,
-      cityCode,
-      districtCode,
-      wardCode,
-    } = customer;
+    const { email, password, role, firstName, lastName, phone, gender, birthday, address } = customer;
 
     const fullName = helper.getFullName(firstName, lastName, langCode);
     const newCustomer = await this.prisma.customer.create({
@@ -150,8 +136,10 @@ export class CustomerService {
     });
 
     if (newCustomer) {
-      let resCustomer: any;
-      if (addressEn && addressVn && cityCode && districtCode && wardCode) {
+      let responseCustomer: any;
+      if (address) {
+        const addressJson = utils.parseJSON<CustomerAddress>(address);
+        const { addressEn, addressVn, cityCode, districtCode, wardCode } = addressJson;
         const fullAddressEn = await helper.getFullAddress(
           addressEn,
           Number(cityCode),
@@ -179,7 +167,7 @@ export class CustomerService {
             isDelete: false,
           },
         });
-        resCustomer = await this.prisma.customer.findUnique({
+        responseCustomer = await this.prisma.customer.findUnique({
           where: { id: newCustomer.id },
           include: { address: true },
         });
@@ -189,30 +177,18 @@ export class CustomerService {
         const result = await this.cloudinary.upload(utils.getFileUrl(file));
         const image = utils.generateImage(result, { customerId: newCustomer.id });
         await this.prisma.image.create({ data: image });
-        resCustomer = await this.prisma.customer.findUnique({
+        responseCustomer = await this.prisma.customer.findUnique({
           where: { id: newCustomer.id },
           include: { address: true, image: true },
         });
       }
-      return resCustomer ? resCustomer : newCustomer;
+      return responseCustomer ? responseCustomer : newCustomer;
     }
   }
 
   async updateCustomer(query: QueryDto, file: Express.Multer.File, customer: CustomerDto) {
     const { customerId, langCode } = query;
-    const {
-      role,
-      firstName,
-      lastName,
-      phone,
-      gender,
-      birthday,
-      addressVn,
-      addressEn,
-      cityCode,
-      districtCode,
-      wardCode,
-    } = customer;
+    const { role, firstName, lastName, phone, gender, birthday, address } = customer;
 
     const fullName = helper.getFullName(firstName, lastName, langCode);
     await this.prisma.customer.update({
@@ -228,7 +204,9 @@ export class CustomerService {
       },
     });
 
-    if (addressEn && addressVn && cityCode && districtCode && wardCode) {
+    if (address) {
+      const addressJson = utils.parseJSON<CustomerAddress>(address);
+      const { addressEn, addressVn, cityCode, districtCode, wardCode } = addressJson;
       const fullAddressEn = await helper.getFullAddress(
         addressEn,
         Number(cityCode),

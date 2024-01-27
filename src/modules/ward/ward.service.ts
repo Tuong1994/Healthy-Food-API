@@ -34,7 +34,9 @@ export class WardService {
   async getWards(query: QueryDto) {
     const { keywords, sortBy, langCode, districtCode } = query;
     const wards = await this.prisma.ward.findMany({
-      where: { districtCode, isDelete: { equals: false } },
+      where: {
+        AND: [{ districtCode: districtCode && Number(districtCode) }, { isDelete: { equals: false } }],
+      },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
       select: { ...this.getSelectFields(langCode) },
     });
@@ -53,7 +55,9 @@ export class WardService {
     const { page, limit, keywords, sortBy, langCode, districtCode } = query;
     let collection: Paging<Ward> = utils.defaultCollection();
     const wards = await this.prisma.ward.findMany({
-      where: { districtCode, isDelete: { equals: false } },
+      where: {
+        AND: [{ districtCode: districtCode && Number(districtCode) }, { isDelete: { equals: false } }],
+      },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
       select: { ...this.getSelectFields(langCode) },
     });

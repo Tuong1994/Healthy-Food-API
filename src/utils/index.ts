@@ -90,6 +90,12 @@ const utils = {
     };
     return data;
   },
+
+  parseJSON: <M>(json: string): M => {
+    if (!json) return;
+    const parse = JSON.parse(json);
+    return parse;
+  },
 };
 
 export default utils;

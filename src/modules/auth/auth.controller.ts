@@ -1,7 +1,8 @@
-import { Controller, Post, Body, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthDto } from './auth.dto';
+import { AuthDto, AuthPasswordDto } from './auth.dto';
 import { QueryDto } from 'src/common/dto/query.dto';
+import { JwtGuard } from 'src/common/guard/jwt.guard';
 
 @Controller('api/auth')
 export class AuthController {
@@ -23,6 +24,13 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   refresh(@Query() query: QueryDto) {
     return this.authService.refresh(query);
+  }
+
+  @Post('changePassword')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtGuard)
+  changePassword(@Query() query: QueryDto, @Body() password: AuthPasswordDto) {
+    return this.authService.changePassword(query, password);
   }
 
   @Post('logout')

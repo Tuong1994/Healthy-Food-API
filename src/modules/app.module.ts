@@ -12,6 +12,7 @@ import { OrderModule } from './order/order.module';
 import { ShipmentModule } from './shipment/shipment.module';
 import { CityModule } from './city/city.module';
 import { DistrictModule } from './district/district.module';
+import { WardModule } from './ward/ward.module';
 import { CommentModule } from './comment/comment.module';
 import { RateModule } from './rate/rate.module';
 import { UploadModule } from './upload/upload.module';
@@ -32,6 +33,7 @@ import { LikeModule } from './like/like.module';
     ShipmentModule,
     CityModule,
     DistrictModule,
+    WardModule,
     CommentModule,
     RateModule,
     LikeModule,

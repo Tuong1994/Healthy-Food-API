@@ -9,7 +9,7 @@ const customerAddresses: CustomerAddress[] = [
     fullAddressVn: '79/24/13 Âu Cơ, Phường 14, Quận  11, Thành phố Hồ Chí Minh',
     cityCode: 79,
     districtCode: 772,
-    wardCode: 26882,
+    wardCode: 27214,
     customerId: 'CUS_1',
     isDelete: false,
     createdAt: new Date(),

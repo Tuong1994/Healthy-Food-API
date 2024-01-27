@@ -34,7 +34,7 @@ export class DistrictService {
   async getDistricts(query: QueryDto) {
     const { keywords, sortBy, langCode, cityCode } = query;
     const districts = await this.prisma.district.findMany({
-      where: { cityCode, isDelete: { equals: false } },
+      where: { AND: [{ cityCode: cityCode && Number(cityCode) }, { isDelete: { equals: false } }] },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
       select: { ...this.getSelectFields(langCode) },
     });
@@ -53,7 +53,7 @@ export class DistrictService {
     const { page, limit, keywords, sortBy, langCode, cityCode } = query;
     let collection: Paging<District> = utils.defaultCollection();
     const districts = await this.prisma.district.findMany({
-      where: { cityCode, isDelete: { equals: false } },
+      where: { AND: [{ cityCode: cityCode && Number(cityCode) }, { isDelete: { equals: false } }] },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
       select: { ...this.getSelectFields(langCode) },
     });
