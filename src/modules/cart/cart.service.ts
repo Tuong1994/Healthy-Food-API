@@ -6,6 +6,7 @@ import { Paging } from 'src/common/type/base';
 import { ELang } from 'src/common/enum/base';
 import { CartDto } from './cart.dto';
 import utils from 'src/utils';
+import helper from 'src/helper';
 
 type CartItems = Array<Omit<CartItem, 'createdAt' | 'updatedAt'>>;
 
@@ -31,11 +32,12 @@ export class CartService {
   }
 
   async getCarts(query: QueryDto) {
-    const { page, limit, langCode } = query;
+    const { page, limit, langCode, sortBy } = query;
     let collection: Paging<Cart> = utils.defaultCollection();
     const carts = await this.prisma.cart.findMany({
       where: { isDelete: { equals: false } },
       include: { items: { select: { ...this.getSelectFields(langCode) } } },
+      orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
     });
     const convertCarts = carts.map((cart) => ({
       ...cart,

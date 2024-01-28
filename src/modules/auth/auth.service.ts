@@ -70,10 +70,7 @@ export class AuthService {
     const login = await this.prisma.customer.findUnique({
       where: { email },
       include: {
-        image: {
-          where: { isDelete: { equals: false } },
-          select: { id: true, path: true, size: true, publicId: true },
-        },
+        image: { select: { id: true, path: true, size: true, publicId: true } },
       },
     });
     if (!login) throw new HttpException('Email is not correct', HttpStatus.NOT_FOUND);

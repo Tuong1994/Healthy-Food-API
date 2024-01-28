@@ -45,11 +45,12 @@ export class CommentService {
   }
 
   async getCommentsByCustomer(query: QueryDto) {
-    const { page, limit, customerId, langCode } = query;
+    const { page, limit, customerId, sortBy, langCode } = query;
     let collection: Paging<Comment> = utils.defaultCollection();
     const comments = await this.prisma.comment.findMany({
       where: { customerId, isDelete: { equals: false } },
       include: { product: { select: { ...this.getSelectProductFields(langCode) } } },
+      orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
     });
     if (comments && comments.length > 0) collection = utils.paging<Comment>(comments, page, limit);
     const items = this.convertCollection(collection.items, langCode);

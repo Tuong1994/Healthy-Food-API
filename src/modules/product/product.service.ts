@@ -45,6 +45,13 @@ export class ProductService {
           nameVn: langCode === ELang.VN,
         },
       },
+      likes: {
+        select: {
+          id: true,
+          productId: true,
+          customerId: true,
+        },
+      },
     };
   }
 
