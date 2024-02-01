@@ -17,6 +17,7 @@ export class ShipmentService {
     const shipments = await this.prisma.shipment.findMany({
       where: { isDelete: { equals: false } },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
+      include: { order: { select: { id: true, orderNumber: true } } },
     });
     if (keywords) {
       const filterShipments = shipments.filter(
