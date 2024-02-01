@@ -66,8 +66,17 @@ export class ProductService {
   }
 
   async getProducts(query: QueryDto) {
-    const { langCode, categoryId, subCategoryId, productStatus, inventoryStatus, origin, sortBy, keywords } =
-      query;
+    const {
+      langCode,
+      categoryId,
+      subCategoryId,
+      productStatus,
+      productUnit,
+      inventoryStatus,
+      origin,
+      sortBy,
+      keywords,
+    } = query;
 
     const products = await this.prisma.product.findMany({
       where: {
@@ -76,6 +85,7 @@ export class ProductService {
           { subCategoryId },
           { isDelete: { equals: false } },
           { origin: origin && Number(origin) },
+          { unit: productUnit && Number(productUnit) },
           { inventoryStatus: inventoryStatus ? Number(inventoryStatus) : EInventoryStatus.IN_STOCK },
           productStatus
             ? Number(productStatus) !== EProductStatus.ALL
@@ -111,6 +121,7 @@ export class ProductService {
       categoryId,
       subCategoryId,
       productStatus,
+      productUnit,
       inventoryStatus,
       origin,
     } = query;
@@ -123,6 +134,7 @@ export class ProductService {
           { subCategoryId },
           { isDelete: { equals: false } },
           { origin: origin && Number(origin) },
+          { unit: productUnit && Number(productUnit) },
           { inventoryStatus: inventoryStatus ? Number(inventoryStatus) : EInventoryStatus.IN_STOCK },
           productStatus
             ? Number(productStatus) !== EProductStatus.ALL
