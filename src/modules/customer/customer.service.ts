@@ -43,8 +43,7 @@ export class CustomerService {
       cityCode: true,
       districtCode: true,
       wardCode: true,
-      createdAt: true,
-      updatedAt: true,
+      customerId: true,
     };
   }
 
@@ -103,11 +102,13 @@ export class CustomerService {
     });
     return {
       ...customer,
-      address: {
-        addressEn: customer.address.addressEn,
-        addressVn: customer.address.addressVn,
-        ...utils.convertAddress(customer.address, langCode),
-      },
+      address: customer.address
+        ? {
+            addressEn: customer.address.addressEn,
+            addressVn: customer.address.addressVn,
+            ...utils.convertAddress(customer.address, langCode),
+          }
+        : null,
     };
   }
 
@@ -279,6 +280,14 @@ export class CustomerService {
       throw new HttpException('Removed success', HttpStatus.OK);
     }
     throw new HttpException('Customers not found', HttpStatus.NOT_FOUND);
+  }
+
+  async removeAddress(query: QueryDto) {
+    const { customerId } = query;
+    const address = await this.prisma.customerAddress.findUnique({ where: { customerId } });
+    if (!address) throw new HttpException('Address not found', HttpStatus.NOT_FOUND);
+    await this.prisma.customerAddress.delete({ where: { customerId } });
+    throw new HttpException('Removed susscess', HttpStatus.OK);
   }
 
   async removeCustomersPermanent(query: QueryDto) {

@@ -73,6 +73,14 @@ export class CustomerController {
     return this.customerService.removeCustomers(query);
   }
 
+  @Delete('removeAddress')
+  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
+  @UseGuards(JwtGuard, RoleGuard)
+  @HttpCode(HttpStatus.OK)
+  removeAddress(@Query() query: QueryDto) {
+    return this.customerService.removeAddress(query);
+  }
+
   @Delete('removePermanent')
   @Roles(ERole.SUPER_ADMIN)
   @UseGuards(JwtGuard, RoleGuard)
