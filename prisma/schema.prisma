@@ -160,7 +160,7 @@ model Order {
   status        Int
   paymentMethod Int
   paymentStatus Int
-  recievedType  Int
+  receivedType  Int
   shipmentFee   Int
   totalPayment  Int
 

@@ -10,7 +10,7 @@ import {
   EOrderPaymentStatus,
   EOrderPaymentMethod,
   EOrderStatus,
-  ERecievedType,
+  EReceivedType,
 } from 'src/modules/order/order.enum';
 
 export class QueryDto {
@@ -37,12 +37,16 @@ export class QueryDto {
   districtId?: string;
   wardId?: string;
 
-  gender?: EGender;
   cityCode?: number;
   districtCode?: number;
+  
   hasSub?: boolean;
-
+  hasCate?: boolean;
+  hasLike?: boolean;
+  convertName?: boolean;
+  
   role?: ERole;
+  gender?: EGender;
   langCode?: ELang;
   productStatus?: EProductStatus;
   productUnit?: EProductUnit;
@@ -51,5 +55,5 @@ export class QueryDto {
   orderStatus?: EOrderStatus;
   paymentMethod?: EOrderPaymentMethod;
   paymentStatus?: EOrderPaymentStatus;
-  recievedType?: ERecievedType;
+  receivedType?: EReceivedType;
 }

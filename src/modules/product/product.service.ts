@@ -2,13 +2,19 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueryDto } from 'src/common/dto/query.dto';
 import { ELang } from 'src/common/enum/base';
-import { EInventoryStatus, EProductStatus } from './product.enum';
+import { EProductStatus } from './product.enum';
 import { Paging } from 'src/common/type/base';
 import { Category, Product } from '@prisma/client';
 import { ProductDto } from './product.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import helper from 'src/helper';
 import utils from 'src/utils';
+
+type SelectFieldsOptions = {
+  hasCate?: boolean;
+  hasLike?: boolean;
+  convertName?: boolean;
+};
 
 @Injectable()
 export class ProductService {
@@ -17,11 +23,11 @@ export class ProductService {
     private cloudinary: CloudinaryService,
   ) {}
 
-  private getSelectFields(langCode: ELang) {
+  private getSelectFields(langCode: ELang, options?: SelectFieldsOptions) {
     return {
       id: true,
-      nameEn: langCode === ELang.EN,
-      nameVn: langCode === ELang.VN,
+      nameEn: options?.convertName ? langCode === ELang.EN : true,
+      nameVn: options?.convertName ? langCode === ELang.VN : true,
       image: true,
       costPrice: true,
       profit: true,
@@ -38,20 +44,24 @@ export class ProductService {
       isDelete: true,
       createdAt: true,
       updatedAt: true,
-      category: {
-        select: {
-          id: true,
-          nameEn: langCode === ELang.EN,
-          nameVn: langCode === ELang.VN,
-        },
-      },
-      likes: {
-        select: {
-          id: true,
-          productId: true,
-          customerId: true,
-        },
-      },
+      category: options?.hasCate
+        ? {
+            select: {
+              id: true,
+              nameEn: langCode === ELang.EN,
+              nameVn: langCode === ELang.VN,
+            },
+          }
+        : false,
+      likes: options?.hasLike
+        ? {
+            select: {
+              id: true,
+              productId: true,
+              customerId: true,
+            },
+          }
+        : false,
     };
   }
 
@@ -76,6 +86,8 @@ export class ProductService {
       origin,
       sortBy,
       keywords,
+      hasCate,
+      hasLike,
     } = query;
 
     const products = await this.prisma.product.findMany({
@@ -86,7 +98,7 @@ export class ProductService {
           { isDelete: { equals: false } },
           { origin: origin && Number(origin) },
           { unit: productUnit && Number(productUnit) },
-          { inventoryStatus: inventoryStatus ? Number(inventoryStatus) : EInventoryStatus.IN_STOCK },
+          { inventoryStatus: inventoryStatus && Number(inventoryStatus) },
           productStatus
             ? Number(productStatus) !== EProductStatus.ALL
               ? { status: Number(productStatus) }
@@ -98,7 +110,7 @@ export class ProductService {
         { totalPrice: helper.getSortBy(sortBy) ?? 'asc' },
         { updatedAt: helper.getSortBy(sortBy) ?? 'asc' },
       ],
-      select: { ...this.getSelectFields(langCode) },
+      select: { ...this.getSelectFields(langCode, { hasCate, hasLike, convertName: true }) },
     });
     let filterProducts: Product[] = [];
     if (keywords)
@@ -124,6 +136,8 @@ export class ProductService {
       productUnit,
       inventoryStatus,
       origin,
+      hasCate,
+      hasLike,
     } = query;
 
     let collection: Paging<Product> = utils.defaultCollection();
@@ -135,7 +149,7 @@ export class ProductService {
           { isDelete: { equals: false } },
           { origin: origin && Number(origin) },
           { unit: productUnit && Number(productUnit) },
-          { inventoryStatus: inventoryStatus ? Number(inventoryStatus) : EInventoryStatus.IN_STOCK },
+          { inventoryStatus: inventoryStatus && Number(inventoryStatus) },
           productStatus
             ? Number(productStatus) !== EProductStatus.ALL
               ? { status: Number(productStatus) }
@@ -147,7 +161,7 @@ export class ProductService {
         { updatedAt: helper.getSortBy(sortBy) ?? 'desc' },
         { totalPrice: helper.getSortBy(sortBy) ?? 'asc' },
       ],
-      select: { ...this.getSelectFields(langCode) },
+      select: { ...this.getSelectFields(langCode, { hasCate, hasLike, convertName: true }) },
     });
 
     if (keywords) {
@@ -163,10 +177,10 @@ export class ProductService {
   }
 
   async getProduct(query: QueryDto) {
-    const { productId, langCode } = query;
+    const { productId, langCode, hasCate, hasLike, convertName } = query;
     const product = await this.prisma.product.findUnique({
       where: { id: productId, isDelete: { equals: false } },
-      select: { ...this.getSelectFields(langCode), rates: true },
+      select: { ...this.getSelectFields(langCode, { hasCate, hasLike, convertName }), rates: true },
     });
     const response = {
       ...product,
@@ -174,13 +188,14 @@ export class ProductService {
       point: helper.getRatePoints(product.rates),
     };
     delete response.rates;
-    return {
-      ...utils.convertRecordsName<Product>(response, langCode),
+    const convertResponse = {
+      ...utils.convertRecordsName<Product>({ ...response }, langCode),
       category:
         'category' in response
           ? { ...utils.convertRecordsName<Category>(response.category as Category, langCode) }
           : null,
     };
+    return convertName ? convertResponse : response;
   }
 
   async createProduct(file: Express.Multer.File, product: ProductDto) {
@@ -198,7 +213,6 @@ export class ProductService {
       origin,
       categoryId,
       subCategoryId,
-      isNew,
     } = product;
 
     const newProduct = await this.prisma.product.create({
@@ -213,7 +227,7 @@ export class ProductService {
         unit: Number(unit),
         status: Number(status),
         origin: Number(origin),
-        isNew: Boolean(isNew) ?? true,
+        isNew: true,
         supplier,
         categoryId,
         subCategoryId,
@@ -225,7 +239,7 @@ export class ProductService {
       if (!file) return newProduct;
       const result = await this.cloudinary.upload(utils.getFileUrl(file));
       const image = utils.generateImage(result, { productId: newProduct.id });
-      await this.prisma.image.create({ data: image });
+      await this.prisma.image.create({ data: { ...image, isDelete: false } });
       const resProduct = await this.prisma.product.findUnique({
         where: { id: newProduct.id },
         include: { image: true },
@@ -284,7 +298,7 @@ export class ProductService {
         await this.cloudinary.destroy(updateProduct.image.publicId);
         await this.prisma.product.update({ where: { id: productId }, data: image });
       } else {
-        await this.prisma.image.create({ data: image });
+        await this.prisma.image.create({ data: { ...image, isDelete: false } });
       }
     }
 

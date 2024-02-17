@@ -42,7 +42,7 @@ export class OrderService {
       orderStatus,
       paymentStatus,
       paymentMethod,
-      recievedType,
+      receivedType,
     } = query;
     let collection: Paging<Order> = utils.defaultCollection();
     const orders = await this.prisma.order.findMany({
@@ -51,13 +51,17 @@ export class OrderService {
           { customerId },
           { paymentMethod: paymentMethod && Number(paymentMethod) },
           { paymentStatus: paymentStatus && Number(paymentStatus) },
-          { recievedType: recievedType && Number(recievedType) },
+          { receivedType: receivedType && Number(receivedType) },
           { status: orderStatus && Number(orderStatus) },
           { isDelete: { equals: false } },
         ],
       },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
-      include: { shipment: true, items: { select: { ...this.getSelectFields(langCode) } } },
+      include: {
+        shipment: true,
+        customer: { select: { id: true, fullName: true } },
+        items: { select: { ...this.getSelectFields(langCode) } },
+      },
     });
     const convertOrders = orders.map((order) => ({
       ...order,
@@ -85,7 +89,7 @@ export class OrderService {
       orderStatus,
       paymentStatus,
       paymentMethod,
-      recievedType,
+      receivedType,
       customerId,
     } = query;
     let collection: Paging<Order> = utils.defaultCollection();
@@ -95,7 +99,7 @@ export class OrderService {
           { customerId },
           { paymentMethod: paymentMethod && Number(paymentMethod) },
           { paymentStatus: paymentStatus && Number(paymentStatus) },
-          { recievedType: recievedType && Number(recievedType) },
+          { receivedType: receivedType && Number(receivedType) },
           { status: orderStatus && Number(orderStatus) },
           { isDelete: { equals: false } },
         ],
@@ -139,7 +143,7 @@ export class OrderService {
       status,
       paymentStatus,
       paymentMethod,
-      recievedType,
+      receivedType,
       shipmentFee,
       totalPayment,
       customerId,
@@ -152,7 +156,7 @@ export class OrderService {
         status,
         paymentStatus,
         paymentMethod,
-        recievedType,
+        receivedType,
         shipmentFee,
         totalPayment,
         customerId,
@@ -203,7 +207,7 @@ export class OrderService {
       status,
       paymentStatus,
       paymentMethod,
-      recievedType,
+      receivedType,
       shipmentFee,
       totalPayment,
       customerId,
@@ -217,7 +221,7 @@ export class OrderService {
         status,
         paymentStatus,
         paymentMethod,
-        recievedType,
+        receivedType,
         shipmentFee,
         totalPayment,
         customerId,

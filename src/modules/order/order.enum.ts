@@ -15,7 +15,7 @@ export enum EOrderPaymentStatus {
   PAID = 2,
 }
 
-export enum ERecievedType {
+export enum EReceivedType {
   STORE = 1,
   DELIVERY = 2,
 }

@@ -1,6 +1,7 @@
 import {
   Controller,
   Delete,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -17,10 +18,17 @@ import { multerOption } from 'src/common/config/multer.config';
 import { Roles } from 'src/common/decorator/role.decorator';
 import { ERole } from 'src/common/enum/base';
 import { RoleGuard } from 'src/common/guard/role.guard';
+import { QueryPaging } from 'src/common/decorator/query.decorator';
 
 @Controller('api/upload')
 export class UploadController {
   constructor(private uploadService: UploadService) {}
+
+  @Get('list')
+  @HttpCode(HttpStatus.OK)
+  getImages(@QueryPaging() query: QueryDto) {
+    return this.uploadService.getImages(query);
+  }
 
   @Post('customer')
   @UseGuards(JwtGuard)

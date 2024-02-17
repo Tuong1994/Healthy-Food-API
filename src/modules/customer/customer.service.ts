@@ -177,7 +177,7 @@ export class CustomerService {
       if (file) {
         const result = await this.cloudinary.upload(utils.getFileUrl(file));
         const image = utils.generateImage(result, { customerId: newCustomer.id });
-        await this.prisma.image.create({ data: image });
+        await this.prisma.image.create({ data: { ...image, isDelete: false } });
         responseCustomer = await this.prisma.customer.findUnique({
           where: { id: newCustomer.id },
           include: { address: true, image: true },
@@ -255,7 +255,7 @@ export class CustomerService {
         await this.cloudinary.destroy(updateCustomer.image.publicId);
         await this.prisma.image.update({ where: { customerId }, data: image });
       } else {
-        await this.prisma.image.create({ data: image });
+        await this.prisma.image.create({ data: { ...image, isDelete: false } });
       }
     }
 

@@ -1,5 +1,5 @@
 import { IsArray, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
-import { EOrderPaymentStatus, EOrderPaymentMethod, EOrderStatus, ERecievedType } from './order.enum';
+import { EOrderPaymentStatus, EOrderPaymentMethod, EOrderStatus, EReceivedType } from './order.enum';
 
 class OrderItemDto {
   @IsNotEmpty()
@@ -44,7 +44,7 @@ export class OrderDto {
   paymentStatus: EOrderPaymentStatus;
 
   @IsNotEmpty()
-  recievedType: ERecievedType;
+  receivedType: EReceivedType;
 
   @IsNotEmpty()
   @IsNumber()

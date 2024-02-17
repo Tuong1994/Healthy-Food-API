@@ -17,6 +17,6 @@ export const multerOption = (): multer.Options => {
         ),
       );
     },
-    storage:memoryStorage()
+    storage: memoryStorage(),
   };
 };

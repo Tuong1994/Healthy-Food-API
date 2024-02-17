@@ -2,6 +2,8 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueryDto } from 'src/common/dto/query.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { Paging } from 'src/common/type/base';
+import { Image } from '@prisma/client';
 import utils from 'src/utils';
 
 @Injectable()
@@ -10,6 +12,14 @@ export class UploadService {
     private prisma: PrismaService,
     private cloudinary: CloudinaryService,
   ) {}
+
+  async getImages(query: QueryDto) {
+    const { page, limit } = query;
+    let collection: Paging<Image> = utils.defaultCollection();
+    const images = await this.prisma.image.findMany({ where: { isDelete: { equals: false } } });
+    if (images && images.length > 0) collection = utils.paging<Image>(images, page, limit);
+    return collection;
+  }
 
   async customerUpload(query: QueryDto, file: Express.Multer.File) {
     const { customerId } = query;
@@ -28,7 +38,7 @@ export class UploadService {
       await this.cloudinary.destroy(customer.image.publicId);
       await this.prisma.image.update({ where: { customerId }, data: image });
     } else {
-      await this.prisma.image.create({ data: image });
+      await this.prisma.image.create({ data: { ...image, isDelete: false } });
     }
 
     throw new HttpException('Uploaded success', HttpStatus.OK);
@@ -51,7 +61,7 @@ export class UploadService {
       await this.cloudinary.destroy(image.publicId);
       await this.prisma.image.update({ where: { productId }, data: image });
     } else {
-      await this.prisma.image.create({ data: image });
+      await this.prisma.image.create({ data: { ...image, isDelete: false } });
     }
 
     throw new HttpException('Uploaded success', HttpStatus.OK);

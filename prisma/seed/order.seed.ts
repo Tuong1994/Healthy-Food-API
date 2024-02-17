@@ -3,7 +3,7 @@ import {
   EOrderPaymentMethod,
   EOrderPaymentStatus,
   EOrderStatus,
-  ERecievedType,
+  EReceivedType,
 } from '../../src/modules/order/order.enum';
 
 const orders: Order[] = [
@@ -13,7 +13,7 @@ const orders: Order[] = [
     status: EOrderStatus.WAITTING,
     paymentMethod: EOrderPaymentMethod.TRANSFER,
     paymentStatus: EOrderPaymentStatus.UNPAID,
-    recievedType: ERecievedType.STORE,
+    receivedType: EReceivedType.STORE,
     shipmentFee: 0,
     totalPayment: 75000,
     customerId: 'CUS_3',
@@ -28,7 +28,7 @@ const orders: Order[] = [
     status: EOrderStatus.DELIVERING,
     paymentMethod: EOrderPaymentMethod.CASH,
     paymentStatus: EOrderPaymentStatus.PAID,
-    recievedType: ERecievedType.STORE,
+    receivedType: EReceivedType.STORE,
     shipmentFee: 0,
     totalPayment: 150000,
     customerId: 'CUS_1',
@@ -43,7 +43,7 @@ const orders: Order[] = [
     status: EOrderStatus.DELIVERED,
     paymentMethod: EOrderPaymentMethod.COD,
     paymentStatus: EOrderPaymentStatus.PAID,
-    recievedType: ERecievedType.DELIVERY,
+    receivedType: EReceivedType.DELIVERY,
     shipmentFee: 50000,
     totalPayment: 135000,
     customerId: 'CUS_2',
