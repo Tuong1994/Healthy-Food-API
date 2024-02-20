@@ -59,7 +59,7 @@ export class ShipmentController {
     return this.shipmentService.removeShipments(query);
   }
 
-  @Delete('removePermenant')
+  @Delete('removePermanent')
   @Roles(ERole.SUPER_ADMIN)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)

@@ -108,7 +108,7 @@ export class CartService {
         if (item.id) {
           if (item.quantity === 0) await this.prisma.cartItem.delete({ where: { id: item.id } });
           else await this.prisma.cartItem.update({ where: { id: item.id }, data: { ...item } });
-        } else await this.prisma.cartItem.create({ data: { ...item, cartId } });
+        } else await this.prisma.cartItem.create({ data: { ...item, cartId, isDelete: false } });
       }),
     );
     throw new HttpException('Updated success', HttpStatus.OK);

@@ -19,6 +19,7 @@ export class OrderService {
       id: true,
       quantity: true,
       productId: true,
+      orderId: true,
       product: {
         select: {
           id: true,
@@ -58,7 +59,6 @@ export class OrderService {
       },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
       include: {
-        shipment: true,
         customer: { select: { id: true, fullName: true } },
         items: { select: { ...this.getSelectFields(langCode) } },
       },
@@ -127,7 +127,10 @@ export class OrderService {
     const { orderId, langCode } = query;
     const order = await this.prisma.order.findUnique({
       where: { id: orderId, isDelete: { equals: false } },
-      include: { shipment: true, items: { select: { ...this.getSelectFields(langCode) } } },
+      include: {
+        shipment: { where: { isDelete: { equals: false } } },
+        items: { select: { ...this.getSelectFields(langCode) } },
+      },
     });
     return {
       ...order,
@@ -202,7 +205,7 @@ export class OrderService {
   }
 
   async updateOrder(query: QueryDto, order: OrderDto) {
-    const { orderId } = query;
+    const { orderId, ids } = query;
     const {
       status,
       paymentStatus,
@@ -214,6 +217,7 @@ export class OrderService {
       orderNumber,
       note,
       items,
+      shipment,
     } = order;
     await this.prisma.order.update({
       where: { id: orderId },
@@ -229,7 +233,28 @@ export class OrderService {
         note,
       },
     });
-    await this.prisma.orderItem.updateMany({ data: items });
+    if (ids && ids.length > 0) {
+      const listIds = ids.split(',');
+      await this.prisma.orderItem.deleteMany({ where: { productId: { in: listIds } } });
+    }
+    await Promise.all(
+      items.map(async (item) => {
+        if (item.id) await this.prisma.orderItem.update({ where: { id: item.id }, data: { ...item } });
+        else await this.prisma.orderItem.create({ data: { ...item, orderId, isDelete: false } });
+      }),
+    );
+    if (shipment) {
+      const order = await this.prisma.order.findUnique({
+        where: { id: orderId },
+        select: { shipment: true },
+      });
+      if (order.shipment)
+        await this.prisma.shipment.update({ where: { id: order.shipment.id }, data: shipment });
+      else
+        await this.prisma.shipment.create({
+          data: { ...shipment, orderId, shipmentNumber: `#S_${Date.now()}`, isDelete: false },
+        });
+    }
     throw new HttpException('Updated success', HttpStatus.OK);
   }
 
