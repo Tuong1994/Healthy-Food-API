@@ -4,6 +4,7 @@ import { QueryDto } from 'src/common/dto/query.dto';
 import { Paging } from 'src/common/type/base';
 import { Shipment } from '@prisma/client';
 import { ShipmentDto } from './shipment.dto';
+import { EReceivedType } from '../order/order.enum';
 import utils from 'src/utils';
 import helper from 'src/helper';
 
@@ -35,6 +36,7 @@ export class ShipmentService {
     const { shipmentId } = query;
     const shipment = await this.prisma.shipment.findUnique({
       where: { id: shipmentId, isDelete: { equals: false } },
+      include: { order: { select: { id: true, orderNumber: true } } },
     });
     return shipment;
   }
@@ -73,6 +75,14 @@ export class ShipmentService {
     const listIds = ids.split(',');
     const shipments = await this.prisma.shipment.findMany({ where: { id: { in: listIds } } });
     if (shipments && shipments.length > 0) {
+      await Promise.all(
+        shipments.map(async (shipment) => {
+          await this.prisma.order.update({
+            where: { id: shipment.orderId },
+            data: { receivedType: EReceivedType.STORE },
+          });
+        }),
+      );
       await this.prisma.shipment.deleteMany({ where: { id: { in: listIds } } });
       throw new HttpException('Removed success', HttpStatus.OK);
     }
