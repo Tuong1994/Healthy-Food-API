@@ -74,12 +74,13 @@ export class SubCategoryService {
   }
 
   async getSubCategory(query: QueryDto) {
-    const { subCategoryId, langCode } = query;
+    const { subCategoryId, langCode, convertName } = query;
     const subCategory = await this.prisma.subCategory.findUnique({
       where: { id: subCategoryId, isDelete: { equals: false } },
       select: { ...this.getSelectFields(langCode) },
     });
-    return utils.convertRecordsName<SubCategory>(subCategory, langCode);
+    const convertResponse = utils.convertRecordsName<SubCategory>(subCategory, langCode);
+    return convertName ? convertResponse : subCategory;
   }
 
   async createSubCategory(file: Express.Multer.File, subCategory: SubCategoryDto) {

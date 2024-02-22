@@ -3,18 +3,12 @@ import { PrismaService } from '../prisma/prisma.service';
 import { QueryDto } from 'src/common/dto/query.dto';
 import { ELang } from 'src/common/enum/base';
 import { EProductStatus } from './product.enum';
-import { Paging } from 'src/common/type/base';
+import { Paging, SelectFieldsOptions } from 'src/common/type/base';
 import { Category, Product } from '@prisma/client';
 import { ProductDto } from './product.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import helper from 'src/helper';
 import utils from 'src/utils';
-
-type SelectFieldsOptions = {
-  hasCate?: boolean;
-  hasLike?: boolean;
-  convertName?: boolean;
-};
 
 @Injectable()
 export class ProductService {

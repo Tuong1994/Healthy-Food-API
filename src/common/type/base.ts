@@ -6,3 +6,10 @@ export type Paging<M> = {
 };
 
 export type List<M> = Omit<Paging<M>, 'page' | 'limit'>;
+
+export type SelectFieldsOptions = {
+  hasCate?: boolean;
+  hasLike?: boolean;
+  hasSub?: boolean;
+  convertName?: boolean;
+};

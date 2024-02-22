@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueryDto } from 'src/common/dto/query.dto';
-import { Paging } from 'src/common/type/base';
+import { Paging, SelectFieldsOptions } from 'src/common/type/base';
 import { Category, SubCategory } from '@prisma/client';
 import { CategoryDto } from './category.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
@@ -16,22 +16,22 @@ export class CategoryService {
     private cloudinary: CloudinaryService,
   ) {}
 
-  private getSelectFields(langCode: ELang, hasSub: boolean) {
+  private getSelectFields(langCode: ELang, options: SelectFieldsOptions) {
     return {
       id: true,
       image: true,
-      nameVn: langCode === ELang.VN,
-      nameEn: langCode === ELang.EN,
+      nameVn: options.convertName ? langCode === ELang.VN : true,
+      nameEn: options.convertName ? langCode === ELang.EN : true,
       isDelete: true,
       createdAt: true,
       updatedAt: true,
-      subCategories: hasSub
+      subCategories: options.hasSub
         ? {
             select: {
               id: true,
               image: true,
-              nameVn: langCode === ELang.VN,
-              nameEn: langCode === ELang.EN,
+              nameVn: options.convertName ? langCode === ELang.VN : true,
+              nameEn: options.convertName ? langCode === ELang.EN : true,
               isDelete: true,
               createdAt: true,
               updatedAt: true,
@@ -58,7 +58,7 @@ export class CategoryService {
     const categories = await this.prisma.category.findMany({
       where: { isDelete: false },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
-      select: { ...this.getSelectFields(langCode, hasSub) },
+      select: { ...this.getSelectFields(langCode, { hasSub, convertName: true }) },
     });
     let filterCategories: Category[] = [];
     if (keywords)
@@ -77,7 +77,7 @@ export class CategoryService {
     const categories = await this.prisma.category.findMany({
       where: { isDelete: false },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
-      select: { ...this.getSelectFields(langCode, hasSub) },
+      select: { ...this.getSelectFields(langCode, { hasSub, convertName: true }) },
     });
     if (keywords) {
       const filterCategories = categories.filter((category) =>
@@ -92,12 +92,13 @@ export class CategoryService {
   }
 
   async getCategory(query: QueryDto) {
-    const { categoryId, langCode, hasSub } = query;
+    const { categoryId, langCode, hasSub, convertName } = query;
     const category = await this.prisma.category.findUnique({
       where: { id: categoryId, isDelete: false },
-      select: { ...this.getSelectFields(langCode, hasSub) },
+      select: { ...this.getSelectFields(langCode, { hasSub, convertName }) },
     });
-    return utils.convertRecordsName(category, langCode);
+    const convertResponse = utils.convertRecordsName({ ...category }, langCode);
+    return convertName ? convertResponse : category;
   }
 
   async createCategory(file: Express.Multer.File, category: CategoryDto) {
