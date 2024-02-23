@@ -303,7 +303,7 @@ export class ProductService {
     const listIds = ids.split(',');
     const products = await this.prisma.product.findMany({
       where: { id: { in: listIds } },
-      select: { id: true, image: true, rates: true, likes: true },
+      select: { id: true, image: true, comments: true, rates: true, likes: true },
     });
     if (products && !products.length) throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
     await this.prisma.product.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
@@ -311,6 +311,11 @@ export class ProductService {
       products.map(async (product) => {
         if (product.image)
           await this.prisma.image.update({ where: { productId: product.id }, data: { isDelete: true } });
+        if (product.comments.length > 0)
+          await this.prisma.comment.updateMany({
+            where: { productId: product.id },
+            data: { isDelete: true },
+          });
         if (product.rates.length > 0)
           await this.prisma.rate.updateMany({
             where: { productId: product.id },
@@ -347,7 +352,7 @@ export class ProductService {
   async restoreProducts() {
     const products = await this.prisma.product.findMany({
       where: { isDelete: { equals: true } },
-      select: { id: true, image: true, rates: true, likes: true },
+      select: { id: true, image: true, comments: true, rates: true, likes: true },
     });
     if (products && !products.length) throw new HttpException('There are no data to restored', HttpStatus.OK);
     await Promise.all(
@@ -355,6 +360,11 @@ export class ProductService {
         await this.prisma.product.update({ where: { id: product.id }, data: { isDelete: false } });
         if (product.image)
           await this.prisma.image.update({ where: { productId: product.id }, data: { isDelete: false } });
+        if (product.comments.length > 0)
+          await this.prisma.comment.updateMany({
+            where: { productId: product.id },
+            data: { isDelete: false },
+          });
         if (product.rates.length > 0)
           await this.prisma.rate.updateMany({
             where: { productId: product.id },

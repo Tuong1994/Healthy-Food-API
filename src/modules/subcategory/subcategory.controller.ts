@@ -75,7 +75,7 @@ export class SubCategoryController {
     return this.subCategoryService.removeSubCategories(query);
   }
 
-  @Delete('removePermenant')
+  @Delete('removePermanent')
   @Roles(ERole.SUPER_ADMIN)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)

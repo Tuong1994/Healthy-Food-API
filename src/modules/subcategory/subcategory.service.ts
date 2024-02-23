@@ -1,8 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueryDto } from 'src/common/dto/query.dto';
-import { Paging } from 'src/common/type/base';
-import { SubCategory } from '@prisma/client';
+import { Paging, SelectFieldsOptions } from 'src/common/type/base';
+import { Category, SubCategory } from '@prisma/client';
 import { SubCategoryDto } from './subcategory.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { ELang, ERecordStatus } from 'src/common/enum/base';
@@ -16,23 +16,36 @@ export class SubCategoryService {
     private cloudinary: CloudinaryService,
   ) {}
 
-  private getSelectFields(langCode: ELang) {
+  private getSelectFields(langCode: ELang, options?: SelectFieldsOptions) {
     return {
       id: true,
       image: true,
-      nameVn: langCode === ELang.VN,
-      nameEn: langCode === ELang.EN,
+      nameVn: options?.convertName ? langCode === ELang.VN : true,
+      nameEn: options?.convertName ? langCode === ELang.EN : true,
       categoryId: true,
       status: true,
       isDelete: true,
       createdAt: true,
       updatedAt: true,
+      category: options?.hasCate
+        ? {
+            select: {
+              id: true,
+              nameVn: options?.convertName ? langCode === ELang.VN : true,
+              nameEn: options?.convertName ? langCode === ELang.EN : true,
+            },
+          }
+        : false,
     };
   }
 
   private convertCollection(subCategories: SubCategory[], langCode: ELang) {
     return subCategories.map((subCategory) => ({
       ...utils.convertRecordsName<SubCategory>(subCategory, langCode),
+      category:
+        'category' in subCategory
+          ? { ...utils.convertRecordsName<Category>(subCategory.category as Category, langCode) }
+          : null,
     }));
   }
 
@@ -80,7 +93,7 @@ export class SubCategoryService {
         ],
       },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
-      select: { ...this.getSelectFields(langCode) },
+      select: { ...this.getSelectFields(langCode, { hasCate: true }) },
     });
     if (keywords) {
       const filterSubCategories = subCategories.filter((subCategory) =>
@@ -98,9 +111,9 @@ export class SubCategoryService {
     const { subCategoryId, langCode, convertName } = query;
     const subCategory = await this.prisma.subCategory.findUnique({
       where: { id: subCategoryId, isDelete: { equals: false } },
-      select: { ...this.getSelectFields(langCode) },
+      select: { ...this.getSelectFields(langCode, { convertName }) },
     });
-    const convertResponse = utils.convertRecordsName<SubCategory>(subCategory, langCode);
+    const convertResponse = utils.convertRecordsName<SubCategory>({ ...subCategory }, langCode);
     return convertName ? convertResponse : subCategory;
   }
 

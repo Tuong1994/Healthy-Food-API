@@ -117,7 +117,7 @@ export class CategoryService {
       where: { id: categoryId, isDelete: false },
       select: { ...this.getSelectFields(langCode, { hasSub, convertName }) },
     });
-    const convertResponse = utils.convertRecordsName({ ...category }, langCode);
+    const convertResponse = utils.convertRecordsName<Category>({ ...category }, langCode);
     return convertName ? convertResponse : category;
   }
 
@@ -168,14 +168,19 @@ export class CategoryService {
     const listIds = ids.split(',');
     const categories = await this.prisma.category.findMany({
       where: { id: { in: listIds } },
-      select: { id: true, image: true },
+      select: { id: true, image: true, subCategories: true },
     });
     if (categories && !categories.length) throw new HttpException('Category not found', HttpStatus.NOT_FOUND);
     await this.prisma.category.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
     await Promise.all(
       categories.map(async (category) => {
-        if (!category.image) return;
-        await this.prisma.image.update({ where: { categoryId: category.id }, data: { isDelete: true } });
+        if (!category.image)
+          await this.prisma.image.update({ where: { categoryId: category.id }, data: { isDelete: true } });
+        if (category.subCategories.length > 0)
+          await this.prisma.subCategory.updateMany({
+            where: { categoryId: category.id },
+            data: { isDelete: true },
+          });
       }),
     );
     throw new HttpException('Removed success', HttpStatus.OK);
@@ -202,7 +207,7 @@ export class CategoryService {
   async restoreCategories() {
     const categories = await this.prisma.category.findMany({
       where: { isDelete: { equals: true } },
-      select: { id: true, image: true },
+      select: { id: true, image: true, subCategories: true },
     });
     if (categories && !categories.length)
       throw new HttpException('There are no data to restored', HttpStatus.OK);
@@ -211,6 +216,11 @@ export class CategoryService {
         await this.prisma.category.update({ where: { id: category.id }, data: { isDelete: false } });
         if (category.image)
           await this.prisma.image.update({ where: { categoryId: category.id }, data: { isDelete: false } });
+        if (category.subCategories.length > 0)
+          await this.prisma.subCategory.updateMany({
+            where: { categoryId: category.id },
+            data: { isDelete: false },
+          });
       }),
     );
     throw new HttpException('Restored success', HttpStatus.OK);
