@@ -1,6 +1,6 @@
 import { Product } from '@prisma/client';
-import { ELang } from '../../../src/common/enum/base';
-import { EInventoryStatus, EProductOrigin, EProductStatus, EProductUnit } from '../../../src/modules/product/product.enum';
+import { ELang, ERecordStatus } from '../../../src/common/enum/base';
+import { EInventoryStatus, EProductOrigin, EProductUnit } from '../../../src/modules/product/product.enum';
 
 const items = [
   // Subcategory 1
@@ -603,7 +603,7 @@ const products_vn = [...items].map((item, idx) => ({
   profit: 0,
   totalPrice: item.totalPrice,
   unit: item.unit ?? EProductUnit.KG,
-  status: EProductStatus.ACTIVE,
+  status: ERecordStatus.ACTIVE,
   inventoryStatus: EInventoryStatus.IN_STOCK,
   langCode: ELang.VN,
   origin: EProductOrigin.VN,

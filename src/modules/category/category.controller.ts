@@ -76,16 +76,16 @@ export class CategoryController {
   }
 
   @Delete('removePermanent')
-  @Roles(ERole.SUPER_ADMIN)
-  @UseGuards(JwtGuard, RoleGuard)
+  // @Roles(ERole.SUPER_ADMIN)
+  // @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeCategoriesPermanent(@Query() query: QueryDto) {
     return this.categoryService.removeCategoriesPermanent(query);
   }
 
   @Post('restore')
-  @Roles(ERole.SUPER_ADMIN)
-  @UseGuards(JwtGuard, RoleGuard)
+  // @Roles(ERole.SUPER_ADMIN)
+  // @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   restoreCategories() {
     return this.categoryService.restoreCategories();

@@ -261,27 +261,43 @@ export class OrderService {
   async removeOrders(query: QueryDto) {
     const { ids } = query;
     const listIds = ids.split(',');
-    const orders = await this.prisma.order.findMany({ where: { id: { in: listIds } } });
-    if (orders && orders.length > 0) {
-      await this.prisma.order.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
-      throw new HttpException('Removed success', HttpStatus.OK);
-    }
-    throw new HttpException('Order not found', HttpStatus.NOT_FOUND);
+    const orders = await this.prisma.order.findMany({
+      where: { id: { in: listIds } },
+      select: { id: true, items: true, shipment: true },
+    });
+    if (orders && !orders.length) throw new HttpException('Order not found', HttpStatus.NOT_FOUND);
+    await Promise.all(
+      orders.map(async (order) => {
+        await this.prisma.order.update({ where: { id: order.id }, data: { isDelete: true } });
+        await this.prisma.shipment.update({ where: { orderId: order.id }, data: { isDelete: true } });
+        await this.prisma.orderItem.updateMany({ where: { orderId: order.id }, data: { isDelete: true } });
+      }),
+    );
+    throw new HttpException('Removed success', HttpStatus.OK);
   }
 
   async removeOrdersPermanent(query: QueryDto) {
     const { ids } = query;
     const listIds = ids.split(',');
     const orders = await this.prisma.order.findMany({ where: { id: { in: listIds } } });
-    if (orders && orders.length > 0) {
-      await this.prisma.order.deleteMany({ where: { id: { in: listIds } } });
-      throw new HttpException('Removed success', HttpStatus.OK);
-    }
-    throw new HttpException('Order not found', HttpStatus.NOT_FOUND);
+    if (orders && !orders.length) throw new HttpException('Order not found', HttpStatus.NOT_FOUND);
+    await this.prisma.order.deleteMany({ where: { id: { in: listIds } } });
+    throw new HttpException('Removed success', HttpStatus.OK);
   }
 
   async restoreOrders() {
-    await this.prisma.order.updateMany({ data: { isDelete: true } });
+    const orders = await this.prisma.order.findMany({
+      where: { isDelete: { equals: true } },
+      select: { id: true, items: true },
+    });
+    if (orders && !orders.length) throw new HttpException('There are no data to restored', HttpStatus.OK);
+    await Promise.all(
+      orders.map(async (order) => {
+        await this.prisma.order.update({ where: { id: order.id }, data: { isDelete: false } });
+        await this.prisma.shipment.update({ where: { orderId: order.id }, data: { isDelete: false } });
+        await this.prisma.orderItem.updateMany({ where: { orderId: order.id }, data: { isDelete: false } });
+      }),
+    );
     throw new HttpException('Restored success', HttpStatus.OK);
   }
 }

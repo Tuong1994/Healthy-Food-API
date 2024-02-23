@@ -118,26 +118,22 @@ export class CartService {
     const { cartId, ids } = query;
     const listIds = ids.split(',');
     const cartItems = await this.prisma.cartItem.findMany({ where: { id: { in: listIds } } });
-    if (cartItems && cartItems.length > 0) {
-      await this.prisma.cartItem.deleteMany({ where: { id: { in: listIds } } });
-      const cart = await this.prisma.cart.findUnique({
-        where: { id: cartId },
-        select: { id: true, items: true },
-      });
-      if (cart && cart.items.length === 0) await this.prisma.cart.delete({ where: { id: cart.id } });
-      throw new HttpException('Removed success', HttpStatus.OK);
-    }
-    throw new HttpException('Cart item not found', HttpStatus.NOT_FOUND);
+    if (cartItems && !cartItems.length) throw new HttpException('Cart item not found', HttpStatus.NOT_FOUND);
+    await this.prisma.cartItem.deleteMany({ where: { id: { in: listIds } } });
+    const cart = await this.prisma.cart.findUnique({
+      where: { id: cartId },
+      select: { id: true, items: true },
+    });
+    if (cart && cart.items.length === 0) await this.prisma.cart.delete({ where: { id: cart.id } });
+    throw new HttpException('Removed success', HttpStatus.OK);
   }
 
   async removeCarts(query: QueryDto) {
     const { ids } = query;
     const listIds = ids.split(',');
     const carts = await this.prisma.cart.findMany({ where: { id: { in: listIds } } });
-    if (carts && carts.length > 0) {
-      await this.prisma.cart.deleteMany({ where: { id: { in: listIds } } });
-      throw new HttpException('Removed success', HttpStatus.OK);
-    }
-    throw new HttpException('Cart not found', HttpStatus.NOT_FOUND);
+    if (carts && !carts.length) throw new HttpException('Cart not found', HttpStatus.NOT_FOUND);
+    await this.prisma.cart.deleteMany({ where: { id: { in: listIds } } });
+    throw new HttpException('Removed success', HttpStatus.OK);
   }
 }

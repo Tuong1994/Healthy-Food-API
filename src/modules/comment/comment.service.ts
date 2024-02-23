@@ -87,26 +87,28 @@ export class CommentService {
     const { ids } = query;
     const listIds = ids.split(',');
     const comments = await this.prisma.comment.findMany({ where: { id: { in: listIds } } });
-    if (comments && comments.length > 0) {
-      await this.prisma.comment.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
-      throw new HttpException('Removed success', HttpStatus.OK);
-    }
-    throw new HttpException('Comment not found', HttpStatus.NOT_FOUND);
+    if (comments && !comments.length) throw new HttpException('Comment not found', HttpStatus.NOT_FOUND);
+    await this.prisma.comment.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
+    throw new HttpException('Removed success', HttpStatus.OK);
   }
 
   async removeCommentsPermanent(query: QueryDto) {
     const { ids } = query;
     const listIds = ids.split(',');
     const comments = await this.prisma.comment.findMany({ where: { id: { in: listIds } } });
-    if (comments && comments.length > 0) {
-      await this.prisma.comment.deleteMany({ where: { id: { in: listIds } } });
-      throw new HttpException('Removed success', HttpStatus.OK);
-    }
-    throw new HttpException('Comment not found', HttpStatus.NOT_FOUND);
+    if (comments && !comments.length) throw new HttpException('Comment not found', HttpStatus.NOT_FOUND);
+    await this.prisma.comment.deleteMany({ where: { id: { in: listIds } } });
+    throw new HttpException('Removed success', HttpStatus.OK);
   }
 
   async restoreComments() {
-    await this.prisma.comment.updateMany({ data: { isDelete: false } });
+    const comments = await this.prisma.comment.findMany({ where: { isDelete: { equals: true } } });
+    if (comments && !comments.length) throw new HttpException('There are no data to restored', HttpStatus.OK);
+    await Promise.all(
+      comments.map(async (comment) => {
+        await this.prisma.comment.update({ where: { id: comment.id }, data: { isDelete: false } });
+      }),
+    );
     throw new HttpException('Restored success', HttpStatus.OK);
   }
 }

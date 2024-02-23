@@ -1,10 +1,6 @@
 import { Product } from '@prisma/client';
-import {
-  EInventoryStatus,
-  EProductOrigin,
-  EProductStatus,
-  EProductUnit,
-} from '../../src/modules/product/product.enum';
+import { EInventoryStatus, EProductOrigin, EProductUnit } from '../../src/modules/product/product.enum';
+import { ERecordStatus } from '../../src/common/enum/base';
 
 const items = [
   {
@@ -4426,7 +4422,7 @@ const products: Product[] = [...items].map((item, idx) => ({
   profit: 0,
   totalPrice: item.totalPrice,
   unit: item.unit ?? EProductUnit.KG,
-  status: EProductStatus.ACTIVE,
+  status: ERecordStatus.ACTIVE,
   inventoryStatus: EInventoryStatus.IN_STOCK,
   origin: EProductOrigin.VN,
   supplier: 'Healthy Food',

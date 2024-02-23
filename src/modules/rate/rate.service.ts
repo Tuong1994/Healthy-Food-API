@@ -77,26 +77,28 @@ export class RateService {
     const { ids } = query;
     const listIds = ids.split(',');
     const rates = await this.prisma.rate.findMany({ where: { id: { in: listIds } } });
-    if (rates && rates.length > 0) {
-      await this.prisma.rate.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
-      throw new HttpException('Removed success', HttpStatus.OK);
-    }
-    throw new HttpException('Rate not found', HttpStatus.NOT_FOUND);
+    if (rates && !rates.length) throw new HttpException('Rate not found', HttpStatus.NOT_FOUND);
+    await this.prisma.rate.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
+    throw new HttpException('Removed success', HttpStatus.OK);
   }
 
   async removeRatesPermanent(query: QueryDto) {
     const { ids } = query;
     const listIds = ids.split(',');
     const rates = await this.prisma.rate.findMany({ where: { id: { in: listIds } } });
-    if (rates && rates.length > 0) {
-      await this.prisma.rate.deleteMany({ where: { id: { in: listIds } } });
-      throw new HttpException('Removed success', HttpStatus.OK);
-    }
-    throw new HttpException('Rate not found', HttpStatus.NOT_FOUND);
+    if (rates && !rates.length) throw new HttpException('Rate not found', HttpStatus.NOT_FOUND);
+    await this.prisma.rate.deleteMany({ where: { id: { in: listIds } } });
+    throw new HttpException('Removed success', HttpStatus.OK);
   }
 
   async restoreRates() {
-    await this.prisma.rate.updateMany({ data: { isDelete: false } });
+    const rates = await this.prisma.rate.findMany({ where: { isDelete: { equals: true } } });
+    if (rates && !rates.length) throw new HttpException('There are no data to restored', HttpStatus.OK);
+    await Promise.all(
+      rates.map(async (rate) => {
+        await this.prisma.rate.update({ where: { id: rate.id }, data: { isDelete: false } });
+      }),
+    );
     throw new HttpException('Restored success', HttpStatus.OK);
   }
 }

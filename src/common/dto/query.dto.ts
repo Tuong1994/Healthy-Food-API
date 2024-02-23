@@ -1,10 +1,5 @@
-import {
-  EInventoryStatus,
-  EProductOrigin,
-  EProductStatus,
-  EProductUnit,
-} from 'src/modules/product/product.enum';
-import { ELang, ERole } from '../enum/base';
+import { EInventoryStatus, EProductOrigin, EProductUnit } from 'src/modules/product/product.enum';
+import { ELang, ERecordStatus, ERole } from '../enum/base';
 import { EGender } from 'src/modules/customer/customer.enum';
 import {
   EOrderPaymentStatus,
@@ -39,16 +34,18 @@ export class QueryDto {
 
   cityCode?: number;
   districtCode?: number;
-  
+
   hasSub?: boolean;
   hasCate?: boolean;
   hasLike?: boolean;
   convertName?: boolean;
-  
+
   role?: ERole;
   gender?: EGender;
   langCode?: ELang;
-  productStatus?: EProductStatus;
+  cateStatus?: ERecordStatus;
+  subCateStatus?: ERecordStatus;
+  productStatus?: ERecordStatus;
   productUnit?: EProductUnit;
   inventoryStatus?: EInventoryStatus;
   origin?: EProductOrigin;

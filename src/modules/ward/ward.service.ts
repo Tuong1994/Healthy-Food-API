@@ -104,26 +104,28 @@ export class WardService {
     const { ids } = query;
     const listIds = ids.split(',');
     const wards = await this.prisma.ward.findMany({ where: { id: { in: listIds } } });
-    if (wards && wards.length > 0) {
-      await this.prisma.ward.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
-      throw new HttpException('Removed success', HttpStatus.OK);
-    }
-    throw new HttpException('Ward not found', HttpStatus.NOT_FOUND);
+    if (wards && !wards.length) throw new HttpException('Ward not found', HttpStatus.NOT_FOUND);
+    await this.prisma.ward.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
+    throw new HttpException('Removed success', HttpStatus.OK);
   }
 
   async removeWardsPermanent(query: QueryDto) {
     const { ids } = query;
     const listIds = ids.split(',');
     const wards = await this.prisma.ward.findMany({ where: { id: { in: listIds } } });
-    if (wards && wards.length > 0) {
-      await this.prisma.ward.deleteMany({ where: { id: { in: listIds } } });
-      throw new HttpException('Removed success', HttpStatus.OK);
-    }
-    throw new HttpException('Ward not found', HttpStatus.NOT_FOUND);
+    if (wards && !wards.length) throw new HttpException('Ward not found', HttpStatus.NOT_FOUND);
+    await this.prisma.ward.deleteMany({ where: { id: { in: listIds } } });
+    throw new HttpException('Removed success', HttpStatus.OK);
   }
 
   async restoreWards() {
-    await this.prisma.ward.updateMany({ data: { isDelete: false } });
+    const wards = await this.prisma.ward.findMany({ where: { isDelete: { equals: true } } });
+    if (wards && !wards.length) throw new HttpException('There are no data to restored', HttpStatus.OK);
+    await Promise.all(
+      wards.map(async (ward) => {
+        await this.prisma.ward.update({ where: { id: ward.id }, data: { isDelete: false } });
+      }),
+    );
     throw new HttpException('Restored success', HttpStatus.OK);
   }
 }

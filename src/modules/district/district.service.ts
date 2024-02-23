@@ -100,26 +100,29 @@ export class DistrictService {
     const { ids } = query;
     const listIds = ids.split(',');
     const districts = await this.prisma.district.findMany({ where: { id: { in: listIds } } });
-    if (districts && districts.length > 0) {
-      await this.prisma.district.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
-      throw new HttpException('Removed success', HttpStatus.OK);
-    }
-    throw new HttpException('District not found', HttpStatus.NOT_FOUND);
+    if (districts && !districts.length) throw new HttpException('District not found', HttpStatus.NOT_FOUND);
+    await this.prisma.district.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
+    throw new HttpException('Removed success', HttpStatus.OK);
   }
 
   async removeDistrictsPermanent(query: QueryDto) {
     const { ids } = query;
     const listIds = ids.split(',');
     const districts = await this.prisma.district.findMany({ where: { id: { in: listIds } } });
-    if (districts && districts.length > 0) {
-      await this.prisma.district.deleteMany({ where: { id: { in: listIds } } });
-      throw new HttpException('Removed success', HttpStatus.OK);
-    }
-    throw new HttpException('District not found', HttpStatus.NOT_FOUND);
+    if (districts && !districts.length) throw new HttpException('District not found', HttpStatus.NOT_FOUND);
+    await this.prisma.district.deleteMany({ where: { id: { in: listIds } } });
+    throw new HttpException('Removed success', HttpStatus.OK);
   }
 
   async restoreDistricts() {
-    await this.prisma.district.updateMany({ data: { isDelete: false } });
+    const districts = await this.prisma.district.findMany({ where: { isDelete: { equals: true } } });
+    if (districts && !districts.length)
+      throw new HttpException('There are no data to restored', HttpStatus.OK);
+    await Promise.all(
+      districts.map(async (district) => {
+        await this.prisma.district.update({ where: { id: district.id }, data: { isDelete: false } });
+      }),
+    );
     throw new HttpException('Restored success', HttpStatus.OK);
   }
 }

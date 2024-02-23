@@ -1,4 +1,5 @@
 import { Category } from '@prisma/client';
+import { ERecordStatus } from '../../src/common/enum/base';
 
 const items = [
   {
@@ -39,6 +40,7 @@ const categories: Category[] = [...items].map((item, idx) => ({
   id: `CATE_${idx + 1}`,
   nameEn: item.nameEn,
   nameVn: item.nameVn,
+  status: ERecordStatus.ACTIVE,
   isDelete: false,
   createdAt: new Date(),
   updatedAt: new Date(),

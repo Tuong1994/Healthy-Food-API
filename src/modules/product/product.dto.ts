@@ -1,5 +1,6 @@
 import { IsNotEmpty, IsOptional } from 'class-validator';
-import { EInventoryStatus, EProductOrigin, EProductStatus, EProductUnit } from './product.enum';
+import { EInventoryStatus, EProductOrigin, EProductUnit } from './product.enum';
+import { ERecordStatus } from 'src/common/enum/base';
 
 export class ProductDto {
   @IsNotEmpty()
@@ -21,7 +22,7 @@ export class ProductDto {
   totalPrice: string;
 
   @IsNotEmpty()
-  status: EProductStatus;
+  status: ERecordStatus;
 
   @IsNotEmpty()
   inventory: string;

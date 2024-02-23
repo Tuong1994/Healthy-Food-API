@@ -81,10 +81,8 @@ export class LikeService {
     const { ids } = query;
     const listIds = ids.split(',');
     const likes = await this.prisma.like.findMany({ where: { id: { in: listIds } } });
-    if (likes && likes.length > 0) {
-      await this.prisma.like.deleteMany({ where: { id: { in: listIds } } });
-      throw new HttpException('Removed success', HttpStatus.OK);
-    }
-    throw new HttpException('Like not found', HttpStatus.NOT_FOUND);
+    if (likes && !likes.length) throw new HttpException('Like not found', HttpStatus.NOT_FOUND);
+    await this.prisma.like.deleteMany({ where: { id: { in: listIds } } });
+    throw new HttpException('Removed success', HttpStatus.OK);
   }
 }

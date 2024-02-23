@@ -5,7 +5,7 @@ import { Paging } from 'src/common/type/base';
 import { SubCategory } from '@prisma/client';
 import { SubCategoryDto } from './subcategory.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import { ELang } from 'src/common/enum/base';
+import { ELang, ERecordStatus } from 'src/common/enum/base';
 import utils from 'src/utils';
 import helper from 'src/helper';
 
@@ -23,6 +23,7 @@ export class SubCategoryService {
       nameVn: langCode === ELang.VN,
       nameEn: langCode === ELang.EN,
       categoryId: true,
+      status: true,
       isDelete: true,
       createdAt: true,
       updatedAt: true,
@@ -36,9 +37,19 @@ export class SubCategoryService {
   }
 
   async getSubCategories(query: QueryDto) {
-    const { keywords, sortBy, categoryId, langCode } = query;
+    const { keywords, sortBy, categoryId, langCode, subCateStatus } = query;
     const subCategories = await this.prisma.subCategory.findMany({
-      where: { AND: [{ categoryId }, { isDelete: { equals: false } }] },
+      where: {
+        AND: [
+          { categoryId },
+          { isDelete: { equals: false } },
+          subCateStatus
+            ? Number(subCateStatus) !== ERecordStatus.ALL
+              ? { status: Number(subCateStatus) }
+              : {}
+            : { status: ERecordStatus.ACTIVE },
+        ],
+      },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
       select: { ...this.getSelectFields(langCode) },
     });
@@ -54,10 +65,20 @@ export class SubCategoryService {
   }
 
   async getSubCategoriesPaging(query: QueryDto) {
-    const { page, limit, keywords, sortBy, categoryId, langCode } = query;
+    const { page, limit, keywords, sortBy, categoryId, langCode, subCateStatus } = query;
     let collection: Paging<SubCategory> = utils.defaultCollection();
     const subCategories = await this.prisma.subCategory.findMany({
-      where: { AND: [{ categoryId }, { isDelete: { equals: false } }] },
+      where: {
+        AND: [
+          { categoryId },
+          { isDelete: { equals: false } },
+          subCateStatus
+            ? Number(subCateStatus) !== ERecordStatus.ALL
+              ? { status: Number(subCateStatus) }
+              : {}
+            : { status: ERecordStatus.ACTIVE },
+        ],
+      },
       orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
       select: { ...this.getSelectFields(langCode) },
     });
@@ -84,15 +105,15 @@ export class SubCategoryService {
   }
 
   async createSubCategory(file: Express.Multer.File, subCategory: SubCategoryDto) {
-    const { nameEn, nameVn, categoryId } = subCategory;
+    const { nameEn, nameVn, status, categoryId } = subCategory;
     const newSubCategory = await this.prisma.subCategory.create({
-      data: { nameEn, nameVn, categoryId, isDelete: false },
+      data: { nameEn, nameVn, status: Number(status), categoryId, isDelete: false },
     });
     if (newSubCategory) {
       if (!file) return newSubCategory;
       const result = await this.cloudinary.upload(utils.getFileUrl(file));
       const image = utils.generateImage(result, { subCategoryId: newSubCategory.id });
-      await this.prisma.image.create({ data: image });
+      await this.prisma.image.create({ data: { ...image, isDelete: false } });
       const resSubCategory = await this.prisma.subCategory.findUnique({ where: { id: newSubCategory.id } });
       return resSubCategory;
     }
@@ -100,10 +121,10 @@ export class SubCategoryService {
 
   async updateSubCategory(query: QueryDto, file: Express.Multer.File, subCategory: SubCategoryDto) {
     const { subCategoryId } = query;
-    const { nameEn, nameVn, categoryId } = subCategory;
+    const { nameEn, nameVn, status, categoryId } = subCategory;
     await this.prisma.subCategory.update({
       where: { id: subCategoryId },
-      data: { nameEn, nameVn, categoryId },
+      data: { nameEn, nameVn, status: Number(status), categoryId },
     });
     if (file) {
       const updateSubCategory = await this.prisma.subCategory.findUnique({
@@ -116,7 +137,7 @@ export class SubCategoryService {
         await this.cloudinary.destroy(updateSubCategory.image.publicId);
         await this.prisma.image.update({ where: { subCategoryId }, data: image });
       } else {
-        await this.prisma.image.create({ data: image });
+        await this.prisma.image.create({ data: { ...image, isDelete: false } });
       }
     }
     throw new HttpException('Updated success', HttpStatus.OK);
@@ -129,20 +150,19 @@ export class SubCategoryService {
       where: { id: { in: listIds } },
       select: { id: true, image: true },
     });
-    if (subCategories && subCategories.length > 0) {
-      await this.prisma.subCategory.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
-      await Promise.all(
-        subCategories.map(async (subCategory) => {
-          if (!subCategory.image) return;
-          await this.prisma.image.update({
-            where: { subCategoryId: subCategory.id },
-            data: { isDelete: true },
-          });
-        }),
-      );
-      throw new HttpException('Removed success', HttpStatus.OK);
-    }
-    throw new HttpException('Subcategory not found', HttpStatus.NOT_FOUND);
+    if (subCategories && !subCategories.length)
+      throw new HttpException('Subcategory not found', HttpStatus.NOT_FOUND);
+    await this.prisma.subCategory.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
+    await Promise.all(
+      subCategories.map(async (subCategory) => {
+        if (!subCategory.image) return;
+        await this.prisma.image.update({
+          where: { subCategoryId: subCategory.id },
+          data: { isDelete: true },
+        });
+      }),
+    );
+    throw new HttpException('Removed success', HttpStatus.OK);
   }
 
   async removeSubCategoriesPermanent(query: QueryDto) {
@@ -152,21 +172,36 @@ export class SubCategoryService {
       where: { id: { in: listIds } },
       include: { image: true },
     });
-    if (subCategories && subCategories.length > 0) {
-      await this.prisma.subCategory.deleteMany({ where: { id: { in: listIds } } });
-      await Promise.all(
-        subCategories.map(async (subCategory) => {
-          if (!subCategory.image) return;
-          await this.cloudinary.destroy(subCategory.image.publicId);
-        }),
-      );
-      throw new HttpException('Removed success', HttpStatus.OK);
-    }
-    throw new HttpException('Subcategory not found', HttpStatus.NOT_FOUND);
+    if (subCategories && !subCategories.length)
+      throw new HttpException('Subcategory not found', HttpStatus.NOT_FOUND);
+    await this.prisma.subCategory.deleteMany({ where: { id: { in: listIds } } });
+    await Promise.all(
+      subCategories.map(async (subCategory) => {
+        if (!subCategory.image) return;
+        await this.cloudinary.destroy(subCategory.image.publicId);
+      }),
+    );
+    throw new HttpException('Removed success', HttpStatus.OK);
   }
 
   async restoreSubCategories() {
-    await this.prisma.subCategory.updateMany({ data: { isDelete: false } });
+    const subCategories = await this.prisma.subCategory.findMany({
+      where: { isDelete: { equals: true } },
+      select: { id: true, image: true },
+    });
+    if (subCategories && !subCategories.length)
+      throw new HttpException('There are no data to restored', HttpStatus.OK);
+    await Promise.all(
+      subCategories.map(async (subCategory) => {
+        await this.prisma.subCategory.update({ where: { id: subCategory.id }, data: { isDelete: false } });
+        if (subCategory.image)
+          await this.prisma.image.update({
+            where: { subCategoryId: subCategory.id },
+            data: { isDelete: false },
+          });
+      }),
+    );
+
     throw new HttpException('Restored success', HttpStatus.OK);
   }
 }

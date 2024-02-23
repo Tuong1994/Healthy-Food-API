@@ -1,4 +1,5 @@
-import { SubCategory } from "@prisma/client";
+import { SubCategory } from '@prisma/client';
+import { ERecordStatus } from '../../src/common/enum/base';
 
 const items = [
   {
@@ -198,6 +199,7 @@ const subcategories: SubCategory[] = [...items].map((item, idx) => ({
   nameEn: item.nameEn,
   nameVn: item.nameVn,
   categoryId: item.categoryId,
+  status: ERecordStatus.ACTIVE,
   isDelete: false,
   createdAt: new Date(),
   updatedAt: new Date(),

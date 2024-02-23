@@ -1,8 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueryDto } from 'src/common/dto/query.dto';
-import { ELang } from 'src/common/enum/base';
-import { EProductStatus } from './product.enum';
+import { ELang, ERecordStatus } from 'src/common/enum/base';
 import { Paging, SelectFieldsOptions } from 'src/common/type/base';
 import { Category, Product } from '@prisma/client';
 import { ProductDto } from './product.dto';
@@ -94,10 +93,10 @@ export class ProductService {
           { unit: productUnit && Number(productUnit) },
           { inventoryStatus: inventoryStatus && Number(inventoryStatus) },
           productStatus
-            ? Number(productStatus) !== EProductStatus.ALL
+            ? Number(productStatus) !== ERecordStatus.ALL
               ? { status: Number(productStatus) }
               : {}
-            : { status: EProductStatus.ACTIVE },
+            : { status: ERecordStatus.ACTIVE },
         ],
       },
       orderBy: [
@@ -145,10 +144,10 @@ export class ProductService {
           { unit: productUnit && Number(productUnit) },
           { inventoryStatus: inventoryStatus && Number(inventoryStatus) },
           productStatus
-            ? Number(productStatus) !== EProductStatus.ALL
+            ? Number(productStatus) !== ERecordStatus.ALL
               ? { status: Number(productStatus) }
               : {}
-            : { status: EProductStatus.ACTIVE },
+            : { status: ERecordStatus.ACTIVE },
         ],
       },
       orderBy: [
@@ -304,19 +303,27 @@ export class ProductService {
     const listIds = ids.split(',');
     const products = await this.prisma.product.findMany({
       where: { id: { in: listIds } },
-      select: { id: true, image: true },
+      select: { id: true, image: true, rates: true, likes: true },
     });
-    if (products && products.length > 0) {
-      await this.prisma.product.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
-      await Promise.all(
-        products.map(async (product) => {
-          if (!product.image) return;
+    if (products && !products.length) throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
+    await this.prisma.product.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
+    await Promise.all(
+      products.map(async (product) => {
+        if (product.image)
           await this.prisma.image.update({ where: { productId: product.id }, data: { isDelete: true } });
-        }),
-      );
-      throw new HttpException('Removed success', HttpStatus.OK);
-    }
-    throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
+        if (product.rates.length > 0)
+          await this.prisma.rate.updateMany({
+            where: { productId: product.id },
+            data: { isDelete: true },
+          });
+        if (product.likes.length > 0)
+          await this.prisma.like.updateMany({
+            where: { productId: product.id },
+            data: { isDelete: true },
+          });
+      }),
+    );
+    throw new HttpException('Removed success', HttpStatus.OK);
   }
 
   async removeProductsPermanent(query: QueryDto) {
@@ -326,21 +333,40 @@ export class ProductService {
       where: { id: { in: listIds } },
       include: { image: true },
     });
-    if (products && products.length > 0) {
-      await this.prisma.product.deleteMany({ where: { id: { in: listIds } } });
-      await Promise.all(
-        products.map(async (product) => {
-          if (!product.image) return;
-          await this.cloudinary.destroy(product.image.publicId);
-        }),
-      );
-      throw new HttpException('Removed success', HttpStatus.OK);
-    }
-    throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
+    if (products && !products.length) throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
+    await this.prisma.product.deleteMany({ where: { id: { in: listIds } } });
+    await Promise.all(
+      products.map(async (product) => {
+        if (!product.image) return;
+        await this.cloudinary.destroy(product.image.publicId);
+      }),
+    );
+    throw new HttpException('Removed success', HttpStatus.OK);
   }
 
   async restoreProducts() {
-    await this.prisma.product.updateMany({ data: { isDelete: false } });
+    const products = await this.prisma.product.findMany({
+      where: { isDelete: { equals: true } },
+      select: { id: true, image: true, rates: true, likes: true },
+    });
+    if (products && !products.length) throw new HttpException('There are no data to restored', HttpStatus.OK);
+    await Promise.all(
+      products.map(async (product) => {
+        await this.prisma.product.update({ where: { id: product.id }, data: { isDelete: false } });
+        if (product.image)
+          await this.prisma.image.update({ where: { productId: product.id }, data: { isDelete: false } });
+        if (product.rates.length > 0)
+          await this.prisma.rate.updateMany({
+            where: { productId: product.id },
+            data: { isDelete: false },
+          });
+        if (product.likes.length > 0)
+          await this.prisma.like.updateMany({
+            where: { productId: product.id },
+            data: { isDelete: false },
+          });
+      }),
+    );
     throw new HttpException('Restored success', HttpStatus.OK);
   }
 }

@@ -1,4 +1,5 @@
 import { IsNotEmpty } from 'class-validator';
+import { ERecordStatus } from 'src/common/enum/base';
 
 export class CategoryDto {
   @IsNotEmpty()
@@ -6,4 +7,7 @@ export class CategoryDto {
 
   @IsNotEmpty()
   nameVn: string;
+
+  @IsNotEmpty()
+  status: ERecordStatus;
 }

@@ -267,19 +267,22 @@ export class CustomerService {
     const listIds = ids.split(',');
     const customers = await this.prisma.customer.findMany({
       where: { id: { in: listIds } },
-      select: { id: true, image: true },
+      select: { id: true, image: true, address: true },
     });
-    if (customers && customers.length > 0) {
-      await this.prisma.customer.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
-      await Promise.all(
-        customers.map(async (customer) => {
-          if (!customer.image) return;
+    if (customers && !customers.length) throw new HttpException('Customers not found', HttpStatus.NOT_FOUND);
+    await this.prisma.customer.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
+    await Promise.all(
+      customers.map(async (customer) => {
+        if (customer.image)
           await this.prisma.image.update({ where: { customerId: customer.id }, data: { isDelete: true } });
-        }),
-      );
-      throw new HttpException('Removed success', HttpStatus.OK);
-    }
-    throw new HttpException('Customers not found', HttpStatus.NOT_FOUND);
+        if (customer.address)
+          await this.prisma.customerAddress.update({
+            where: { customerId: customer.id },
+            data: { isDelete: true },
+          });
+      }),
+    );
+    throw new HttpException('Removed success', HttpStatus.OK);
   }
 
   async removeAddress(query: QueryDto) {
@@ -297,21 +300,36 @@ export class CustomerService {
       where: { id: { in: listIds } },
       include: { image: true },
     });
-    if (customers && customers.length > 0) {
-      await this.prisma.customer.deleteMany({ where: { id: { in: listIds } } });
-      await Promise.all(
-        customers.map(async (customer) => {
-          if (!customer.image) return;
-          await this.cloudinary.destroy(customer.image.publicId);
-        }),
-      );
-      throw new HttpException('Removed success', HttpStatus.OK);
-    }
-    throw new HttpException('Customers not found', HttpStatus.NOT_FOUND);
+    if (customers && !customers.length) throw new HttpException('Customers not found', HttpStatus.NOT_FOUND);
+    await this.prisma.customer.deleteMany({ where: { id: { in: listIds } } });
+    await Promise.all(
+      customers.map(async (customer) => {
+        if (!customer.image) return;
+        await this.cloudinary.destroy(customer.image.publicId);
+      }),
+    );
+    throw new HttpException('Removed success', HttpStatus.OK);
   }
 
   async restoreCustomers() {
-    await this.prisma.customer.updateMany({ data: { isDelete: false } });
+    const customers = await this.prisma.customer.findMany({
+      where: { isDelete: { equals: true } },
+      select: { id: true, address: true, image: true },
+    });
+    if (customers && !customers.length)
+      throw new HttpException('There are no data to restored', HttpStatus.OK);
+    await Promise.all(
+      customers.map(async (customer) => {
+        await this.prisma.customer.update({ where: { id: customer.id }, data: { isDelete: false } });
+        if (customer.address)
+          await this.prisma.customerAddress.update({
+            where: { customerId: customer.id },
+            data: { isDelete: false },
+          });
+        if (customer.image)
+          await this.prisma.image.update({ where: { customerId: customer.id }, data: { isDelete: false } });
+      }),
+    );
     throw new HttpException('Restored success', HttpStatus.OK);
   }
 }

@@ -63,34 +63,37 @@ export class ShipmentService {
     const { ids } = query;
     const listIds = ids.split(',');
     const shipments = await this.prisma.shipment.findMany({ where: { id: { in: listIds } } });
-    if (shipments && shipments.length > 0) {
-      await this.prisma.shipment.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
-      throw new HttpException('Removed success', HttpStatus.OK);
-    }
-    throw new HttpException('Shipment not found', HttpStatus.NOT_FOUND);
+    if (shipments && !shipments.length) throw new HttpException('Shipment not found', HttpStatus.NOT_FOUND);
+    await this.prisma.shipment.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
+    throw new HttpException('Removed success', HttpStatus.OK);
   }
 
   async removeShipmentsPermanent(query: QueryDto) {
     const { ids } = query;
     const listIds = ids.split(',');
     const shipments = await this.prisma.shipment.findMany({ where: { id: { in: listIds } } });
-    if (shipments && shipments.length > 0) {
-      await Promise.all(
-        shipments.map(async (shipment) => {
-          await this.prisma.order.update({
-            where: { id: shipment.orderId },
-            data: { receivedType: EReceivedType.STORE },
-          });
-        }),
-      );
-      await this.prisma.shipment.deleteMany({ where: { id: { in: listIds } } });
-      throw new HttpException('Removed success', HttpStatus.OK);
-    }
-    throw new HttpException('Shipment not found', HttpStatus.NOT_FOUND);
+    if (shipments && !shipments.length) throw new HttpException('Shipment not found', HttpStatus.NOT_FOUND);
+    await Promise.all(
+      shipments.map(async (shipment) => {
+        await this.prisma.order.update({
+          where: { id: shipment.orderId },
+          data: { receivedType: EReceivedType.STORE },
+        });
+      }),
+    );
+    await this.prisma.shipment.deleteMany({ where: { id: { in: listIds } } });
+    throw new HttpException('Removed success', HttpStatus.OK);
   }
 
   async restoreShipments() {
-    await this.prisma.shipment.updateMany({ data: { isDelete: false } });
+    const shipments = await this.prisma.shipment.findMany({ where: { isDelete: { equals: true } } });
+    if (shipments && !shipments.length)
+      throw new HttpException('There are no data to restored', HttpStatus.OK);
+    await Promise.all(
+      shipments.map(async (shipment) => {
+        await this.prisma.shipment.update({ where: { id: shipment.id }, data: { isDelete: false } });
+      }),
+    );
     throw new HttpException('Restored success', HttpStatus.OK);
   }
 }
