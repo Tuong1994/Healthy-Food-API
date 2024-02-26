@@ -1,4 +1,4 @@
-import { City, Prisma, PrismaClient, Rate } from '@prisma/client';
+import { City, Order, Prisma, PrismaClient, Rate } from '@prisma/client';
 import { ELang, ESort } from 'src/common/enum/base';
 
 const prisma = new PrismaClient();
@@ -64,6 +64,11 @@ const helper = {
     const totalPoint = oneRates * 1 + twoRates * 2 + threeRates * 3 + fourRates * 4 + fiveRates * 5;
     const totalRes = oneRates + twoRates + threeRates + fourRates + fiveRates;
     return Math.ceil(totalPoint / totalRes);
+  },
+
+  getTotalPayment: (orders: Order[]) => {
+    if (orders.length === 0) return 0;
+    return orders.reduce((total, order) => (total += order.totalPayment), 0);
   },
 };
 export default helper;

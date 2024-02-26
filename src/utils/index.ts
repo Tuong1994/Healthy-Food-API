@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import { Image } from '@prisma/client';
 import { UploadApiResponse } from 'cloudinary';
 import { ELang } from '../common/enum/base';
+import { Lang, en, vn } from 'src/modules/export/lang';
 
 type ImageOption = {
   customerId?: string;
@@ -95,6 +96,11 @@ const utils = {
     if (!json) return;
     const parse = JSON.parse(json);
     return parse;
+  },
+
+  getLang: (langCode: ELang): Lang => {
+    if (langCode === ELang.EN) return en;
+    return vn;
   },
 };
 

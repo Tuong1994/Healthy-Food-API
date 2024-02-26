@@ -1,5 +1,11 @@
 import { OrderItem } from '@prisma/client';
 
+const currentDate = new Date();
+const previousDate = new Date(currentDate);
+previousDate.setDate(currentDate.getDate() - 1);
+const precedingDate = new Date(currentDate);
+precedingDate.setDate(currentDate.getDate() - 2);
+
 const orderItems: OrderItem[] = [
   {
     id: 'OI_1',
@@ -7,8 +13,8 @@ const orderItems: OrderItem[] = [
     productId: 'PRO_1',
     orderId: 'O_1',
     isDelete: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: currentDate,
+    updatedAt: currentDate,
   },
   {
     id: 'OI_2',
@@ -16,8 +22,8 @@ const orderItems: OrderItem[] = [
     productId: 'PRO_39',
     orderId: 'O_1',
     isDelete: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: currentDate,
+    updatedAt: currentDate,
   },
 
   {
@@ -26,8 +32,8 @@ const orderItems: OrderItem[] = [
     productId: 'PRO_45',
     orderId: 'O_2',
     isDelete: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: currentDate,
+    updatedAt: currentDate,
   },
   {
     id: 'OI_4',
@@ -35,8 +41,8 @@ const orderItems: OrderItem[] = [
     productId: 'PRO_30',
     orderId: 'O_2',
     isDelete: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: currentDate,
+    updatedAt: currentDate,
   },
   {
     id: 'OI_5',
@@ -44,8 +50,8 @@ const orderItems: OrderItem[] = [
     productId: 'PRO_11',
     orderId: 'O_2',
     isDelete: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: currentDate,
+    updatedAt: currentDate,
   },
   {
     id: 'OI_6',
@@ -53,8 +59,8 @@ const orderItems: OrderItem[] = [
     productId: 'PRO_2',
     orderId: 'O_1',
     isDelete: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: currentDate,
+    updatedAt: currentDate,
   },
 
   {
@@ -63,8 +69,8 @@ const orderItems: OrderItem[] = [
     productId: 'PRO_4',
     orderId: 'O_3',
     isDelete: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: currentDate,
+    updatedAt: currentDate,
   },
   {
     id: 'OI_8',
@@ -72,8 +78,8 @@ const orderItems: OrderItem[] = [
     productId: 'PRO_7',
     orderId: 'O_3',
     isDelete: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: currentDate,
+    updatedAt: currentDate,
   },
   {
     id: 'OI_9',
@@ -81,8 +87,8 @@ const orderItems: OrderItem[] = [
     productId: 'PRO_16',
     orderId: 'O_3',
     isDelete: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: currentDate,
+    updatedAt: currentDate,
   },
   {
     id: 'OI_10',
@@ -90,9 +96,157 @@ const orderItems: OrderItem[] = [
     productId: 'PRO_20',
     orderId: 'O_3',
     isDelete: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: currentDate,
+    updatedAt: currentDate,
+  },
+
+  {
+    id: 'OI_11',
+    quantity: 5,
+    productId: 'PRO_4',
+    orderId: 'O_4',
+    isDelete: false,
+    createdAt: previousDate,
+    updatedAt: previousDate,
+  },
+  {
+    id: 'OI_12',
+    quantity: 4,
+    productId: 'PRO_7',
+    orderId: 'O_4',
+    isDelete: false,
+    createdAt: previousDate,
+    updatedAt: previousDate,
+  },
+  {
+    id: 'OI_13',
+    quantity: 10,
+    productId: 'PRO_16',
+    orderId: 'O_4',
+    isDelete: false,
+    createdAt: previousDate,
+    updatedAt: previousDate,
+  },
+  {
+    id: 'OI_14',
+    quantity: 10,
+    productId: 'PRO_20',
+    orderId: 'O_4',
+    isDelete: false,
+    createdAt: previousDate,
+    updatedAt: previousDate,
+  },
+
+  {
+    id: 'OI_15',
+    quantity: 5,
+    productId: 'PRO_4',
+    orderId: 'O_5',
+    isDelete: false,
+    createdAt: previousDate,
+    updatedAt: previousDate,
+  },
+  {
+    id: 'OI_16',
+    quantity: 4,
+    productId: 'PRO_7',
+    orderId: 'O_5',
+    isDelete: false,
+    createdAt: previousDate,
+    updatedAt: previousDate,
+  },
+  {
+    id: 'OI_17',
+    quantity: 10,
+    productId: 'PRO_16',
+    orderId: 'O_5',
+    isDelete: false,
+    createdAt: previousDate,
+    updatedAt: previousDate,
+  },
+  {
+    id: 'OI_18',
+    quantity: 10,
+    productId: 'PRO_20',
+    orderId: 'O_5',
+    isDelete: false,
+    createdAt: previousDate,
+    updatedAt: previousDate,
+  },
+
+  {
+    id: 'OI_19',
+    quantity: 5,
+    productId: 'PRO_4',
+    orderId: 'O_6',
+    isDelete: false,
+    createdAt: precedingDate,
+    updatedAt: precedingDate,
+  },
+  {
+    id: 'OI_20',
+    quantity: 4,
+    productId: 'PRO_7',
+    orderId: 'O_6',
+    isDelete: false,
+    createdAt: precedingDate,
+    updatedAt: precedingDate,
+  },
+  {
+    id: 'OI_21',
+    quantity: 10,
+    productId: 'PRO_16',
+    orderId: 'O_6',
+    isDelete: false,
+    createdAt: precedingDate,
+    updatedAt: precedingDate,
+  },
+  {
+    id: 'OI_22',
+    quantity: 10,
+    productId: 'PRO_20',
+    orderId: 'O_6',
+    isDelete: false,
+    createdAt: precedingDate,
+    updatedAt: precedingDate,
+  },
+
+  {
+    id: 'OI_23',
+    quantity: 5,
+    productId: 'PRO_4',
+    orderId: 'O_7',
+    isDelete: false,
+    createdAt: precedingDate,
+    updatedAt: precedingDate,
+  },
+  {
+    id: 'OI_24',
+    quantity: 4,
+    productId: 'PRO_7',
+    orderId: 'O_7',
+    isDelete: false,
+    createdAt: precedingDate,
+    updatedAt: precedingDate,
+  },
+  {
+    id: 'OI_25',
+    quantity: 10,
+    productId: 'PRO_16',
+    orderId: 'O_7',
+    isDelete: false,
+    createdAt: precedingDate,
+    updatedAt: precedingDate,
+  },
+  {
+    id: 'OI_26',
+    quantity: 10,
+    productId: 'PRO_20',
+    orderId: 'O_7',
+    isDelete: false,
+    createdAt: precedingDate,
+    updatedAt: precedingDate,
   },
 ];
 
-export default orderItems
+export default orderItems;

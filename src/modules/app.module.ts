@@ -17,12 +17,17 @@ import { CommentModule } from './comment/comment.module';
 import { RateModule } from './rate/rate.module';
 import { UploadModule } from './upload/upload.module';
 import { LikeModule } from './like/like.module';
+import { StatisticModule } from './statistic/statistic.module';
+import { ExcelModule } from './excel/excel.module';
+import { ExportModule } from './export/export.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     CloudinaryModule,
+    ExcelModule,
+    StatisticModule,
     CustomerModule,
     AuthModule,
     CategoryModule,
@@ -38,6 +43,7 @@ import { LikeModule } from './like/like.module';
     RateModule,
     LikeModule,
     UploadModule,
+    ExportModule,
   ],
 })
 export class AppModule {}
