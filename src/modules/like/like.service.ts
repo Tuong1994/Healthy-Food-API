@@ -5,7 +5,6 @@ import { LikeDto } from './like.dto';
 import { Like, Product } from '@prisma/client';
 import { Paging } from 'src/common/type/base';
 import { ELang } from 'src/common/enum/base';
-import helper from 'src/helper';
 import utils from 'src/utils';
 
 @Injectable()
@@ -35,7 +34,7 @@ export class LikeService {
     const { customerId, productId, sortBy, langCode } = query;
     const likes = await this.prisma.like.findMany({
       where: { AND: [{ customerId }, { productId }, { isDelete: { equals: false } }] },
-      orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
+      orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
       include: { product: { select: { ...this.getProductSelectFields(langCode) } } },
     });
     const items = this.convertCollection(likes, langCode);
@@ -47,7 +46,7 @@ export class LikeService {
     let collection: Paging<Like> = utils.defaultCollection();
     const likes = await this.prisma.like.findMany({
       where: { AND: [{ customerId }, { productId }, { isDelete: { equals: false } }] },
-      orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
+      orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
       include: { product: { select: { ...this.getProductSelectFields(langCode) } } },
     });
     if (likes && likes.length > 0) collection = utils.paging<Like>(likes, page, limit);

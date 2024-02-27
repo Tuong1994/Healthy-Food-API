@@ -6,7 +6,6 @@ import { Product, Rate } from '@prisma/client';
 import { RateDto } from './rate.dto';
 import { ELang } from 'src/common/enum/base';
 import utils from 'src/utils';
-import helper from 'src/helper';
 
 @Injectable()
 export class RateService {
@@ -34,7 +33,7 @@ export class RateService {
     const rates = await this.prisma.rate.findMany({
       where: { AND: [{ customerId }, { productId }, { isDelete: { equals: false } }] },
       include: { product: { select: { ...this.getSelectProductFields(langCode) } } },
-      orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
+      orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
     });
     if (rates && rates.length > 0) collection = utils.paging<Rate>(rates, page, limit);
     const items = this.convertCollection(collection.items, langCode);

@@ -1,8 +1,8 @@
 import * as bcryptjs from 'bcryptjs';
 import * as fs from 'fs';
-import { Image } from '@prisma/client';
+import { Image, Prisma } from '@prisma/client';
 import { UploadApiResponse } from 'cloudinary';
-import { ELang } from '../common/enum/base';
+import { ELang, ESort } from '../common/enum/base';
 import { Lang, en, vn } from 'src/modules/export/lang';
 
 type ImageOption = {
@@ -58,6 +58,16 @@ const utils = {
     const b64 = Buffer.from(file.buffer).toString('base64');
     let dataURL = 'data:' + file.mimetype + ';base64,' + b64;
     return dataURL;
+  },
+
+  getSortBy: (sort: number): Prisma.SortOrder => {
+    const sorts: Record<number, string> = {
+      [ESort.NEWEST]: 'desc',
+      [ESort.OLDEST]: 'asc',
+      [ESort.PRICE_GO_UP]: 'asc',
+      [ESort.PRICE_GO_DOWN]: 'desc',
+    };
+    return sorts[sort] as Prisma.SortOrder;
   },
 
   removeFile: (path: string, message = 'Filed is deleted') => {

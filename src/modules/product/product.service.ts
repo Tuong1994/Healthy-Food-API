@@ -6,14 +6,15 @@ import { Paging, SelectFieldsOptions } from 'src/common/type/base';
 import { Category, Product } from '@prisma/client';
 import { ProductDto } from './product.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import helper from 'src/helper';
 import utils from 'src/utils';
+import { ProductHelper } from './product.helper';
 
 @Injectable()
 export class ProductService {
   constructor(
     private prisma: PrismaService,
     private cloudinary: CloudinaryService,
+    private productHelper: ProductHelper,
   ) {}
 
   private getSelectFields(langCode: ELang, options?: SelectFieldsOptions) {
@@ -100,8 +101,8 @@ export class ProductService {
         ],
       },
       orderBy: [
-        { totalPrice: helper.getSortBy(sortBy) ?? 'asc' },
-        { updatedAt: helper.getSortBy(sortBy) ?? 'asc' },
+        { totalPrice: utils.getSortBy(sortBy) ?? 'asc' },
+        { updatedAt: utils.getSortBy(sortBy) ?? 'asc' },
       ],
       select: { ...this.getSelectFields(langCode, { hasCate, hasLike, convertName: true }) },
     });
@@ -151,8 +152,8 @@ export class ProductService {
         ],
       },
       orderBy: [
-        { updatedAt: helper.getSortBy(sortBy) ?? 'desc' },
-        { totalPrice: helper.getSortBy(sortBy) ?? 'asc' },
+        { updatedAt: utils.getSortBy(sortBy) ?? 'desc' },
+        { totalPrice: utils.getSortBy(sortBy) ?? 'asc' },
       ],
       select: { ...this.getSelectFields(langCode, { hasCate, hasLike, convertName: true }) },
     });
@@ -178,7 +179,7 @@ export class ProductService {
     const response = {
       ...product,
       totalVoted: product.rates.length,
-      point: helper.getRatePoints(product.rates),
+      point: this.productHelper.getRatePoints(product.rates),
     };
     delete response.rates;
     const convertResponse = {

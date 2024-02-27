@@ -3,10 +3,11 @@ import { ProductController } from './product.controller';
 import { ProductService } from './product.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CheckIdMiddleware } from 'src/common/middleware/checkId.middleware';
+import { ProductHelper } from './product.helper';
 
 @Module({
   controllers: [ProductController],
-  providers: [ProductService],
+  providers: [ProductService, ProductHelper],
 })
 export class ProductModule implements NestModule {
   constructor(private prisma: PrismaService) {}

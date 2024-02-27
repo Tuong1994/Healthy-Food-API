@@ -7,7 +7,6 @@ import { CategoryDto } from './category.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { ELang, ERecordStatus } from 'src/common/enum/base';
 import utils from 'src/utils';
-import helper from 'src/helper';
 
 @Injectable()
 export class CategoryService {
@@ -68,7 +67,7 @@ export class CategoryService {
             : { status: ERecordStatus.ACTIVE },
         ],
       },
-      orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
+      orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
       select: { ...this.getSelectFields(langCode, { hasSub, convertName: true }) },
     });
     let filterCategories: Category[] = [];
@@ -96,7 +95,7 @@ export class CategoryService {
             : { status: ERecordStatus.ACTIVE },
         ],
       },
-      orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
+      orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
       select: { ...this.getSelectFields(langCode, { hasSub, convertName: true }) },
     });
     if (keywords) {

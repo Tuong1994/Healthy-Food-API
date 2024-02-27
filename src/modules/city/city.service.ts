@@ -5,7 +5,6 @@ import { Paging } from 'src/common/type/base';
 import { City } from '@prisma/client';
 import { CityDto } from './city.dto';
 import { ELang } from 'src/common/enum/base';
-import helper from 'src/helper';
 import utils from 'src/utils';
 
 @Injectable()
@@ -34,7 +33,7 @@ export class CityService {
     const { keywords, sortBy, langCode } = query;
     const cities = await this.prisma.city.findMany({
       where: { isDelete: { equals: false } },
-      orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
+      orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
       select: { ...this.getSelectFields(langCode) },
     });
     let filterCities: City[] = [];
@@ -53,7 +52,7 @@ export class CityService {
     let collection: Paging<City> = utils.defaultCollection();
     const cities = await this.prisma.city.findMany({
       where: { isDelete: { equals: false } },
-      orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
+      orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
       select: { ...this.getSelectFields(langCode) },
     });
     if (keywords) {

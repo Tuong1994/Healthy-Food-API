@@ -5,7 +5,6 @@ import { Paging } from 'src/common/type/base';
 import { Ward } from '@prisma/client';
 import { WardDto } from './ward.dto';
 import { ELang } from 'src/common/enum/base';
-import helper from 'src/helper';
 import utils from 'src/utils';
 
 @Injectable()
@@ -37,7 +36,7 @@ export class WardService {
       where: {
         AND: [{ districtCode: districtCode && Number(districtCode) }, { isDelete: { equals: false } }],
       },
-      orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
+      orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
       select: { ...this.getSelectFields(langCode) },
     });
     let filterWards: Ward[] = [];
@@ -58,7 +57,7 @@ export class WardService {
       where: {
         AND: [{ districtCode: districtCode && Number(districtCode) }, { isDelete: { equals: false } }],
       },
-      orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
+      orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
       select: { ...this.getSelectFields(langCode) },
     });
     if (keywords) {

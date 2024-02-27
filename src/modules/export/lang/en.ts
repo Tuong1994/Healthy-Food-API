@@ -12,6 +12,8 @@ const en = {
       image: 'Image',
       productName: 'Name',
       quantity: 'Quantity',
+      costPrice: 'Cost',
+      profit: 'Profit',
       price: 'Price',
       orderNumber: 'Order number',
       customer: 'Customer',
@@ -26,9 +28,12 @@ const en = {
       supplier: 'Supplier',
       comment: 'Comment',
       rate: 'Rate',
+      shipmentFee: 'Shipment Fee',
       shipmentNumber: 'Shipment number',
       totalPayment: 'Total payment',
+      products: 'Products',
       category: 'Category',
+      subCategory: 'Sub category',
       createdAt: 'Created date',
       updatedAt: 'Updated date',
     },
@@ -79,6 +84,9 @@ const en = {
     receivedType: {
       store: 'Pickup at store',
       delivery: 'Delivery',
+    },
+    others: {
+      none: 'None',
     },
   },
 };

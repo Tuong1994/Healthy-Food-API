@@ -12,6 +12,8 @@ const vn = {
       image: 'Hình ảnh',
       productName: 'Tên sản phẩm',
       quantity: 'Số lượng',
+      costPrice: 'Giá gốc',
+      profit: 'Lợi nhuận',
       price: 'Đơn giá',
       orderNumber: 'Mã đơn hàng',
       customer: 'Khách hàng',
@@ -26,9 +28,12 @@ const vn = {
       supplier: 'Nhà cung cấp',
       comment: 'Bình luận',
       rate: 'Đánh giá',
+      shipmentFee: 'Phí vận chuyển',
       shipmentNumber: 'Mã vận chuyển',
       totalPayment: 'Tổng tiền thanh toán',
+      products: 'Số lượng sản phẩm',
       category: 'Danh mục',
+      subCategory: 'Danh mục phụ',
       createdAt: 'Ngày tạo',
       updatedAt: 'Ngày cập nhật',
     },
@@ -79,6 +84,9 @@ const vn = {
     receivedType: {
       store: 'Nhận hàng tại cửa hàng',
       delivery: 'Giao nhận',
+    },
+    others: {
+      none: 'Không có',
     },
   },
 };

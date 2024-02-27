@@ -6,7 +6,6 @@ import { Shipment } from '@prisma/client';
 import { ShipmentDto } from './shipment.dto';
 import { EReceivedType } from '../order/order.enum';
 import utils from 'src/utils';
-import helper from 'src/helper';
 
 @Injectable()
 export class ShipmentService {
@@ -17,7 +16,7 @@ export class ShipmentService {
     let collection: Paging<Shipment> = utils.defaultCollection();
     const shipments = await this.prisma.shipment.findMany({
       where: { isDelete: { equals: false } },
-      orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
+      orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
       include: { order: { select: { id: true, orderNumber: true } } },
     });
     if (keywords) {

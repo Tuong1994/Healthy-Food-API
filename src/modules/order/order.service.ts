@@ -6,7 +6,6 @@ import { ELang } from 'src/common/enum/base';
 import { Order, OrderItem } from '@prisma/client';
 import { OrderDto } from './order.dto';
 import utils from 'src/utils';
-import helper from 'src/helper';
 
 type OrderItems = Array<Omit<OrderItem, 'createdAt' | 'updatedAt'>>;
 
@@ -57,7 +56,7 @@ export class OrderService {
           { isDelete: { equals: false } },
         ],
       },
-      orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
+      orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
       include: {
         customer: { select: { id: true, fullName: true } },
         items: { select: { ...this.getSelectFields(langCode) } },
@@ -104,7 +103,7 @@ export class OrderService {
           { isDelete: { equals: false } },
         ],
       },
-      orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
+      orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
       include: { items: { select: { ...this.getSelectFields(langCode) } } },
     });
     const convertOrders = orders.map((order) => ({

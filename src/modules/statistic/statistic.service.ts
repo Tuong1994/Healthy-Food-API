@@ -1,10 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import helper from 'src/helper';
+import { StatisticHelper } from './statistic.helper';
 
 @Injectable()
 export class StatisticService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private statisticHelper: StatisticHelper,
+  ) {}
 
   async getGeneral() {
     const currentYear = new Date().getFullYear();
@@ -25,7 +28,7 @@ export class StatisticService {
     const totalCustomers = customers.length;
     const totalProducts = products.length;
     const totalOrders = orders.length;
-    const totalRevenue = helper.getTotalPayment(orders);
+    const totalRevenue = this.statisticHelper.getTotalPayment(orders);
     return { totalCustomers, totalProducts, totalOrders, totalRevenue };
   }
 
@@ -85,9 +88,18 @@ export class StatisticService {
         },
       },
     });
-    const currentDateData = { date: currentDate, total: helper.getTotalPayment(ordersCurrentDate) };
-    const previousDateData = { date: previousDate, total: helper.getTotalPayment(ordersPreviousDate) };
-    const precedingDateData = { date: precedingDate, total: helper.getTotalPayment(ordersPrecedingDate) };
+    const currentDateData = {
+      date: currentDate,
+      total: this.statisticHelper.getTotalPayment(ordersCurrentDate),
+    };
+    const previousDateData = {
+      date: previousDate,
+      total: this.statisticHelper.getTotalPayment(ordersPreviousDate),
+    };
+    const precedingDateData = {
+      date: precedingDate,
+      total: this.statisticHelper.getTotalPayment(ordersPrecedingDate),
+    };
     data = [...data, precedingDateData, previousDateData, currentDateData];
     return data;
   }

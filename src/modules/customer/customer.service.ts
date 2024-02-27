@@ -7,7 +7,7 @@ import { CustomerResponse } from './customer.type';
 import { CustomerDto } from 'src/modules/customer/customer.dto';
 import { ELang } from 'src/common/enum/base';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import helper from 'src/helper';
+import { CustomerHelper } from './customer.helper';
 import utils from 'src/utils';
 
 @Injectable()
@@ -15,6 +15,7 @@ export class CustomerService {
   constructor(
     private prisma: PrismaService,
     private cloudinary: CloudinaryService,
+    private customerHelper: CustomerHelper,
   ) {}
 
   private getSelectFields() {
@@ -73,7 +74,7 @@ export class CustomerService {
         address: { select: { ...this.getSelectAddressFields(langCode) } },
         image: { select: { id: true, path: true, size: true, publicId: true } },
       },
-      orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
+      orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
     });
     if (keywords) {
       const filterCustomers = customers.filter(
@@ -116,7 +117,7 @@ export class CustomerService {
     const { langCode } = query;
     const { email, password, role, firstName, lastName, phone, gender, birthday, address } = customer;
 
-    const fullName = helper.getFullName(firstName, lastName, langCode);
+    const fullName = this.customerHelper.getFullName(firstName, lastName, langCode);
     const newCustomer = await this.prisma.customer.create({
       data: {
         email,
@@ -141,14 +142,14 @@ export class CustomerService {
       if (address) {
         const addressJson = utils.parseJSON<CustomerAddress>(address);
         const { addressEn, addressVn, cityCode, districtCode, wardCode } = addressJson;
-        const fullAddressEn = await helper.getFullAddress(
+        const fullAddressEn = await this.customerHelper.getFullAddress(
           addressEn,
           Number(cityCode),
           Number(districtCode),
           Number(wardCode),
           ELang.EN,
         );
-        const fullAddressVn = await helper.getFullAddress(
+        const fullAddressVn = await this.customerHelper.getFullAddress(
           addressEn,
           Number(cityCode),
           Number(districtCode),
@@ -191,7 +192,7 @@ export class CustomerService {
     const { customerId, langCode } = query;
     const { role, firstName, lastName, phone, gender, birthday, address } = customer;
 
-    const fullName = helper.getFullName(firstName, lastName, langCode);
+    const fullName = this.customerHelper.getFullName(firstName, lastName, langCode);
     await this.prisma.customer.update({
       where: { id: customerId },
       data: {
@@ -208,14 +209,14 @@ export class CustomerService {
     if (address) {
       const addressJson = utils.parseJSON<CustomerAddress>(address);
       const { addressEn, addressVn, cityCode, districtCode, wardCode } = addressJson;
-      const fullAddressEn = await helper.getFullAddress(
+      const fullAddressEn = await this.customerHelper.getFullAddress(
         addressEn,
         Number(cityCode),
         Number(districtCode),
         Number(wardCode),
         ELang.EN,
       );
-      const fullAddressVn = await helper.getFullAddress(
+      const fullAddressVn = await this.customerHelper.getFullAddress(
         addressVn,
         Number(cityCode),
         Number(districtCode),

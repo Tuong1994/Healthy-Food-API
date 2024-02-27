@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import * as ExcelJs from 'exceljs';
-import * as fs from 'fs';
 
 @Injectable()
 export class ExcelService {
@@ -9,6 +8,6 @@ export class ExcelService {
     const workSheet = workBook.addWorksheet(sheetName);
     workSheet.columns = columns;
     workSheet.addRows(data);
-    return workBook;
+    return { workBook, workSheet };
   }
 }

@@ -6,7 +6,6 @@ import { Comment, Product } from '@prisma/client';
 import { CommentDto } from './comment.dto';
 import { ELang } from 'src/common/enum/base';
 import utils from 'src/utils';
-import helper from 'src/helper';
 
 @Injectable()
 export class CommentService {
@@ -34,7 +33,7 @@ export class CommentService {
     const comments = await this.prisma.comment.findMany({
       where: { AND: [{ productId }, { isDelete: { equals: false } }] },
       include: { customer: { select: { fullName: true, image: true } } },
-      orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
+      orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
     });
     if (comments && comments.length > 0) {
       const totalItems = comments.length;
@@ -50,7 +49,7 @@ export class CommentService {
     const comments = await this.prisma.comment.findMany({
       where: { customerId, isDelete: { equals: false } },
       include: { product: { select: { ...this.getSelectProductFields(langCode) } } },
-      orderBy: [{ updatedAt: helper.getSortBy(sortBy) ?? 'desc' }],
+      orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
     });
     if (comments && comments.length > 0) collection = utils.paging<Comment>(comments, page, limit);
     const items = this.convertCollection(collection.items, langCode);
