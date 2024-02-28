@@ -49,7 +49,7 @@ export class SubCategoryService {
   }
 
   async getSubCategories(query: QueryDto) {
-    const { keywords, sortBy, categoryId, langCode, subCateStatus } = query;
+    const { keywords, sortBy, categoryId, langCode, hasCate, subCateStatus } = query;
     const subCategories = await this.prisma.subCategory.findMany({
       where: {
         AND: [
@@ -63,7 +63,7 @@ export class SubCategoryService {
         ],
       },
       orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
-      select: { ...this.getSelectFields(langCode) },
+      select: { ...this.getSelectFields(langCode, { hasCate }) },
     });
     let filterSubCategories: SubCategory[] = [];
     if (keywords)
