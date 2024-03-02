@@ -45,4 +45,19 @@ export class CustomerHelper {
     const wardName = ward ? `${isEnglish ? ward.nameEn : ward.nameVn}, ` : '';
     return addressInfo + wardName + districtName + cityName;
   }
+
+  convertAddress<M>(record: M, langCode: ELang) {
+    if (!record) return null;
+    const recordClone = { ...record };
+    delete record['addressEn'];
+    delete record['addressVn'];
+    delete record['fullAddressEn'];
+    delete record['fullAddressVn'];
+    const data = {
+      address: langCode === ELang.EN ? recordClone['addressEn'] : recordClone['addressVn'],
+      fullAddress: langCode === ELang.EN ? recordClone['fullAddressEn'] : recordClone['fullAddressVn'],
+      ...record,
+    };
+    return data;
+  }
 }

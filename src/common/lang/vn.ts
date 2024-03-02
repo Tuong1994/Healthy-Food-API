@@ -89,6 +89,41 @@ const vn = {
       none: 'Không có',
     },
   },
+  email: {
+    label: {
+      customerName: 'Họ và Tên',
+      productName: 'Tên sản phẩm',
+      phone: 'Điện thoại',
+      email: 'Email',
+      address: 'Địa chỉ',
+      price: 'Đơn giá',
+      quantity: 'Số lượng',
+      paymentMethods: 'Hình thức thanh toán',
+      totalProducts: 'Số lượng sản phẩm',
+      shipmentFee: 'Phí vận chuyển',
+      tax: 'VAT(10%)',
+      totalPrice: 'Tổng giá sản phẩm',
+      totalPricePreTax: 'Tổng tiền trước thuế',
+      totalPayment: 'Tổng tiền thanh toán',
+      received: 'Nhận hàng',
+      note: 'Ghi chú',
+    },
+    common: {
+      greeting: 'Gửi',
+      content:
+        'Trong lúc chờ đợi, vui lòng xác nhận thông tin bên dưới. Nếu có vấn đề gì xin vui lòng liên hệ với chúng tôi qua email này hoặc gọi tới số hotline: 028 3975 3186 để được hỗ trợ tốt nhất. Cảm ơn và chúc một ngày tốt lành.',
+    },
+    contact: {
+      appreciate:
+        'Cảm ơn bạn đã liên hệ với chúng tôi, chúng tôi đã nhận được thông tin của bạn. Đội bán hàng sẽ sớm liên hệ với bạn.',
+    },
+    order: {
+      appreciate:
+        'Cảm ơn bạn đã mua sản phẩm của chúng tôi, sau khi chuẩn bị hàng xong chúng tôi sẽ liên hệ với bạn.',
+      shipment: 'Thông tin vận chuyển',
+      general: 'Thông tin chung',
+    },
+  },
 };
 
 export type VN = typeof vn;

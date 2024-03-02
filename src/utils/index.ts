@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import { Image, Prisma } from '@prisma/client';
 import { UploadApiResponse } from 'cloudinary';
 import { ELang, ESort } from '../common/enum/base';
-import { Lang, en, vn } from 'src/modules/export/lang';
+import { Lang, en, vn } from '../common/lang';
 
 type ImageOption = {
   customerId?: string;
@@ -70,6 +70,11 @@ const utils = {
     return sorts[sort] as Prisma.SortOrder;
   },
 
+  getLang: (langCode: ELang): Lang => {
+    if (langCode === ELang.EN) return en;
+    return vn;
+  },
+
   removeFile: (path: string, message = 'Filed is deleted') => {
     if (!path) return;
     return fs.unlink(path, (error) => {
@@ -87,30 +92,41 @@ const utils = {
     return data;
   },
 
-  convertAddress: <M>(record: M, langCode: ELang) => {
-    if (!record) return null;
-    const recordClone = { ...record };
-    delete record['addressEn'];
-    delete record['addressVn'];
-    delete record['fullAddressEn'];
-    delete record['fullAddressVn'];
-    const data = {
-      address: langCode === ELang.EN ? recordClone['addressEn'] : recordClone['addressVn'],
-      fullAddress: langCode === ELang.EN ? recordClone['fullAddressEn'] : recordClone['fullAddressVn'],
-      ...record,
-    };
-    return data;
-  },
-
   parseJSON: <M>(json: string): M => {
     if (!json) return;
     const parse = JSON.parse(json);
     return parse;
   },
 
-  getLang: (langCode: ELang): Lang => {
-    if (langCode === ELang.EN) return en;
-    return vn;
+  formatPhoneNumber: (phone: string) => {
+    let telFormat = '(xxx) xxxx xxxx';
+    let mobileFormat = '(xxx) xxx xxxx';
+    const telNumberLength = 11;
+    const mobileNumberLength = 10;
+
+    if (phone.length !== telNumberLength && phone.length !== mobileNumberLength)
+      return 'Invalid phone number';
+
+    for (let i = 0; i < phone.length; i++) {
+      telFormat = telFormat.replace('x', phone[i]);
+      mobileFormat = mobileFormat.replace('x', phone[i]);
+    }
+
+    if (phone.length === telNumberLength) return telFormat;
+    return mobileFormat;
+  },
+
+  formatPrice: (locale: ELang, price = 0) => {
+    const displayPrice = price.toLocaleString();
+    const currency = locale === ELang.VN ? 'đ' : 'VND';
+    return `${displayPrice} ${currency}`;
+  },
+
+  getTotalPayment: (totalPrice: number, shipmentFee: number) => {
+    const paymentBeforeTax = totalPrice + shipmentFee;
+    const taxFee = (paymentBeforeTax * 10) / 100;
+    const totalPayment = paymentBeforeTax + taxFee;
+    return { paymentBeforeTax, taxFee, totalPayment };
   },
 };
 

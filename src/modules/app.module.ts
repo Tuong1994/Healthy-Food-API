@@ -20,6 +20,7 @@ import { LikeModule } from './like/like.module';
 import { StatisticModule } from './statistic/statistic.module';
 import { ExcelModule } from './excel/excel.module';
 import { ExportModule } from './export/export.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { ExportModule } from './export/export.module';
     PrismaModule,
     CloudinaryModule,
     ExcelModule,
+    EmailModule,
     StatisticModule,
     CustomerModule,
     AuthModule,

@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService, TokenExpiredError } from '@nestjs/jwt';
 import { TokenPayload } from './auth.type';
 import { AuthDto, AuthPasswordDto } from './auth.dto';
+import { AuthHelper } from './auth.helper';
 import { ERole } from 'src/common/enum/base';
 import { QueryDto } from 'src/common/dto/query.dto';
 import utils from 'src/utils';
@@ -15,41 +16,8 @@ export class AuthService {
     private prisma: PrismaService,
     private jwt: JwtService,
     private config: ConfigService,
+    private authHelper: AuthHelper,
   ) {}
-
-  private parseDurationToMilliseconds(duration: string) {
-    const match = duration.match(/^(\d+)([hm])$/);
-
-    if (!match) throw new Error('Invalid duration format');
-
-    const value = parseInt(match[1], 10);
-    const unit = match[2];
-
-    if (unit === 'm') return value * 60 * 1000; // Convert minutes to milliseconds
-    if (unit === 'h') return value * 60 * 60 * 1000; // Convert hours to milliseconds
-
-    throw new Error('Invalid duration unit');
-  }
-
-  private async getAccessToken(payload: TokenPayload) {
-    const expiresIn = '30m';
-
-    const expirationTimeInSeconds = Date.now() + this.parseDurationToMilliseconds(expiresIn);
-
-    const token = await this.jwt.signAsync(payload, {
-      secret: this.config.get('ACCESS_TOKEN_SECRET'),
-      expiresIn,
-    });
-    return { token, expirationTimeInSeconds };
-  }
-
-  private async getRefreshToken(payload: TokenPayload) {
-    const token = await this.jwt.signAsync(payload, {
-      secret: this.config.get('REFRESH_TOKEN_SECRET'),
-      expiresIn: '24h',
-    });
-    return token;
-  }
 
   async signUp(auth: AuthDto) {
     const { email, password, phone } = auth;
@@ -87,8 +55,8 @@ export class AuthService {
       email: login.email,
       role: login.role,
     };
-    const accessToken = await this.getAccessToken(payload);
-    const refreshToken = await this.getRefreshToken(payload);
+    const accessToken = await this.authHelper.getAccessToken(payload);
+    const refreshToken = await this.authHelper.getRefreshToken(payload);
     await this.prisma.auth.upsert({
       where: { customerId: login.id },
       create: { token: refreshToken, customerId: login.id },
@@ -116,7 +84,7 @@ export class AuthService {
           email: decode.email,
           role: decode.role,
         };
-        const { token, expirationTimeInSeconds } = await this.getAccessToken(payload);
+        const { token, expirationTimeInSeconds } = await this.authHelper.getAccessToken(payload);
         return { accessToken: token, expired: expirationTimeInSeconds };
       }
     } catch (error) {

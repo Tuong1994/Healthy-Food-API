@@ -53,7 +53,7 @@ export class CustomerService {
       ...customer,
       address:
         'address' in customer
-          ? utils.convertAddress<CustomerAddress>(customer.address as CustomerAddress, langCode)
+          ? this.customerHelper.convertAddress<CustomerAddress>(customer.address as CustomerAddress, langCode)
           : null,
     }));
   }
@@ -107,7 +107,7 @@ export class CustomerService {
         ? {
             addressEn: customer.address.addressEn,
             addressVn: customer.address.addressVn,
-            ...utils.convertAddress(customer.address, langCode),
+            ...this.customerHelper.convertAddress(customer.address, langCode),
           }
         : null,
     };

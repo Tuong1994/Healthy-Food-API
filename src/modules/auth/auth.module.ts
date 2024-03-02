@@ -5,11 +5,12 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CheckIdMiddleware } from 'src/common/middleware/checkId.middleware';
+import { AuthHelper } from './auth.helper';
 
 @Module({
   imports: [JwtModule.register({})],
   controllers: [AuthController],
-  providers: [AuthService, JwtService, JwtStategy],
+  providers: [AuthService, AuthHelper, JwtService, JwtStategy],
 })
 export class AuthModule implements NestModule {
   constructor(private prisma: PrismaService) {}
