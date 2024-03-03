@@ -105,8 +105,12 @@ export class CartService {
     await Promise.all(
       items.map(async (item) => {
         if (item.id) {
-          if (item.quantity === 0) await this.prisma.cartItem.delete({ where: { id: item.id } });
-          else await this.prisma.cartItem.update({ where: { id: item.id }, data: { ...item } });
+          if (items.length === 1 && item.quantity === 0) {
+            await this.prisma.cart.delete({ where: { id: cartId } });
+          } else {
+            if (item.quantity === 0) await this.prisma.cartItem.delete({ where: { id: item.id } });
+            else await this.prisma.cartItem.update({ where: { id: item.id }, data: { ...item } });
+          }
         } else await this.prisma.cartItem.create({ data: { ...item, cartId, isDelete: false } });
       }),
     );

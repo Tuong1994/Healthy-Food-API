@@ -108,10 +108,8 @@ export class AuthService {
 
   async logout(query: QueryDto) {
     const { customerId } = query;
-
     const auth = await this.prisma.auth.findUnique({ where: { customerId } });
-    if (!auth) throw new ForbiddenException('Logout failed');
-
+    if (!auth) throw new HttpException('Logout success', HttpStatus.OK);
     await this.prisma.auth.delete({ where: { id: auth.id } });
     throw new HttpException('Logout success', HttpStatus.OK);
   }
