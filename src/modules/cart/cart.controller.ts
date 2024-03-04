@@ -54,8 +54,8 @@ export class CartController {
   }
 
   @Delete('remove')
-  // @UseGuards(JwtGuard)
-  // @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.OK)
   removeCart(@Query() query: QueryDto) {
     return this.cartService.removeCarts(query);
   }

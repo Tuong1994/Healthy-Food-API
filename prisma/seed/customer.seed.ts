@@ -6,9 +6,9 @@ import utils from '../../src/utils';
 const customers: Customer[] = [
   {
     id: 'CUS_1',
-    email: 'jack@example.com',
+    email: 'nhambontuong68@gmail.com',
     password: utils.bcryptHash('123456'),
-    firstName: 'Jack',
+    firstName: 'Tuong',
     lastName: 'Anderson',
     fullName: 'Jack Anderson',
     phone: '0793229970',

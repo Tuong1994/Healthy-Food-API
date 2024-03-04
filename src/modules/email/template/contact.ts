@@ -5,7 +5,7 @@ import utils from 'src/utils';
 export const getEmailContactTemplate = (langCode: ELang, data: EmailContactDto) => {
   const lang = utils.getLang(langCode);
   const { fullName, phone, email } = data;
-  
+
   return `<div
    style="
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
