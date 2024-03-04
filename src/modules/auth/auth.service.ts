@@ -72,9 +72,9 @@ export class AuthService {
 
   async refresh(query: QueryDto) {
     const { customerId } = query;
+    const auth = await this.prisma.auth.findUnique({ where: { customerId } });
+    if (!auth) throw new ForbiddenException('Token not found');
     try {
-      const auth = await this.prisma.auth.findUnique({ where: { customerId } });
-      if (!auth) throw new ForbiddenException('Token not found');
       const decode = this.jwt.verify(auth.token, {
         secret: this.config.get('REFRESH_TOKEN_SECRET'),
       });
