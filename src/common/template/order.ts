@@ -11,6 +11,9 @@ export const getEmailOrderTemplate = async (langCode: ELang, data: EmailOrderDto
   const { order, items, shipment } = data;
 
   let products = [];
+
+  const customer = await prisma.customer.findUnique({ where: { id: order.customerId } });
+
   await Promise.all(
     items.map(async (item) => {
       const product = await prisma.product.findUnique({
@@ -107,7 +110,7 @@ export const getEmailOrderTemplate = async (langCode: ELang, data: EmailOrderDto
     font-size: 14px;
   "
 >
-  <p>${lang.email.common.greeting}, <strong>Customer name</strong></p>
+  <p>${lang.email.common.greeting}, <strong>${customer?.fullName || 'Customer'}</strong></p>
   <p>${lang.email.order.appreciate}</p>
   <p>${lang.email.common.content}</p>
   <div>
