@@ -122,6 +122,10 @@ const en = {
       shipment: 'Shipment information',
       general: 'General information',
     },
+    resetPassword: {
+      message: 'We have received password reset request, please click the link below to reset your password',
+      note: 'This link only valid only for 10 minutes',
+    },
   },
 };
 

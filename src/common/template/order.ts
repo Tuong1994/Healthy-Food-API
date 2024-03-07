@@ -1,7 +1,7 @@
 import { ELang } from 'src/common/enum/base';
 import { PrismaClient, Product } from '@prisma/client';
 import { getPaymentMethod, getReceivedType } from 'src/modules/export/helpers/order';
-import { EmailOrderDto } from '../email.dto';
+import { EmailOrderDto } from '../../modules/email/email.dto';
 import utils from 'src/utils';
 
 const prisma = new PrismaClient();

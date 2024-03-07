@@ -23,9 +23,11 @@ model Customer {
   gender    Int?
   birthday  String?
 
-  isDelete  Boolean?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  isDelete          Boolean?
+  resetToken        String?
+  resetTokenExpires BigInt?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   address  CustomerAddress?
   image    Image?

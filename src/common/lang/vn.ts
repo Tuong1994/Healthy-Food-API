@@ -123,6 +123,11 @@ const vn = {
       shipment: 'Thông tin vận chuyển',
       general: 'Thông tin chung',
     },
+    resetPassword: {
+      message:
+        'Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu, vui lòng nhấp vào liên kết bên dưới để đặt lại mật khẩu của bạn',
+      note: 'Liên kết này chỉ có hiệu lực trong 10 phút',
+    },
   },
 };
 

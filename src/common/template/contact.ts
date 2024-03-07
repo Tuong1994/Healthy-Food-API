@@ -1,5 +1,5 @@
 import { ELang } from 'src/common/enum/base';
-import { EmailContactDto } from '../email.dto';
+import { EmailContactDto } from '../../modules/email/email.dto';
 import utils from 'src/utils';
 
 export const getEmailContactTemplate = (langCode: ELang, data: EmailContactDto) => {

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { TokenPayload } from './auth.type';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthHelper {
@@ -41,5 +42,12 @@ export class AuthHelper {
       expiresIn: '24h',
     });
     return token;
+  }
+
+  getPasswordResetToken() {
+    const token = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const expires = Date.now() + 10 * 60 * 1000;
+    return { token, tokenHash, expires };
   }
 }

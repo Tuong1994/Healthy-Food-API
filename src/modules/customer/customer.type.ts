@@ -1,3 +1,3 @@
-import { Customer } from "@prisma/client";
+import { Customer } from '@prisma/client';
 
-export type CustomerResponse = Omit<Customer, 'password' | 'isDelete'>
+export type CustomerResponse = Omit<Customer, 'password' | 'isDelete' | 'resetToken' | 'resetTokenExpires'>;

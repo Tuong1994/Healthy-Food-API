@@ -1,21 +1,25 @@
+import * as nodemailer from 'nodemailer';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class EmailHelper {
   constructor(private config: ConfigService) {}
 
-  getGmailTransporter() {
+  async sendGmail(options: nodemailer.SendMailOptions) {
     const transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
       port: 587,
-      secure: false, // true for 465, false for other ports
+      secure: false,
       auth: {
         user: this.config.get('APP_EMAIL'),
         pass: this.config.get('APP_EMAIL_PASS'),
       },
     });
-    return transporter;
+    const emailOptions: nodemailer.SendMailOptions = {
+      from: '"Healthy Food" <nbtuong1994@gmail.com>',
+      ...options,
+    };
+    await transporter.sendMail(emailOptions);
   }
 }

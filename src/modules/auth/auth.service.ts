@@ -1,13 +1,16 @@
 import * as bcryptjs from 'bcryptjs';
+import * as crypto from 'crypto';
 import { ForbiddenException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import { JwtService, TokenExpiredError } from '@nestjs/jwt';
+import { AuthChangePasswordDto, AuthDto, AuthForgotPasswordDto, AuthResetPasswordDto } from './auth.dto';
 import { TokenPayload } from './auth.type';
-import { AuthDto, AuthPasswordDto } from './auth.dto';
+import { getEmailResetPasswordTemplate } from 'src/common/template/resetPassword';
 import { AuthHelper } from './auth.helper';
-import { ERole } from 'src/common/enum/base';
+import { ELang, ERole } from 'src/common/enum/base';
 import { QueryDto } from 'src/common/dto/query.dto';
+import { EmailHelper } from '../email/email.helper';
 import utils from 'src/utils';
 
 @Injectable()
@@ -17,6 +20,7 @@ export class AuthService {
     private jwt: JwtService,
     private config: ConfigService,
     private authHelper: AuthHelper,
+    private emailHelper: EmailHelper,
   ) {}
 
   async signUp(auth: AuthDto) {
@@ -92,7 +96,7 @@ export class AuthService {
     }
   }
 
-  async changePassword(query: QueryDto, password: AuthPasswordDto) {
+  async changePassword(query: QueryDto, password: AuthChangePasswordDto) {
     const { customerId } = query;
     const { oldPassword, newPassword } = password;
 
@@ -104,6 +108,51 @@ export class AuthService {
     const hash = utils.bcryptHash(newPassword);
     await this.prisma.customer.update({ where: { id: customerId }, data: { password: hash } });
     throw new HttpException('Password has successfully changed', HttpStatus.OK);
+  }
+
+  async forgotPassword(query: QueryDto, data: AuthForgotPasswordDto) {
+    const { langCode } = query;
+    const { email } = data;
+
+    const auth = await this.prisma.customer.findUnique({ where: { email } });
+    if (!auth) throw new ForbiddenException('Email is not correct');
+    const { token, tokenHash, expires } = this.authHelper.getPasswordResetToken();
+    await this.prisma.customer.update({
+      where: { email },
+      data: { resetToken: tokenHash, resetTokenExpires: expires },
+    });
+
+    const resetUrl = `http://localhost:3000/auth/resetPassword/${token}?langCode=${langCode}`;
+    const subject = langCode === ELang.EN ? 'Forgot password' : 'Quên mật khẩu';
+    try {
+      await this.emailHelper.sendGmail({
+        to: email,
+        subject,
+        html: getEmailResetPasswordTemplate(langCode, auth.fullName, resetUrl),
+      });
+      throw new HttpException('Email has been sent', HttpStatus.OK);
+    } catch (error) {
+      if (error && error.status > 200) {
+        await this.prisma.customer.update({
+          where: { email },
+          data: { resetToken: null, resetTokenExpires: null },
+        });
+      }
+    }
+  }
+
+  async resetPassword(data: AuthResetPasswordDto) {
+    const { resetPassword, token } = data;
+    const resetToken = crypto.createHash('sha256').update(token).digest('hex');
+    const auth = await this.prisma.customer.findFirst({
+      where: { resetToken, resetTokenExpires: { gt: Date.now()} },
+    });
+    if (!auth) throw new HttpException('Reset token has been expires or invalid', HttpStatus.BAD_REQUEST);
+    await this.prisma.customer.update({
+      where: { id: auth.id },
+      data: { password: utils.bcryptHash(resetPassword), resetToken: null, resetTokenExpires: null },
+    });
+    throw new HttpException('Password has been reset', HttpStatus.OK);
   }
 
   async logout(query: QueryDto) {
