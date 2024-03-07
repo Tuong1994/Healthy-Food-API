@@ -123,7 +123,7 @@ export class AuthService {
     });
 
     const resetUrl = `http://localhost:3000/auth/resetPassword/${token}?langCode=${langCode}`;
-    const subject = langCode === ELang.EN ? 'Forgot password' : 'Quên mật khẩu';
+    const subject = langCode === ELang.EN ? 'Reset password' : 'Đặt lại mật khẩu';
     try {
       await this.emailHelper.sendGmail({
         to: email,
