@@ -111,7 +111,7 @@ export class AuthService {
   }
 
   async forgotPassword(query: QueryDto, data: AuthForgotPasswordDto) {
-    const { langCode } = query;
+    const { langCode, admin } = query;
     const { email } = data;
 
     const auth = await this.prisma.customer.findUnique({ where: { email } });
@@ -122,7 +122,8 @@ export class AuthService {
       data: { resetToken: tokenHash, resetTokenExpires: expires },
     });
 
-    const resetUrl = `http://localhost:3000/auth/resetPassword/${token}?langCode=${langCode}`;
+    const baseUrl = admin ? 'http://localhost:5173' : 'http://localhost:3000';
+    const resetUrl = `${baseUrl}/auth/resetPassword/${token}?langCode=${langCode}`;
     const subject = langCode === ELang.EN ? 'Reset password' : 'Đặt lại mật khẩu';
     try {
       await this.emailHelper.sendGmail({
@@ -145,7 +146,7 @@ export class AuthService {
     const { resetPassword, token } = data;
     const resetToken = crypto.createHash('sha256').update(token).digest('hex');
     const auth = await this.prisma.customer.findFirst({
-      where: { resetToken, resetTokenExpires: { gt: Date.now()} },
+      where: { resetToken, resetTokenExpires: { gt: Date.now() } },
     });
     if (!auth) throw new HttpException('Reset token has been expires or invalid', HttpStatus.BAD_REQUEST);
     await this.prisma.customer.update({

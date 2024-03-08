@@ -39,6 +39,7 @@ export class QueryDto {
   hasCate?: boolean;
   hasLike?: boolean;
   convertName?: boolean;
+  admin?: boolean;
 
   role?: ERole;
   gender?: EGender;
