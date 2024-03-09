@@ -52,7 +52,7 @@ export class ProductService {
             select: {
               id: true,
               productId: true,
-              customerId: true,
+              userId: true,
             },
           }
         : false,
