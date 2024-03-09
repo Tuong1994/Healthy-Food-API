@@ -3,7 +3,7 @@ import { ELang } from 'src/common/enum/base';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
-export class CustomerHelper {
+export class UserHelper {
   constructor(private prisma: PrismaService) {}
 
   getFullName(firstName: string, lastName: string, langCode: ELang) {

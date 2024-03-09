@@ -36,7 +36,7 @@ export class ShipmentController {
   }
 
   @Post('create')
-  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
+  @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.CREATED)
   createShipment(@Body() shipment: ShipmentDto) {
@@ -44,7 +44,7 @@ export class ShipmentController {
   }
 
   @Put('update')
-  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
+  @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   updateShipment(@Query() query: QueryDto, @Body() shipment: ShipmentDto) {
@@ -52,7 +52,7 @@ export class ShipmentController {
   }
 
   @Delete('remove')
-  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
+  @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeShipments(@Query() query: QueryDto) {
@@ -60,7 +60,7 @@ export class ShipmentController {
   }
 
   @Delete('removePermanent')
-  @Roles(ERole.SUPER_ADMIN)
+  @Roles(ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeShipmentsPermanent(@Query() query: QueryDto) {
@@ -68,7 +68,7 @@ export class ShipmentController {
   }
 
   @Post('restore')
-  @Roles(ERole.SUPER_ADMIN)
+  @Roles(ERole.STAFF, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   restoreShipments() {

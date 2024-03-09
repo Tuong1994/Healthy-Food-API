@@ -29,11 +29,11 @@ export class CommentController {
     return this.commentService.getComments(query);
   }
 
-  @Get('listByCustomer')
+  @Get('listByUser')
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
-  getCommentsByCustomer(@QueryPaging() query: QueryDto) {
-    return this.commentService.getCommentsByCustomer(query);
+  getCommentsByUser(@QueryPaging() query: QueryDto) {
+    return this.commentService.getCommentsByUser(query);
   }
 
   @Get('detail')
@@ -64,7 +64,7 @@ export class CommentController {
   }
 
   @Delete('removePermanent')
-  @Roles(ERole.SUPER_ADMIN)
+  @Roles(ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeCommentsPermanent(@Query() query: QueryDto) {
@@ -72,7 +72,7 @@ export class CommentController {
   }
 
   @Post('restore')
-  @Roles(ERole.SUPER_ADMIN)
+  @Roles(ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   restoreComment() {

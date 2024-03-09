@@ -50,9 +50,9 @@ export class CartService {
   }
 
   async getCart(query: QueryDto) {
-    const { page, limit, customerId, langCode } = query;
+    const { page, limit, userId, langCode } = query;
     const cart = await this.prisma.cart.findUnique({
-      where: { customerId, isDelete: { equals: false } },
+      where: { userId, isDelete: { equals: false } },
       include: { items: { select: { ...this.getSelectFields(langCode) } } },
     });
     if (!cart) throw new HttpException('Id not match', HttpStatus.NOT_FOUND);
@@ -69,9 +69,9 @@ export class CartService {
   }
 
   async createCart(cart: CartDto) {
-    const { customerId, items } = cart;
+    const { userId, items } = cart;
 
-    const newCart = await this.prisma.cart.create({ data: { customerId, isDelete: false } });
+    const newCart = await this.prisma.cart.create({ data: { userId, isDelete: false } });
     if (newCart) {
       const cartItems: CartItems = items.map((item) => ({ ...item, cartId: newCart.id, isDelete: false }));
 

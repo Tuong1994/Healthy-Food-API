@@ -42,7 +42,7 @@ export class CityController {
   }
 
   @Post('create')
-  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
+  @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.CREATED)
   createCity(@Body() city: CityDto) {
@@ -50,7 +50,7 @@ export class CityController {
   }
 
   @Put('update')
-  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
+  @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   updateCity(@Query() query: QueryDto, @Body() city: CityDto) {
@@ -58,7 +58,7 @@ export class CityController {
   }
 
   @Delete('remove')
-  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
+  @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeCities(@Query() query: QueryDto) {
@@ -66,7 +66,7 @@ export class CityController {
   }
 
   @Delete('removePermanent')
-  @Roles(ERole.SUPER_ADMIN)
+  @Roles(ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeCitiesPermanent(@Query() query: QueryDto) {
@@ -74,7 +74,7 @@ export class CityController {
   }
 
   @Post('restore')
-  @Roles(ERole.SUPER_ADMIN)
+  @Roles(ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   restoreCities() {

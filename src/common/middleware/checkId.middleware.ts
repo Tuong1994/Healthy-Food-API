@@ -14,7 +14,7 @@ export class CheckIdMiddleware implements NestMiddleware {
   async use(req: Request, res: Response, next: NextFunction) {
     const {
       ids,
-      customerId,
+      userId,
       categoryId,
       subCategoryId,
       productId,
@@ -34,7 +34,7 @@ export class CheckIdMiddleware implements NestMiddleware {
 
     if (
       !ids &&
-      !customerId &&
+      !userId &&
       !categoryId &&
       !subCategoryId &&
       !productId &&
@@ -59,7 +59,7 @@ export class CheckIdMiddleware implements NestMiddleware {
     const record = await this.prisma[this.model].findUnique({
       where: {
         id: String(
-          customerId ||
+          userId ||
             categoryId ||
             subCategoryId ||
             productId ||

@@ -26,11 +26,11 @@ export class AuthService {
   async signUp(auth: AuthDto) {
     const { email, password, phone } = auth;
 
-    const exist = await this.prisma.customer.findUnique({ where: { email } });
+    const exist = await this.prisma.user.findUnique({ where: { email } });
     if (exist) throw new ForbiddenException('Email is already exist');
 
     const hashPass = utils.bcryptHash(password);
-    const newAccount = await this.prisma.customer.create({
+    const newAccount = await this.prisma.user.create({
       data: { email, password: hashPass, phone, isDelete: false, role: ERole.CUSTOMER },
     });
     return newAccount;
@@ -39,7 +39,7 @@ export class AuthService {
   async signIn(auth: AuthDto) {
     const { email, password } = auth;
 
-    const login = await this.prisma.customer.findUnique({
+    const login = await this.prisma.user.findUnique({
       where: { email },
       include: {
         image: { select: { id: true, path: true, size: true, publicId: true } },
@@ -62,8 +62,8 @@ export class AuthService {
     const accessToken = await this.authHelper.getAccessToken(payload);
     const refreshToken = await this.authHelper.getRefreshToken(payload);
     await this.prisma.auth.upsert({
-      where: { customerId: login.id },
-      create: { token: refreshToken, customerId: login.id },
+      where: { userId: login.id },
+      create: { token: refreshToken, userId: login.id },
       update: { token: refreshToken },
     });
     return {
@@ -75,8 +75,8 @@ export class AuthService {
   }
 
   async refresh(query: QueryDto) {
-    const { customerId } = query;
-    const auth = await this.prisma.auth.findUnique({ where: { customerId } });
+    const { userId } = query;
+    const auth = await this.prisma.auth.findUnique({ where: { userId } });
     if (!auth) throw new ForbiddenException('Token not found');
     try {
       const decode = this.jwt.verify(auth.token, {
@@ -97,16 +97,16 @@ export class AuthService {
   }
 
   async changePassword(query: QueryDto, password: AuthChangePasswordDto) {
-    const { customerId } = query;
+    const { userId } = query;
     const { oldPassword, newPassword } = password;
 
-    const customer = await this.prisma.customer.findUnique({ where: { id: customerId } });
+    const customer = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!customer) throw new HttpException('Customer not found', HttpStatus.NOT_FOUND);
     const isAuth = bcryptjs.compareSync(oldPassword, customer.password);
     if (!isAuth) throw new ForbiddenException('Old password is not correct');
 
     const hash = utils.bcryptHash(newPassword);
-    await this.prisma.customer.update({ where: { id: customerId }, data: { password: hash } });
+    await this.prisma.user.update({ where: { id: userId }, data: { password: hash } });
     throw new HttpException('Password has successfully changed', HttpStatus.OK);
   }
 
@@ -114,10 +114,10 @@ export class AuthService {
     const { langCode, admin } = query;
     const { email } = data;
 
-    const auth = await this.prisma.customer.findUnique({ where: { email } });
+    const auth = await this.prisma.user.findUnique({ where: { email } });
     if (!auth) throw new ForbiddenException('Email is not correct');
     const { token, tokenHash, expires } = this.authHelper.getPasswordResetToken();
-    await this.prisma.customer.update({
+    await this.prisma.user.update({
       where: { email },
       data: { resetToken: tokenHash, resetTokenExpires: expires },
     });
@@ -134,7 +134,7 @@ export class AuthService {
       throw new HttpException('Email has been sent', HttpStatus.OK);
     } catch (error) {
       if (error && error.status > 200) {
-        await this.prisma.customer.update({
+        await this.prisma.user.update({
           where: { email },
           data: { resetToken: null, resetTokenExpires: null },
         });
@@ -145,11 +145,11 @@ export class AuthService {
   async resetPassword(data: AuthResetPasswordDto) {
     const { resetPassword, token } = data;
     const resetToken = crypto.createHash('sha256').update(token).digest('hex');
-    const auth = await this.prisma.customer.findFirst({
+    const auth = await this.prisma.user.findFirst({
       where: { resetToken, resetTokenExpires: { gt: Date.now() } },
     });
     if (!auth) throw new HttpException('Reset token has been expires or invalid', HttpStatus.BAD_REQUEST);
-    await this.prisma.customer.update({
+    await this.prisma.user.update({
       where: { id: auth.id },
       data: { password: utils.bcryptHash(resetPassword), resetToken: null, resetTokenExpires: null },
     });
@@ -157,8 +157,8 @@ export class AuthService {
   }
 
   async logout(query: QueryDto) {
-    const { customerId } = query;
-    const auth = await this.prisma.auth.findUnique({ where: { customerId } });
+    const { userId } = query;
+    const auth = await this.prisma.auth.findUnique({ where: { userId } });
     if (!auth) throw new HttpException('Logout success', HttpStatus.OK);
     await this.prisma.auth.delete({ where: { id: auth.id } });
     throw new HttpException('Logout success', HttpStatus.OK);

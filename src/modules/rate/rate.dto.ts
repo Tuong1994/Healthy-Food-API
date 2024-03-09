@@ -6,7 +6,7 @@ export class RateDto {
   point: number;
 
   @IsNotEmpty()
-  customerId: string;
+  userId: string;
 
   @IsNotEmpty()
   productId: string;

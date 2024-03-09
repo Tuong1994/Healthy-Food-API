@@ -38,7 +38,7 @@ export class OrderService {
       langCode,
       keywords,
       sortBy,
-      customerId,
+      userId,
       orderStatus,
       paymentStatus,
       paymentMethod,
@@ -48,7 +48,7 @@ export class OrderService {
     const orders = await this.prisma.order.findMany({
       where: {
         AND: [
-          { customerId },
+          { userId },
           { paymentMethod: paymentMethod && Number(paymentMethod) },
           { paymentStatus: paymentStatus && Number(paymentStatus) },
           { receivedType: receivedType && Number(receivedType) },
@@ -58,7 +58,7 @@ export class OrderService {
       },
       orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
       include: {
-        customer: { select: { id: true, fullName: true } },
+        user: { select: { id: true, fullName: true } },
         items: { select: { ...this.getSelectFields(langCode) } },
       },
     });
@@ -78,7 +78,7 @@ export class OrderService {
     return collection;
   }
 
-  async getOrdersByCustomer(query: QueryDto) {
+  async getOrdersByUser(query: QueryDto) {
     const {
       page,
       limit,
@@ -89,13 +89,13 @@ export class OrderService {
       paymentStatus,
       paymentMethod,
       receivedType,
-      customerId,
+      userId,
     } = query;
     let collection: Paging<Order> = utils.defaultCollection();
     const orders = await this.prisma.order.findMany({
       where: {
         AND: [
-          { customerId },
+          { userId },
           { paymentMethod: paymentMethod && Number(paymentMethod) },
           { paymentStatus: paymentStatus && Number(paymentStatus) },
           { receivedType: receivedType && Number(receivedType) },
@@ -148,7 +148,7 @@ export class OrderService {
       receivedType,
       shipmentFee,
       totalPayment,
-      customerId,
+      userId,
       note,
       items,
       shipment,
@@ -161,7 +161,7 @@ export class OrderService {
         receivedType,
         shipmentFee,
         totalPayment,
-        customerId,
+        userId,
         note,
         isDelete: false,
         orderNumber: `#O_${Date.now()}`,
@@ -212,7 +212,7 @@ export class OrderService {
       receivedType,
       shipmentFee,
       totalPayment,
-      customerId,
+      userId,
       orderNumber,
       note,
       items,
@@ -227,7 +227,7 @@ export class OrderService {
         receivedType,
         shipmentFee,
         totalPayment,
-        customerId,
+        userId,
         orderNumber,
         note,
       },

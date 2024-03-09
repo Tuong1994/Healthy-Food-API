@@ -8,11 +8,11 @@ import { JwtGuard } from 'src/common/guard/jwt.guard';
 export class ExportController {
   constructor(private exportService: ExportService) {}
 
-  @Get('customer')
+  @Get('user')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtGuard)
-  customerExport(@Query() query: QueryDto, @Res() res: Response) {
-    return this.exportService.customerExport(query, res);
+  userExport(@Query() query: QueryDto, @Res() res: Response) {
+    return this.exportService.userExport(query, res);
   }
 
   @Get('category')

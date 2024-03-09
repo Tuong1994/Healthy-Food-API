@@ -55,7 +55,7 @@ export class OrderDto {
   totalPayment: number;
 
   @IsNotEmpty()
-  customerId: string;
+  userId: string;
 
   @IsOptional()
   note: string;

@@ -31,9 +31,9 @@ export class LikeService {
   }
 
   async getLikes(query: QueryDto) {
-    const { customerId, productId, sortBy, langCode } = query;
+    const { userId, productId, sortBy, langCode } = query;
     const likes = await this.prisma.like.findMany({
-      where: { AND: [{ customerId }, { productId }, { isDelete: { equals: false } }] },
+      where: { AND: [{ userId }, { productId }, { isDelete: { equals: false } }] },
       orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
       include: { product: { select: { ...this.getProductSelectFields(langCode) } } },
     });
@@ -42,10 +42,10 @@ export class LikeService {
   }
 
   async getLikesPaging(query: QueryDto) {
-    const { page, limit, customerId, productId, langCode, sortBy } = query;
+    const { page, limit, userId, productId, langCode, sortBy } = query;
     let collection: Paging<Like> = utils.defaultCollection();
     const likes = await this.prisma.like.findMany({
-      where: { AND: [{ customerId }, { productId }, { isDelete: { equals: false } }] },
+      where: { AND: [{ userId }, { productId }, { isDelete: { equals: false } }] },
       orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
       include: { product: { select: { ...this.getProductSelectFields(langCode) } } },
     });
@@ -58,21 +58,21 @@ export class LikeService {
     const { likeId } = query;
     const like = await this.prisma.like.findUnique({
       where: { id: likeId, isDelete: { equals: false } },
-      include: { customer: true, product: true },
+      include: { user: true, product: true },
     });
     return like;
   }
 
   async createLike(like: LikeDto) {
-    const { customerId, productId } = like;
-    const newLike = await this.prisma.like.create({ data: { customerId, productId, isDelete: false } });
+    const { userId, productId } = like;
+    const newLike = await this.prisma.like.create({ data: { userId, productId, isDelete: false } });
     return newLike;
   }
 
   async updateLike(query: QueryDto, like: LikeDto) {
     const { likeId } = query;
-    const { customerId, productId } = like;
-    await this.prisma.like.update({ where: { id: likeId }, data: { customerId, productId } });
+    const { userId, productId } = like;
+    await this.prisma.like.update({ where: { id: likeId }, data: { userId, productId } });
     throw new HttpException('Updated success', HttpStatus.OK);
   }
 

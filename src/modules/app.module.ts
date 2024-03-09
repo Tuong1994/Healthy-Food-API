@@ -3,7 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { AuthModule } from './auth/auth.module';
-import { CustomerModule } from './customer/customer.module';
+import { UserModule } from './user/user.module';
 import { CategoryModule } from './category/category.module';
 import { SubCategoryModule } from './subcategory/subcategory.module';
 import { ProductModule } from './product/product.module';
@@ -30,7 +30,7 @@ import { EmailModule } from './email/email.module';
     ExcelModule,
     EmailModule,
     StatisticModule,
-    CustomerModule,
+    UserModule,
     AuthModule,
     CategoryModule,
     SubCategoryModule,

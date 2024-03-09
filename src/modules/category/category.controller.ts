@@ -46,7 +46,7 @@ export class CategoryController {
   }
 
   @Post('create')
-  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
+  @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @UseInterceptors(FileInterceptor('image', multerOption()))
   @HttpCode(HttpStatus.CREATED)
@@ -55,7 +55,7 @@ export class CategoryController {
   }
 
   @Put('update')
-  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
+  @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @UseInterceptors(FileInterceptor('image', multerOption()))
   @HttpCode(HttpStatus.OK)
@@ -68,7 +68,7 @@ export class CategoryController {
   }
 
   @Delete('remove')
-  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
+  @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeCategories(@Query() query: QueryDto) {
@@ -76,7 +76,7 @@ export class CategoryController {
   }
 
   @Delete('removePermanent')
-  @Roles(ERole.SUPER_ADMIN)
+  @Roles(ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeCategoriesPermanent(@Query() query: QueryDto) {
@@ -84,7 +84,7 @@ export class CategoryController {
   }
 
   @Post('restore')
-  @Roles(ERole.SUPER_ADMIN)
+  @Roles(ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   restoreCategories() {

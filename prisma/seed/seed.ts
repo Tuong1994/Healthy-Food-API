@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
-import customers from './customer.seed';
-import customerAddresses from './customer-address.seed';
+import users from './user.seed';
+import userAddresses from './user-address.seed';
+import userPermissions from './user-permission';
 import products from './product.seed';
 import subcategories from './subcategory.seed';
 import categories from './category.seed';
@@ -15,8 +16,9 @@ import comments from './comment.seed';
 const prisma = new PrismaClient();
 
 const main = async () => {
-  await prisma.customer.createMany({ data: customers });
-  await prisma.customerAddress.createMany({ data: customerAddresses });
+  await prisma.user.createMany({ data: users });
+  await prisma.userAddress.createMany({ data: userAddresses });
+  await prisma.userPermission.createMany({ data: userPermissions });
   await prisma.category.createMany({ data: categories });
   await prisma.subCategory.createMany({ data: subcategories });
   await prisma.product.createMany({ data: products });

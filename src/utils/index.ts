@@ -6,7 +6,7 @@ import { ELang, ESort } from '../common/enum/base';
 import { Lang, en, vn } from '../common/lang';
 
 type ImageOption = {
-  customerId?: string;
+  userId?: string;
   productId?: string;
   categoryId?: string;
   subCategoryId?: string;

@@ -32,7 +32,7 @@ export class CommentService {
     let collection: List<Comment> = utils.defaultList();
     const comments = await this.prisma.comment.findMany({
       where: { AND: [{ productId }, { isDelete: { equals: false } }] },
-      include: { customer: { select: { fullName: true, image: true } } },
+      include: { user: { select: { fullName: true, image: true } } },
       orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
     });
     if (comments && comments.length > 0) {
@@ -43,11 +43,11 @@ export class CommentService {
     return collection;
   }
 
-  async getCommentsByCustomer(query: QueryDto) {
-    const { page, limit, customerId, sortBy, langCode } = query;
+  async getCommentsByUser(query: QueryDto) {
+    const { page, limit, userId, sortBy, langCode } = query;
     let collection: Paging<Comment> = utils.defaultCollection();
     const comments = await this.prisma.comment.findMany({
-      where: { customerId, isDelete: { equals: false } },
+      where: { userId, isDelete: { equals: false } },
       include: { product: { select: { ...this.getSelectProductFields(langCode) } } },
       orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
     });
@@ -65,19 +65,19 @@ export class CommentService {
   }
 
   async createComment(comment: CommentDto) {
-    const { content, customerId, productId, parentId } = comment;
+    const { content, userId, productId, parentId } = comment;
     const newComment = await this.prisma.comment.create({
-      data: { content, customerId, productId, parentId, isDelete: false },
+      data: { content, userId, productId, parentId, isDelete: false },
     });
     return newComment;
   }
 
   async updateComment(query: QueryDto, comment: CommentDto) {
     const { commentId } = query;
-    const { content, customerId, productId, parentId } = comment;
+    const { content, userId, productId, parentId } = comment;
     await this.prisma.comment.update({
       where: { id: commentId },
-      data: { content, customerId, productId, parentId },
+      data: { content, userId, productId, parentId },
     });
     throw new HttpException('Updated success', HttpStatus.OK);
   }

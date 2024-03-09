@@ -1,8 +1,8 @@
 import { IsNotEmpty, IsOptional } from 'class-validator';
 import { ERole } from 'src/common/enum/base';
-import { EGender } from './customer.enum';
+import { EGender } from './user.enum';
 
-export class CustomerDto {
+export class UserDto {
   @IsOptional()
   @IsNotEmpty()
   email: string;

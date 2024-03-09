@@ -30,16 +30,16 @@ export class UploadController {
     return this.uploadService.getImages(query);
   }
 
-  @Post('customer')
+  @Post('user')
   @UseGuards(JwtGuard)
   @UseInterceptors(FileInterceptor('image', multerOption()))
   @HttpCode(HttpStatus.OK)
-  customerUpload(@Query() query: QueryDto, @UploadedFile() file: Express.Multer.File) {
-    return this.uploadService.customerUpload(query, file);
+  userUpload(@Query() query: QueryDto, @UploadedFile() file: Express.Multer.File) {
+    return this.uploadService.userUpload(query, file);
   }
 
   @Post('product')
-  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
+  @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @UseInterceptors(FileInterceptor('image', multerOption()))
   @HttpCode(HttpStatus.OK)
@@ -48,7 +48,7 @@ export class UploadController {
   }
 
   @Delete('remove')
-  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
+  @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeImages(@Query() query: QueryDto) {
@@ -56,7 +56,7 @@ export class UploadController {
   }
 
   @Delete('removePermanent')
-  @Roles(ERole.SUPER_ADMIN)
+  @Roles(ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeImagesPermanent(@Query() query: QueryDto) {
@@ -64,7 +64,7 @@ export class UploadController {
   }
 
   @Post('restore')
-  @Roles(ERole.SUPER_ADMIN)
+  @Roles(ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   restoreImages() {

@@ -21,22 +21,22 @@ export class UploadService {
     return collection;
   }
 
-  async customerUpload(query: QueryDto, file: Express.Multer.File) {
-    const { customerId } = query;
-    if (!customerId) throw new HttpException('Customer ID is missing', HttpStatus.BAD_REQUEST);
+  async userUpload(query: QueryDto, file: Express.Multer.File) {
+    const { userId } = query;
+    if (!userId) throw new HttpException('User ID is missing', HttpStatus.BAD_REQUEST);
     if (!file) throw new HttpException('File is not provided', HttpStatus.NOT_FOUND);
 
-    const customer = await this.prisma.customer.findUnique({
-      where: { id: customerId },
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
       select: { image: true },
     });
 
     const result = await this.cloudinary.upload(utils.getFileUrl(file));
-    const image = utils.generateImage(result, { customerId });
+    const image = utils.generateImage(result, { userId });
 
-    if (customer && customer.image) {
-      await this.cloudinary.destroy(customer.image.publicId);
-      await this.prisma.image.update({ where: { customerId }, data: image });
+    if (user && user.image) {
+      await this.cloudinary.destroy(user.image.publicId);
+      await this.prisma.image.update({ where: { userId }, data: image });
     } else {
       await this.prisma.image.create({ data: { ...image, isDelete: false } });
     }

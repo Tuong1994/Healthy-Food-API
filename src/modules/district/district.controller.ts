@@ -42,7 +42,7 @@ export class DistrictController {
   }
 
   @Post('create')
-  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
+  @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.CREATED)
   createDistrict(@Body() district: DistrictDto) {
@@ -50,7 +50,7 @@ export class DistrictController {
   }
 
   @Put('update')
-  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
+  @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   updateDistrict(@Query() query: QueryDto, @Body() district: DistrictDto) {
@@ -58,7 +58,7 @@ export class DistrictController {
   }
 
   @Delete('remove')
-  @Roles(ERole.SUPER_ADMIN)
+  @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeDistricts(@Query() query: QueryDto) {
@@ -66,10 +66,18 @@ export class DistrictController {
   }
 
   @Delete('removePermanent')
-  @Roles(ERole.SUPER_ADMIN)
+  @Roles(ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeDistrictsPermanent(@Query() query: QueryDto) {
     return this.districtService.removeDistrictsPermanent(query);
+  }
+
+  @Post('restore')
+  @Roles(ERole.LEADER, ERole.MANAGER)
+  @UseGuards(JwtGuard, RoleGuard)
+  @HttpCode(HttpStatus.OK)
+  restoreDistricts() {
+    return this.districtService.restoreDistricts();
   }
 }

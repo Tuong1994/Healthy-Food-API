@@ -2,7 +2,7 @@ const vn = {
   excel: {
     header: {
       name: 'Tên',
-      customerName: 'Họ và Tên',
+      userName: 'Họ và Tên',
       phone: 'Điện thoại',
       email: 'Email',
       gender: 'Giới tính',
@@ -42,9 +42,10 @@ const vn = {
       female: 'Nữ',
     },
     role: {
-      superAdmin: 'Quản trị cấp cao',
-      admin: 'Quản trị',
-      customer: 'Khách hàng',
+      manager: 'Quản lý',
+      leader: 'Trưởng bộ phận',
+      staff: 'Staff',
+      customer: 'Nhân viên',
     },
     recordStatus: {
       all: 'Tất cả',

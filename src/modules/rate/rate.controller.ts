@@ -29,11 +29,11 @@ export class RateController {
     return this.rateService.getRates(query);
   }
 
-  @Get('listByCustomer')
+  @Get('listByUser')
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
-  getRatesByCustomer(@QueryPaging() query: QueryDto) {
-    return this.rateService.getRatesByCustomer(query);
+  getRatesByUser(@QueryPaging() query: QueryDto) {
+    return this.rateService.getRatesByUser(query);
   }
 
   @Get('detail')
@@ -57,7 +57,7 @@ export class RateController {
   }
 
   @Delete('remove')
-  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
+  @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeRates(@Query() query: QueryDto) {
@@ -65,7 +65,7 @@ export class RateController {
   }
 
   @Delete('removePermanent')
-  @Roles(ERole.SUPER_ADMIN)
+  @Roles(ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeRatesPermanent(@Query() query: QueryDto) {
@@ -73,7 +73,7 @@ export class RateController {
   }
 
   @Post('restore')
-  @Roles(ERole.SUPER_ADMIN)
+  @Roles(ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   restoreRates() {

@@ -5,7 +5,7 @@ export class CommentDto {
   content: string;
 
   @IsNotEmpty()
-  customerId: string;
+  userId: string;
 
   @IsNotEmpty()
   productId: string;

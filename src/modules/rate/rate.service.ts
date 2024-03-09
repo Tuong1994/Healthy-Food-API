@@ -28,10 +28,10 @@ export class RateService {
   }
 
   async getRates(query: QueryDto) {
-    const { page, limit, customerId, productId, langCode, sortBy } = query;
+    const { page, limit, userId, productId, langCode, sortBy } = query;
     let collection: Paging<Rate> = utils.defaultCollection();
     const rates = await this.prisma.rate.findMany({
-      where: { AND: [{ customerId }, { productId }, { isDelete: { equals: false } }] },
+      where: { AND: [{ userId }, { productId }, { isDelete: { equals: false } }] },
       include: { product: { select: { ...this.getSelectProductFields(langCode) } } },
       orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
     });
@@ -40,10 +40,10 @@ export class RateService {
     return { ...collection, items };
   }
 
-  async getRatesByCustomer(query: QueryDto) {
-    const { page, limit, customerId } = query;
+  async getRatesByUser(query: QueryDto) {
+    const { page, limit, userId } = query;
     let collection: Paging<Rate> = utils.defaultCollection();
-    const rates = await this.prisma.rate.findMany({ where: { customerId, isDelete: { equals: false } } });
+    const rates = await this.prisma.rate.findMany({ where: { userId, isDelete: { equals: false } } });
     if (rates && rates.length > 0) collection = utils.paging<Rate>(rates, page, limit);
     return collection;
   }
@@ -55,19 +55,19 @@ export class RateService {
   }
 
   async createRate(rate: RateDto) {
-    const { point, customerId, productId, note } = rate;
+    const { point, userId, productId, note } = rate;
     const newRate = await this.prisma.rate.create({
-      data: { point, customerId, productId, note, isDelete: false },
+      data: { point, userId, productId, note, isDelete: false },
     });
     return newRate;
   }
 
   async updateRate(query: QueryDto, rate: RateDto) {
     const { rateId } = query;
-    const { point, customerId, productId, note } = rate;
+    const { point, userId, productId, note } = rate;
     await this.prisma.rate.update({
       where: { id: rateId },
-      data: { point, customerId, productId, note },
+      data: { point, userId, productId, note },
     });
     throw new HttpException('Updated success', HttpStatus.OK);
   }

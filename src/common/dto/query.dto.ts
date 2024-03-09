@@ -1,6 +1,6 @@
 import { EInventoryStatus, EProductOrigin, EProductUnit } from 'src/modules/product/product.enum';
 import { ELang, ERecordStatus, ERole } from '../enum/base';
-import { EGender } from 'src/modules/customer/customer.enum';
+import { EGender } from 'src/modules/user/user.enum';
 import {
   EOrderPaymentStatus,
   EOrderPaymentMethod,
@@ -15,7 +15,7 @@ export class QueryDto {
   sortBy?: number;
 
   ids?: string;
-  customerId?: string;
+  userId?: string;
   categoryId?: string;
   subCategoryId?: string;
   productId?: string;

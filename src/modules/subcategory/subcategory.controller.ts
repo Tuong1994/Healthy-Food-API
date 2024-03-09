@@ -46,7 +46,7 @@ export class SubCategoryController {
   }
 
   @Post('create')
-  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
+  @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @UseInterceptors(FileInterceptor('image', multerOption()))
   @HttpCode(HttpStatus.CREATED)
@@ -55,7 +55,7 @@ export class SubCategoryController {
   }
 
   @Put('update')
-  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
+  @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @UseInterceptors(FileInterceptor('image', multerOption()))
   @HttpCode(HttpStatus.OK)
@@ -68,7 +68,7 @@ export class SubCategoryController {
   }
 
   @Delete('remove')
-  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
+  @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeSubCategories(@Query() query: QueryDto) {
@@ -76,7 +76,7 @@ export class SubCategoryController {
   }
 
   @Delete('removePermanent')
-  @Roles(ERole.SUPER_ADMIN)
+  @Roles(ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeSubCategoriesPermanent(@Query() query: QueryDto) {
@@ -84,7 +84,7 @@ export class SubCategoryController {
   }
 
   @Post('restore')
-  @Roles(ERole.SUPER_ADMIN)
+  @Roles(ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   restoreSubCategories() {

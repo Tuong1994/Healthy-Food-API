@@ -10,7 +10,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Customer {
+model User {
   id       String @id @default(uuid())
   email    String @unique
   password String
@@ -29,17 +29,18 @@ model Customer {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  address  CustomerAddress?
-  image    Image?
-  cart     Cart?
-  auth     Auth?
-  orders   Order[]
-  comments Comment[]
-  rates    Rate[]
-  likes    Like[]
+  address    UserAddress?
+  permission UserPermission?
+  image      Image?
+  cart       Cart?
+  auth       Auth?
+  orders     Order[]
+  comments   Comment[]
+  rates      Rate[]
+  likes      Like[]
 }
 
-model CustomerAddress {
+model UserAddress {
   id            String @id @default(uuid())
   addressEn     String
   addressVn     String
@@ -53,8 +54,22 @@ model CustomerAddress {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  customerId String   @unique
-  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserPermission {
+  id     String  @id @default(uuid())
+  create Boolean
+  update Boolean
+  remove Boolean
+
+  isDelete  Boolean?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Auth {
@@ -63,8 +78,8 @@ model Auth {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  customerId String   @unique
-  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Category {
@@ -138,8 +153,8 @@ model Cart {
 
   isDelete Boolean?
 
-  customerId String   @unique
-  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   items CartItem[]
 }
@@ -173,8 +188,8 @@ model Order {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  customerId String
-  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   shipment Shipment?
   items    OrderItem[]
@@ -254,10 +269,10 @@ model Comment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  customerId String
-  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  productId  String
-  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model Rate {
@@ -269,10 +284,10 @@ model Rate {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  customerId String
-  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  productId  String
-  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model Like {
@@ -281,10 +296,10 @@ model Like {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  customerId String
-  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  productId  String
-  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model Image {
@@ -297,8 +312,8 @@ model Image {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  customerId    String?      @unique
-  customer      Customer?    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  userId        String?      @unique
+  user          User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
   categoryId    String?      @unique
   category      Category?    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   subCategoryId String?      @unique

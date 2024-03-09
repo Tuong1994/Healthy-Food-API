@@ -1,6 +1,6 @@
 import { Controller, Post, Body, Query, HttpCode, HttpStatus, UseGuards, Put } from '@nestjs/common';
-import { AuthService } from './auth.service';
 import { AuthDto, AuthChangePasswordDto, AuthForgotPasswordDto, AuthResetPasswordDto } from './auth.dto';
+import { AuthService } from './auth.service';
 import { QueryDto } from 'src/common/dto/query.dto';
 import { JwtGuard } from 'src/common/guard/jwt.guard';
 

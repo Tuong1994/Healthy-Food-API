@@ -2,7 +2,7 @@ const en = {
   excel: {
     header: {
       name: 'Name',
-      customerName: 'Full name',
+      userName: 'Full name',
       phone: 'Phone',
       email: 'Email',
       gender: 'Gender',
@@ -42,8 +42,9 @@ const en = {
       female: 'Female',
     },
     role: {
-      superAdmin: 'Super admin',
-      admin: 'Admin',
+      manager: 'Manager',
+      leader: 'Leader',
+      staff: 'Staff',
       customer: 'Customer',
     },
     recordStatus: {

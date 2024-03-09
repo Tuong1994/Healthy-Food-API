@@ -2,7 +2,7 @@ import { IsNotEmpty } from 'class-validator';
 
 export class LikeDto {
   @IsNotEmpty()
-  customerId: string;
+  userId: string;
 
   @IsNotEmpty()
   productId: string;

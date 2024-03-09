@@ -18,7 +18,7 @@ class CartItemDto {
 export class CartDto {
   @IsOptional()
   @IsNotEmpty()
-  customerId: string;
+  userId: string;
 
   @IsArray()
   items: CartItemDto[];

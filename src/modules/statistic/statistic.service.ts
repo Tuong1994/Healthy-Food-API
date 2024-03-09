@@ -16,7 +16,7 @@ export class StatisticService {
       lt: new Date(currentYear + 1, 0, 1), // January 1st of next year
     };
 
-    const customers = await this.prisma.customer.findMany({
+    const users = await this.prisma.user.findMany({
       where: { isDelete: { equals: false }, createdAt: dateRange },
     });
     const products = await this.prisma.product.findMany({
@@ -25,11 +25,11 @@ export class StatisticService {
     const orders = await this.prisma.order.findMany({
       where: { isDelete: { equals: false }, createdAt: dateRange },
     });
-    const totalCustomers = customers.length;
+    const totalUsers = users.length;
     const totalProducts = products.length;
     const totalOrders = orders.length;
     const totalRevenue = this.statisticHelper.getTotalPayment(orders);
-    return { totalCustomers, totalProducts, totalOrders, totalRevenue };
+    return { totalUsers, totalProducts, totalOrders, totalRevenue };
   }
 
   async getRecentOrders() {

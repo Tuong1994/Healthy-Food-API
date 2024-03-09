@@ -29,24 +29,24 @@ export class ExportService {
 
   private resHeaderContentDispositionValue = 'attachment; filename=';
 
-  async customerExport(query: QueryDto, res: Response) {
+  async userExport(query: QueryDto, res: Response) {
     const { langCode } = query;
     const lang = utils.getLang(langCode);
 
-    const customers = await this.prisma.customer.findMany({
+    const users = await this.prisma.user.findMany({
       where: { isDelete: { equals: false } },
       include: { address: true },
     });
-    const exportData = customers.map((customer) => ({
-      ...customer,
-      birthday: moment(customer.birthday).format('DD/MM/YYYY'),
-      gender: getGender(customer.gender, langCode),
-      role: getRole(customer.role, langCode),
-      address: customer.address ? getAddress(customer.address, langCode) : lang.excel.others.none,
+    const exportData = users.map((user) => ({
+      ...user,
+      birthday: moment(user.birthday).format('DD/MM/YYYY'),
+      gender: getGender(user.gender, langCode),
+      role: getRole(user.role, langCode),
+      address: user.address ? getAddress(user.address, langCode) : lang.excel.others.none,
     }));
     const columns: WorkSheetColumns = [
       { header: lang.excel.header.email, key: 'email' },
-      { header: lang.excel.header.customerName, key: 'fullName' },
+      { header: lang.excel.header.userName, key: 'fullName' },
       { header: lang.excel.header.phone, key: 'phone' },
       { header: lang.excel.header.gender, key: 'gender' },
       { header: lang.excel.header.birthday, key: 'birthday' },
@@ -54,10 +54,10 @@ export class ExportService {
       { header: lang.excel.header.address, key: 'address' },
     ];
 
-    const { workBook } = this.excelService.generateExcel(exportData, columns, 'Customers');
+    const { workBook } = this.excelService.generateExcel(exportData, columns, 'Users');
     const buffer = await workBook.xlsx.writeBuffer();
     res.setHeader('Content-Type', this.resHeaderContentTypeValue);
-    res.setHeader('Content-Disposition', this.resHeaderContentDispositionValue + 'customers.xlsx');
+    res.setHeader('Content-Disposition', this.resHeaderContentDispositionValue + 'users.xlsx');
     res.send(buffer);
   }
 
@@ -176,7 +176,7 @@ export class ExportService {
       where: { isDelete: false },
       include: {
         items: true,
-        customer: { select: { fullName: true } },
+        user: { select: { fullName: true } },
         shipment: { select: { shipmentNumber: true } },
       },
     });
@@ -196,13 +196,13 @@ export class ExportService {
       paymentMethod: getPaymentMethod(order.paymentMethod, langCode),
       paymentStatus: getPaymentStatus(order.paymentStatus, langCode),
       receivedType: getReceivedType(order.receivedType, langCode),
-      customer: order.customer ? order.customer.fullName : lang.excel.others.none,
+      user: order.user ? order.user.fullName : lang.excel.others.none,
       shipmentNumber: order.shipment ? order.shipment.shipmentNumber : lang.excel.others.none,
       totalProducts: getTotalProducts(order.items),
     }));
     const columns: WorkSheetColumns = [
       { header: lang.excel.header.orderNumber, key: 'orderNumber' },
-      { header: lang.excel.header.customerName, key: 'customer' },
+      { header: lang.excel.header.userName, key: 'user' },
       { header: lang.excel.header.status, key: 'status' },
       { header: lang.excel.header.paymentMethod, key: 'paymentMethod' },
       { header: lang.excel.header.paymentStatus, key: 'paymentStatus' },
@@ -234,7 +234,7 @@ export class ExportService {
     }));
     const columns: WorkSheetColumns = [
       { header: lang.excel.header.shipmentNumber, key: 'shipmentNumber' },
-      { header: lang.excel.header.customerName, key: 'fullName' },
+      { header: lang.excel.header.userName, key: 'fullName' },
       { header: lang.excel.header.phone, key: 'phone' },
       { header: lang.excel.header.email, key: 'email' },
       { header: lang.excel.header.address, key: 'address' },

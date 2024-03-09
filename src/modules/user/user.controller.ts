@@ -12,88 +12,80 @@ import {
   UseInterceptors,
   UploadedFile,
 } from '@nestjs/common';
-import { CustomerService } from './customer.service';
+import { UserService } from './user.service';
 import { QueryDto } from 'src/common/dto/query.dto';
 import { QueryPaging } from 'src/common/decorator/query.decorator';
 import { RoleGuard } from 'src/common/guard/role.guard';
 import { JwtGuard } from 'src/common/guard/jwt.guard';
 import { Roles } from 'src/common/decorator/role.decorator';
 import { ERole } from 'src/common/enum/base';
-import { CustomerDto } from 'src/modules/customer/customer.dto';
+import { UserDto } from 'src/modules/user/user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerOption } from 'src/common/config/multer.config';
 
-@Controller('api/customer')
-export class CustomerController {
-  constructor(private customerService: CustomerService) {}
+@Controller('api/user')
+export class UserController {
+  constructor(private userService: UserService) {}
 
   @Get('list')
   @HttpCode(HttpStatus.OK)
-  getCustomers(@QueryPaging() query: QueryDto) {
-    return this.customerService.getCustomers(query);
+  getUsers(@QueryPaging() query: QueryDto) {
+    return this.userService.getUsers(query);
   }
 
   @Get('detail')
   @HttpCode(HttpStatus.OK)
-  getCustomer(@Query() query: QueryDto) {
-    return this.customerService.getCustomer(query);
+  getUser(@Query() query: QueryDto) {
+    return this.userService.getUser(query);
   }
 
   @Post('create')
-  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
+  @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @UseInterceptors(FileInterceptor('image', multerOption()))
   @HttpCode(HttpStatus.CREATED)
-  createCustomer(
-    @Query() query: QueryDto,
-    @UploadedFile() file: Express.Multer.File,
-    @Body() customer: CustomerDto,
-  ) {
-    return this.customerService.createCustomer(query, file, customer);
+  createUser(@Query() query: QueryDto, @UploadedFile() file: Express.Multer.File, @Body() user: UserDto) {
+    return this.userService.createUser(query, file, user);
   }
 
   @Put('update')
-  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
+  @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @UseInterceptors(FileInterceptor('image', multerOption()))
   @HttpCode(HttpStatus.OK)
-  updateCustomer(
-    @Query() query: QueryDto,
-    @UploadedFile() file: Express.Multer.File,
-    @Body() customer: CustomerDto,
-  ) {
-    return this.customerService.updateCustomer(query, file, customer);
+  updateUser(@Query() query: QueryDto, @UploadedFile() file: Express.Multer.File, @Body() user: UserDto) {
+    return this.userService.updateUser(query, file, user);
   }
 
   @Delete('remove')
-  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
+  @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
-  removeCustomers(@Query() query: QueryDto) {
-    return this.customerService.removeCustomers(query);
+  removeUsers(@Query() query: QueryDto) {
+    return this.userService.removeUsers(query);
   }
 
   @Delete('removeAddress')
-  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
+  @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeAddress(@Query() query: QueryDto) {
-    return this.customerService.removeAddress(query);
+    return this.userService.removeAddress(query);
   }
 
   @Delete('removePermanent')
-  @Roles(ERole.SUPER_ADMIN)
+  @Roles(ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
-  removeCustomersPermanent(@Query() query: QueryDto) {
-    return this.customerService.removeCustomersPermanent(query);
+  removeUsersPermanent(@Query() query: QueryDto) {
+    return this.userService.removeUsersPermanent(query);
   }
 
   @Post('restore')
-  @Roles(ERole.SUPER_ADMIN)
+  @Roles(ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
-  restoreCustomers() {
-    return this.customerService.restoreCustomers();
+  restoreUsers() {
+    return this.userService.restoreUsers();
   }
 }

@@ -12,7 +12,7 @@ export const getEmailOrderTemplate = async (langCode: ELang, data: EmailOrderDto
 
   let products = [];
 
-  const customer = await prisma.customer.findUnique({ where: { id: order.customerId } });
+  const customer = await prisma.user.findUnique({ where: { id: order.userId } });
 
   await Promise.all(
     items.map(async (item) => {

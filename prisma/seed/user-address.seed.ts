@@ -1,8 +1,8 @@
-import { CustomerAddress } from '@prisma/client';
+import { UserAddress } from '@prisma/client';
 
-const customerAddresses: CustomerAddress[] = [
+const customerAddresses: UserAddress[] = [
   {
-    id: 'CUS_ADDR_1',
+    id: 'US_ADDR_1',
     addressEn: '79/24/13 Au Co Str',
     addressVn: '79/24/13 Âu Cơ',
     fullAddressEn: '79/24/13 Au Co Str, Ward 14, District 11, Hồ Chí Minh City',
@@ -10,7 +10,7 @@ const customerAddresses: CustomerAddress[] = [
     cityCode: 79,
     districtCode: 772,
     wardCode: 27214,
-    customerId: 'CUS_1',
+    userId: 'US_1',
     isDelete: false,
     createdAt: new Date(),
     updatedAt: new Date(),

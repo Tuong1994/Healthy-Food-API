@@ -29,11 +29,11 @@ export class OrderController {
     return this.orderService.getOrders(query);
   }
 
-  @Get('listByCustomer')
+  @Get('listByUser')
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
-  getOrdersByCustomer(@QueryPaging() query: QueryDto) {
-    return this.orderService.getOrdersByCustomer(query);
+  getOrdersByUser(@QueryPaging() query: QueryDto) {
+    return this.orderService.getOrdersByUser(query);
   }
 
   @Get('detail')
@@ -50,7 +50,7 @@ export class OrderController {
   }
 
   @Put('update')
-  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
+  @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   updateOrder(@Query() query: QueryDto, @Body() order: OrderDto) {
@@ -58,7 +58,7 @@ export class OrderController {
   }
 
   @Delete('remove')
-  @Roles(ERole.ADMIN, ERole.SUPER_ADMIN)
+  @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeOrders(@Query() query: QueryDto) {
@@ -66,7 +66,7 @@ export class OrderController {
   }
 
   @Delete('removePermanent')
-  @Roles(ERole.SUPER_ADMIN)
+  @Roles(ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeOrdersPermanent(@Query() query: QueryDto) {
@@ -74,7 +74,7 @@ export class OrderController {
   }
 
   @Post('restore')
-  @Roles(ERole.SUPER_ADMIN)
+  @Roles(ERole.LEADER, ERole.MANAGER)
   @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   restoreOrders() {

@@ -1,11 +1,11 @@
-import { Customer } from '@prisma/client';
+import { User } from '@prisma/client';
 import { ERole } from '../../src/common/enum/base';
-import { EGender } from '../../src/modules/customer/customer.enum';
+import { EGender } from '../../src/modules/user/user.enum';
 import utils from '../../src/utils';
 
-const customers: Customer[] = [
+const users: User[] = [
   {
-    id: 'CUS_1',
+    id: 'US_1',
     email: 'nhambontuong68@gmail.com',
     password: utils.bcryptHash('123456'),
     firstName: 'Tuong',
@@ -14,7 +14,7 @@ const customers: Customer[] = [
     phone: '0793229970',
     gender: EGender.MALE,
     birthday: '1994-11-28T00:00:00.000Z',
-    role: ERole.SUPER_ADMIN,
+    role: ERole.MANAGER,
     isDelete: false,
     resetToken: null,
     resetTokenExpires: null,
@@ -22,7 +22,7 @@ const customers: Customer[] = [
     updatedAt: new Date(),
   },
   {
-    id: 'CUS_2',
+    id: 'US_2',
     email: 'claire@example.com',
     password: utils.bcryptHash('123456'),
     firstName: 'Claire',
@@ -31,7 +31,7 @@ const customers: Customer[] = [
     phone: '0593114491',
     gender: EGender.FEMALE,
     birthday: '1997-11-28T00:00:00.000Z',
-    role: ERole.ADMIN,
+    role: ERole.LEADER,
     isDelete: false,
     resetToken: null,
     resetTokenExpires: null,
@@ -39,7 +39,7 @@ const customers: Customer[] = [
     updatedAt: new Date(),
   },
   {
-    id: 'CUS_3',
+    id: 'US_3',
     email: 'kevin@example.com',
     password: utils.bcryptHash('123456'),
     firstName: 'Kevin',
@@ -48,7 +48,7 @@ const customers: Customer[] = [
     phone: '0793886681',
     gender: EGender.MALE,
     birthday: '1984-01-15T00:00:00.000Z',
-    role: ERole.CUSTOMER,
+    role: ERole.STAFF,
     isDelete: false,
     resetToken: null,
     resetTokenExpires: null,
@@ -56,7 +56,7 @@ const customers: Customer[] = [
     updatedAt: new Date(),
   },
   {
-    id: 'CUS_4',
+    id: 'US_4',
     email: 'bill@example.com',
     password: utils.bcryptHash('123456'),
     firstName: 'Bill',
@@ -65,7 +65,7 @@ const customers: Customer[] = [
     phone: '0854266700',
     gender: EGender.MALE,
     birthday: '1994-01-15T00:00:00.000Z',
-    role: ERole.CUSTOMER,
+    role: ERole.STAFF,
     isDelete: false,
     resetToken: null,
     resetTokenExpires: null,
@@ -73,7 +73,7 @@ const customers: Customer[] = [
     updatedAt: new Date(),
   },
   {
-    id: 'CUS_5',
+    id: 'US_5',
     email: 'emily@example.com',
     password: utils.bcryptHash('123456'),
     firstName: 'Emily',
@@ -90,7 +90,7 @@ const customers: Customer[] = [
     updatedAt: new Date(),
   },
   {
-    id: 'CUS_6',
+    id: 'US_6',
     email: 'anna@example.com',
     password: utils.bcryptHash('123456'),
     firstName: 'Anna',
@@ -107,7 +107,7 @@ const customers: Customer[] = [
     updatedAt: new Date(),
   },
   {
-    id: 'CUS_7',
+    id: 'US_7',
     email: 'John@example.com',
     password: utils.bcryptHash('123456'),
     firstName: 'John',
@@ -124,7 +124,7 @@ const customers: Customer[] = [
     updatedAt: new Date(),
   },
   {
-    id: 'CUS_8',
+    id: 'US_8',
     email: 'ben@example.com',
     password: utils.bcryptHash('123456'),
     firstName: 'Ben',
@@ -141,7 +141,7 @@ const customers: Customer[] = [
     updatedAt: new Date(),
   },
   {
-    id: 'CUS_9',
+    id: 'US_9',
     email: 'eva@example.com',
     password: utils.bcryptHash('123456'),
     firstName: 'Eva',
@@ -158,7 +158,7 @@ const customers: Customer[] = [
     updatedAt: new Date(),
   },
   {
-    id: 'CUS_10',
+    id: 'US_10',
     email: 'evan@example.com',
     password: utils.bcryptHash('123456'),
     firstName: 'Evan',
@@ -176,4 +176,4 @@ const customers: Customer[] = [
   },
 ];
 
-export default customers
+export default users

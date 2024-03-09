@@ -1,6 +1,6 @@
-import { CustomerAddress } from '@prisma/client';
+import { UserAddress } from '@prisma/client';
 import { ELang, ERole } from 'src/common/enum/base';
-import { EGender } from 'src/modules/customer/customer.enum';
+import { EGender } from 'src/modules/user/user.enum';
 import utils from 'src/utils';
 
 export const getGender = (gender: EGender, langCode: ELang) => {
@@ -10,12 +10,13 @@ export const getGender = (gender: EGender, langCode: ELang) => {
 
 export const getRole = (role: ERole, langCode: ELang) => {
   const lang = utils.getLang(langCode);
-  if (role === ERole.SUPER_ADMIN) return lang.excel.role.superAdmin;
-  if (role === ERole.ADMIN) return lang.excel.role.admin;
+  if (role === ERole.MANAGER) return lang.excel.role.manager;
+  if (role === ERole.LEADER) return lang.excel.role.leader;
+  if (role === ERole.STAFF) return lang.excel.role.staff;
   return lang.excel.role.customer;
 };
 
-export const getAddress = (address: CustomerAddress, langCode: ELang) => {
+export const getAddress = (address: UserAddress, langCode: ELang) => {
   const lang = utils.getLang(langCode);
   return langCode === ELang.EN ? address.fullAddressEn : address.fullAddressVn;
 };
