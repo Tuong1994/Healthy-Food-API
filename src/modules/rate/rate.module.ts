@@ -14,7 +14,7 @@ export class RateModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(new CheckIdMiddleware(this.prisma, 'rate').use).forRoutes(
       {
-        path: 'api/rate/listByCustomer',
+        path: 'api/rate/listByUser',
         method: RequestMethod.GET,
       },
       {

@@ -21,6 +21,7 @@ import { StatisticModule } from './statistic/statistic.module';
 import { ExcelModule } from './excel/excel.module';
 import { ExportModule } from './export/export.module';
 import { EmailModule } from './email/email.module';
+import { SettingModule } from './setting/setting.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { EmailModule } from './email/email.module';
     LikeModule,
     UploadModule,
     ExportModule,
+    SettingModule,
   ],
 })
 export class AppModule {}

@@ -14,7 +14,7 @@ export class OrderModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(new CheckIdMiddleware(this.prisma, 'order').use).forRoutes(
       {
-        path: 'api/order/listByCustomer',
+        path: 'api/order/listByUser',
         method: RequestMethod.GET,
       },
       {

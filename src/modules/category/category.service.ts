@@ -136,6 +136,7 @@ export class CategoryService {
       });
       return resCategory;
     }
+    throw new HttpException('Create failed', HttpStatus.BAD_REQUEST)
   }
 
   async updateCategory(query: QueryDto, file: Express.Multer.File, category: CategoryDto) {

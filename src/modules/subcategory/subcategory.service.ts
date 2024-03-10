@@ -129,6 +129,7 @@ export class SubCategoryService {
       const resSubCategory = await this.prisma.subCategory.findUnique({ where: { id: newSubCategory.id } });
       return resSubCategory;
     }
+    throw new HttpException('Create failed', HttpStatus.BAD_REQUEST)
   }
 
   async updateSubCategory(query: QueryDto, file: Express.Multer.File, subCategory: SubCategoryDto) {

@@ -7,6 +7,7 @@ export class CheckIdMiddleware implements NestMiddleware {
   constructor(
     private readonly prisma: PrismaClient,
     private readonly model: string,
+    private readonly validateField?: string,
   ) {
     this.use = this.use.bind(this);
   }
@@ -56,9 +57,11 @@ export class CheckIdMiddleware implements NestMiddleware {
 
     if (ids) return next();
 
+    const checkedField = this.validateField ? this.validateField : 'id';
+
     const record = await this.prisma[this.model].findUnique({
       where: {
-        id: String(
+        [checkedField]: String(
           userId ||
             categoryId ||
             subCategoryId ||

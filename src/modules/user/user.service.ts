@@ -139,6 +139,15 @@ export class UserService {
 
     if (newUser) {
       let responseUser: any;
+      await this.prisma.userPermission.create({
+        data: {
+          create: false,
+          update: false,
+          remove: false,
+          isDelete: false,
+          userId: newUser.id,
+        },
+      });
       if (address) {
         const addressJson = utils.parseJSON<UserAddress>(address);
         const { addressEn, addressVn, cityCode, districtCode, wardCode } = addressJson;
@@ -186,6 +195,7 @@ export class UserService {
       }
       return responseUser ? responseUser : newUser;
     }
+    throw new HttpException('Create failed', HttpStatus.BAD_REQUEST);
   }
 
   async updateUser(query: QueryDto, file: Express.Multer.File, user: UserDto) {
@@ -332,8 +342,7 @@ export class UserService {
       where: { isDelete: { equals: true } },
       select: { id: true, address: true, image: true, comments: true, rates: true, likes: true },
     });
-    if (users && !users.length)
-      throw new HttpException('There are no data to restored', HttpStatus.OK);
+    if (users && !users.length) throw new HttpException('There are no data to restored', HttpStatus.OK);
     await Promise.all(
       users.map(async (user) => {
         await this.prisma.user.update({ where: { id: user.id }, data: { isDelete: false } });

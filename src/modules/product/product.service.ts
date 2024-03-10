@@ -6,8 +6,8 @@ import { Paging, SelectFieldsOptions } from 'src/common/type/base';
 import { Category, Product } from '@prisma/client';
 import { ProductDto } from './product.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import utils from 'src/utils';
 import { ProductHelper } from './product.helper';
+import utils from 'src/utils';
 
 @Injectable()
 export class ProductService {
@@ -240,6 +240,7 @@ export class ProductService {
       });
       return resProduct;
     }
+    throw new HttpException('Create failed', HttpStatus.BAD_REQUEST)
   }
 
   async updateProduct(query: QueryDto, file: Express.Multer.File, product: ProductDto) {

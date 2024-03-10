@@ -201,6 +201,7 @@ export class OrderService {
         })),
       };
     }
+    throw new HttpException('Create failed', HttpStatus.BAD_REQUEST)
   }
 
   async updateOrder(query: QueryDto, order: OrderDto) {

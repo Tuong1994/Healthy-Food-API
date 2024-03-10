@@ -13,8 +13,8 @@ export class RoleGuard implements CanActivate {
       context.getClass(),
     ]);
     if (!requireRoles) return true;
-    const { customer } = context.switchToHttp().getRequest();
-    const isMatch = requireRoles.some((role) => customer.role === role);
+    const { user } = context.switchToHttp().getRequest();
+    const isMatch = requireRoles.some((role) => user?.role === role);
     if (isMatch) return true;
     throw new ForbiddenException("You're not authorize to process");
   }

@@ -33,7 +33,19 @@ export class AuthService {
     const newAccount = await this.prisma.user.create({
       data: { email, password: hashPass, phone, isDelete: false, role: ERole.CUSTOMER },
     });
-    return newAccount;
+    if (newAccount) {
+      await this.prisma.userPermission.create({
+        data: {
+          create: false,
+          update: false,
+          remove: false,
+          isDelete: false,
+          userId: newAccount.id,
+        },
+      });
+      return newAccount;
+    }
+    throw new HttpException('Sign up failed', HttpStatus.BAD_REQUEST);
   }
 
   async signIn(auth: AuthDto) {
@@ -43,6 +55,7 @@ export class AuthService {
       where: { email },
       include: {
         image: { select: { id: true, path: true, size: true, publicId: true } },
+        permission: { select: { id: true, create: true, update: true, remove: true } },
       },
     });
     if (!login) throw new HttpException('Email is not correct', HttpStatus.NOT_FOUND);
