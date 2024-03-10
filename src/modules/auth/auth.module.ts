@@ -17,13 +17,13 @@ export class AuthModule implements NestModule {
   constructor(private prisma: PrismaService) {}
 
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(new CheckIdMiddleware(this.prisma, 'customer').use).forRoutes(
+    consumer.apply(new CheckIdMiddleware(this.prisma, 'user').use).forRoutes(
       {
-        path: 'api/customer/refresh',
+        path: 'api/auth/refresh',
         method: RequestMethod.POST,
       },
       {
-        path: 'api/customer/logout',
+        path: 'api/auth/logout',
         method: RequestMethod.POST,
       },
     );

@@ -1,6 +1,6 @@
 import * as bcryptjs from 'bcryptjs';
 import * as crypto from 'crypto';
-import { ForbiddenException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { ForbiddenException, HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import { JwtService, TokenExpiredError } from '@nestjs/jwt';
@@ -48,7 +48,8 @@ export class AuthService {
     throw new HttpException('Sign up failed', HttpStatus.BAD_REQUEST);
   }
 
-  async signIn(auth: AuthDto) {
+  async signIn(query: QueryDto, auth: AuthDto) {
+    const { admin } = query;
     const { email, password } = auth;
 
     const login = await this.prisma.user.findUnique({
@@ -62,6 +63,9 @@ export class AuthService {
 
     const isAuth = bcryptjs.compareSync(password, login.password);
     if (!isAuth) throw new ForbiddenException('Password is not correct');
+
+    if (admin && login.role === ERole.CUSTOMER)
+      throw new UnauthorizedException("You're not authorize to proccess");
 
     const info = { ...login };
     delete info.password;

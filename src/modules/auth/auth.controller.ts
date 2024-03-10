@@ -16,8 +16,8 @@ export class AuthController {
 
   @Post('signIn')
   @HttpCode(HttpStatus.OK)
-  signIn(@Body() auth: AuthDto) {
-    return this.authService.signIn(auth);
+  signIn(@Query() query: QueryDto, @Body() auth: AuthDto) {
+    return this.authService.signIn(query, auth);
   }
 
   @Post('refresh')
