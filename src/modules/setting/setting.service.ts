@@ -9,7 +9,22 @@ export class SettingService {
 
   async getUserPermission(query: QueryDto) {
     const { userId } = query;
-    const userPermission = await this.prisma.userPermission.findUnique({ where: { userId } });
+    const userPermission = await this.prisma.userPermission.findUnique({
+      where: { userId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            phone: true,
+            email: true,
+            gender: true,
+            birthday: true,
+            role: true,
+          },
+        },
+      },
+    });
     return userPermission;
   }
 

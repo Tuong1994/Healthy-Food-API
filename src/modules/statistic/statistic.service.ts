@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { StatisticHelper } from './statistic.helper';
+import { ERole } from 'src/common/enum/base';
 
 @Injectable()
 export class StatisticService {
@@ -16,8 +17,8 @@ export class StatisticService {
       lt: new Date(currentYear + 1, 0, 1), // January 1st of next year
     };
 
-    const users = await this.prisma.user.findMany({
-      where: { isDelete: { equals: false }, createdAt: dateRange },
+    const customers = await this.prisma.user.findMany({
+      where: { isDelete: { equals: false }, role: ERole.CUSTOMER, createdAt: dateRange },
     });
     const products = await this.prisma.product.findMany({
       where: { isDelete: { equals: false }, createdAt: dateRange },
@@ -25,11 +26,11 @@ export class StatisticService {
     const orders = await this.prisma.order.findMany({
       where: { isDelete: { equals: false }, createdAt: dateRange },
     });
-    const totalUsers = users.length;
+    const totalCustomers = customers.length;
     const totalProducts = products.length;
     const totalOrders = orders.length;
     const totalRevenue = this.statisticHelper.getTotalPayment(orders);
-    return { totalUsers, totalProducts, totalOrders, totalRevenue };
+    return { totalCustomers, totalProducts, totalOrders, totalRevenue };
   }
 
   async getRecentOrders() {
