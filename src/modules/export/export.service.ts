@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ExcelService } from '../excel/excel.service';
 import { QueryDto } from 'src/common/dto/query.dto';
+import { ERole } from 'src/common/enum/base';
 import { Category, Product, SubCategory } from '@prisma/client';
 import { WorkSheetColumns } from './export.type';
 import { Response } from 'express';
@@ -30,11 +31,16 @@ export class ExportService {
   private resHeaderContentDispositionValue = 'attachment; filename=';
 
   async userExport(query: QueryDto, res: Response) {
-    const { langCode } = query;
+    const { langCode, staffOnly } = query;
     const lang = utils.getLang(langCode);
 
     const users = await this.prisma.user.findMany({
-      where: { isDelete: { equals: false } },
+      where: {
+        AND: [
+          { isDelete: { equals: false } },
+          { role: staffOnly ? { not: ERole.CUSTOMER } : { equals: ERole.CUSTOMER } },
+        ],
+      },
       include: { address: true },
     });
     const exportData = users.map((user) => ({

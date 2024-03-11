@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueryDto } from 'src/common/dto/query.dto';
 import { Paging } from 'src/common/type/base';
-import { ELang } from 'src/common/enum/base';
+import { ELang, ERole } from 'src/common/enum/base';
 import { UserAddress } from '@prisma/client';
 import { UserResponse } from './user.type';
 import { UserDto } from 'src/modules/user/user.dto';
@@ -59,13 +59,17 @@ export class UserService {
   }
 
   async getUsers(query: QueryDto) {
-    const { page, limit, langCode, keywords, sortBy, gender, role } = query;
+    const { page, limit, langCode, keywords, sortBy, gender, role, staffOnly } = query;
     let collection: Paging<UserResponse> = utils.defaultCollection();
     const users = await this.prisma.user.findMany({
       where: {
         AND: [
           { gender: gender && Number(gender) },
-          { role: role && Number(role) },
+          {
+            role: staffOnly
+              ? { not: ERole.CUSTOMER, in: role ? [Number(role)] : undefined }
+              : role && Number(role),
+          },
           { isDelete: { equals: false } },
         ],
       },

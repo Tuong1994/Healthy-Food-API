@@ -31,13 +31,13 @@ export class QueryDto {
   cityId?: string;
   districtId?: string;
   wardId?: string;
-
   cityCode?: number;
   districtCode?: number;
 
   hasSub?: boolean;
   hasCate?: boolean;
   hasLike?: boolean;
+  staffOnly?: boolean
   convertName?: boolean;
   admin?: boolean;
 
