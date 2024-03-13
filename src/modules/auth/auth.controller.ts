@@ -1,8 +1,21 @@
-import { Controller, Post, Body, Query, HttpCode, HttpStatus, UseGuards, Put } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Query,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
+  Put,
+  Res,
+  Req,
+} from '@nestjs/common';
 import { AuthDto, AuthChangePasswordDto, AuthForgotPasswordDto, AuthResetPasswordDto } from './auth.dto';
 import { AuthService } from './auth.service';
 import { QueryDto } from 'src/common/dto/query.dto';
 import { JwtGuard } from 'src/common/guard/jwt.guard';
+import { Request, Response } from 'express';
 
 @Controller('api/auth')
 export class AuthController {
@@ -16,8 +29,14 @@ export class AuthController {
 
   @Post('signIn')
   @HttpCode(HttpStatus.OK)
-  signIn(@Query() query: QueryDto, @Body() auth: AuthDto) {
-    return this.authService.signIn(query, auth);
+  signIn(@Res() res: Response, @Query() query: QueryDto, @Body() auth: AuthDto) {
+    return this.authService.signIn(res, query, auth);
+  }
+
+  @Get('authenticate')
+  @HttpCode(HttpStatus.OK)
+  authenticate(@Req() req: Request) {
+    return this.authService.authenticate(req);
   }
 
   @Post('refresh')
@@ -47,7 +66,7 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  logout(@Query() query: QueryDto) {
-    return this.authService.logout(query);
+  logout(@Res() res: Response, @Query() query: QueryDto) {
+    return this.authService.logout(res, query);
   }
 }

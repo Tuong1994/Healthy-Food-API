@@ -1,6 +1,13 @@
 import * as bcryptjs from 'bcryptjs';
 import * as crypto from 'crypto';
-import { ForbiddenException, HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { Request, Response } from 'express';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import { JwtService, TokenExpiredError } from '@nestjs/jwt';
@@ -48,7 +55,7 @@ export class AuthService {
     throw new HttpException('Sign up failed', HttpStatus.BAD_REQUEST);
   }
 
-  async signIn(query: QueryDto, auth: AuthDto) {
+  async signIn(res: Response, query: QueryDto, auth: AuthDto) {
     const { admin } = query;
     const { email, password } = auth;
 
@@ -83,12 +90,13 @@ export class AuthService {
       create: { token: refreshToken, userId: login.id },
       update: { token: refreshToken },
     });
-    return {
+    res.cookie('token', accessToken, { httpOnly: true, secure: false, maxAge: 24 * 60 * 60 * 1000 });
+    return res.json({
       accessToken: accessToken.token,
       expired: accessToken.expirationTimeInSeconds,
-      info,
       isAuth: true,
-    };
+      info,
+    });
   }
 
   async refresh(query: QueryDto) {
@@ -110,6 +118,58 @@ export class AuthService {
       }
     } catch (error) {
       if (error instanceof TokenExpiredError) throw new ForbiddenException('Token is expired');
+    }
+  }
+
+  async authenticate(req: Request) {
+    if (!req.cookies.token) throw new ForbiddenException('Token not found');
+    const { token: loginToken } = req.cookies.token;
+    if (!loginToken) throw new ForbiddenException('Token not found');
+
+    const decode = this.jwt.decode(loginToken) as TokenPayload;
+    const info = await this.prisma.user.findUnique({
+      where: { id: decode.id },
+      include: {
+        image: { select: { id: true, path: true, size: true, publicId: true } },
+        permission: { select: { id: true, create: true, update: true, remove: true } },
+      },
+    });
+    delete info.password;
+    delete info.createdAt;
+    delete info.updatedAt;
+    const payload: TokenPayload = {
+      id: info.id,
+      email: info.email,
+      role: info.role,
+    };
+
+    const accessToken = await this.authHelper.getAccessToken(payload);
+
+    try {
+      this.jwt.verify(loginToken, {
+        secret: this.config.get('ACCESS_TOKEN_SECRET'),
+      }) as TokenPayload;
+
+      return {
+        accessToken: accessToken.token,
+        expired: accessToken.expirationTimeInSeconds,
+        isAuth: true,
+        info,
+      };
+    } catch (error) {
+      if (error instanceof TokenExpiredError) {
+        try {
+          const response = await this.refresh({ userId: decode.id });
+          return {
+            accessToken: response.accessToken,
+            expired: response.expired,
+            isAuth: true,
+            info,
+          };
+        } catch (error) {
+          if (error instanceof TokenExpiredError) throw new ForbiddenException('Token is expired');
+        }
+      }
     }
   }
 
@@ -173,11 +233,12 @@ export class AuthService {
     throw new HttpException('Password has been reset', HttpStatus.OK);
   }
 
-  async logout(query: QueryDto) {
+  async logout(res: Response, query: QueryDto) {
     const { userId } = query;
     const auth = await this.prisma.auth.findUnique({ where: { userId } });
     if (!auth) throw new HttpException('Logout success', HttpStatus.OK);
     await this.prisma.auth.delete({ where: { id: auth.id } });
+    res.cookie('token', '', { maxAge: 0, httpOnly: true });
     throw new HttpException('Logout success', HttpStatus.OK);
   }
 }
