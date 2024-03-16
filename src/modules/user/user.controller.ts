@@ -49,8 +49,7 @@ export class UserController {
   }
 
   @Put('update')
-  @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
-  @UseGuards(JwtGuard, RoleGuard)
+  @UseGuards(JwtGuard)
   @UseInterceptors(FileInterceptor('image', multerOption()))
   @HttpCode(HttpStatus.OK)
   updateUser(@Query() query: QueryDto, @UploadedFile() file: Express.Multer.File, @Body() user: UserDto) {
@@ -75,7 +74,7 @@ export class UserController {
 
   @Delete('removePermanent')
   @Roles(ERole.MANAGER)
-  @UseGuards(JwtGuard, RoleGuard)
+  // @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeUsersPermanent(@Query() query: QueryDto) {
     return this.userService.removeUsersPermanent(query);

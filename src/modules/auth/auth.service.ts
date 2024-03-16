@@ -63,7 +63,7 @@ export class AuthService {
       where: { email },
       include: {
         image: { select: { id: true, path: true, size: true, publicId: true } },
-        permission: { select: { id: true, create: true, update: true, remove: true } },
+        permission: admin ? { select: { id: true, create: true, update: true, remove: true } } : false,
       },
     });
     if (!login) throw new HttpException('Email is not correct', HttpStatus.NOT_FOUND);
