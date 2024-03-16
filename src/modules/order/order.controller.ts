@@ -16,8 +16,10 @@ import { QueryDto } from 'src/common/dto/query.dto';
 import { JwtGuard } from 'src/common/guard/jwt.guard';
 import { OrderDto } from './order.dto';
 import { Roles } from 'src/common/decorator/role.decorator';
-import { ERole } from 'src/common/enum/base';
+import { EPermission, ERole } from 'src/common/enum/base';
 import { RoleGuard } from 'src/common/guard/role.guard';
+import { Permission } from 'src/common/decorator/permission.decorator';
+import { PermissionGuard } from 'src/common/guard/permission.guard';
 
 @Controller('api/order')
 export class OrderController {
@@ -51,7 +53,8 @@ export class OrderController {
 
   @Put('update')
   @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
-  @UseGuards(JwtGuard, RoleGuard)
+  @Permission(EPermission.UPDATE)
+  @UseGuards(JwtGuard, RoleGuard, PermissionGuard)
   @HttpCode(HttpStatus.OK)
   updateOrder(@Query() query: QueryDto, @Body() order: OrderDto) {
     return this.orderService.updateOrder(query, order);
@@ -59,7 +62,8 @@ export class OrderController {
 
   @Delete('remove')
   @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
-  @UseGuards(JwtGuard, RoleGuard)
+  @Permission(EPermission.REMOVE)
+  @UseGuards(JwtGuard, RoleGuard, PermissionGuard)
   @HttpCode(HttpStatus.OK)
   removeOrders(@Query() query: QueryDto) {
     return this.orderService.removeOrders(query);

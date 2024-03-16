@@ -16,12 +16,14 @@ import { CategoryService } from './category.service';
 import { QueryDto } from 'src/common/dto/query.dto';
 import { QueryPaging } from 'src/common/decorator/query.decorator';
 import { Roles } from 'src/common/decorator/role.decorator';
-import { ERole } from 'src/common/enum/base';
+import { EPermission, ERole } from 'src/common/enum/base';
 import { JwtGuard } from 'src/common/guard/jwt.guard';
 import { RoleGuard } from 'src/common/guard/role.guard';
 import { CategoryDto } from './category.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerOption } from 'src/common/config/multer.config';
+import { Permission } from 'src/common/decorator/permission.decorator';
+import { PermissionGuard } from 'src/common/guard/permission.guard';
 
 @Controller('api/category')
 export class CategoryController {
@@ -47,7 +49,8 @@ export class CategoryController {
 
   @Post('create')
   @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
-  @UseGuards(JwtGuard, RoleGuard)
+  @Permission(EPermission.CREATE)
+  @UseGuards(JwtGuard, RoleGuard, PermissionGuard)
   @UseInterceptors(FileInterceptor('image', multerOption()))
   @HttpCode(HttpStatus.CREATED)
   createCategory(@UploadedFile() file: Express.Multer.File, @Body() category: CategoryDto) {
@@ -56,7 +59,8 @@ export class CategoryController {
 
   @Put('update')
   @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
-  @UseGuards(JwtGuard, RoleGuard)
+  @Permission(EPermission.UPDATE)
+  @UseGuards(JwtGuard, RoleGuard, PermissionGuard)
   @UseInterceptors(FileInterceptor('image', multerOption()))
   @HttpCode(HttpStatus.OK)
   updateCategory(
@@ -69,7 +73,8 @@ export class CategoryController {
 
   @Delete('remove')
   @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
-  @UseGuards(JwtGuard, RoleGuard)
+  @Permission(EPermission.REMOVE)
+  @UseGuards(JwtGuard, RoleGuard, PermissionGuard)
   @HttpCode(HttpStatus.OK)
   removeCategories(@Query() query: QueryDto) {
     return this.categoryService.removeCategories(query);

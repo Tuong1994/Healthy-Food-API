@@ -14,10 +14,12 @@ import { WardService } from './ward.service';
 import { QueryDto } from 'src/common/dto/query.dto';
 import { QueryPaging } from 'src/common/decorator/query.decorator';
 import { Roles } from 'src/common/decorator/role.decorator';
-import { ERole } from 'src/common/enum/base';
+import { EPermission, ERole } from 'src/common/enum/base';
 import { JwtGuard } from 'src/common/guard/jwt.guard';
 import { RoleGuard } from 'src/common/guard/role.guard';
 import { WardDto } from './ward.dto';
+import { Permission } from 'src/common/decorator/permission.decorator';
+import { PermissionGuard } from 'src/common/guard/permission.guard';
 
 @Controller('api/ward')
 export class WardController {
@@ -43,7 +45,8 @@ export class WardController {
 
   @Post('create')
   @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
-  @UseGuards(JwtGuard, RoleGuard)
+  @Permission(EPermission.CREATE)
+  @UseGuards(JwtGuard, RoleGuard, PermissionGuard)
   @HttpCode(HttpStatus.CREATED)
   createWard(@Body() ward: WardDto) {
     return this.wardService.createWard(ward);
@@ -51,7 +54,8 @@ export class WardController {
 
   @Put('update')
   @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
-  @UseGuards(JwtGuard, RoleGuard)
+  @Permission(EPermission.UPDATE)
+  @UseGuards(JwtGuard, RoleGuard, PermissionGuard)
   @HttpCode(HttpStatus.OK)
   updateWard(@Query() query: QueryDto, @Body() ward: WardDto) {
     return this.wardService.updateWard(query, ward);
@@ -59,7 +63,8 @@ export class WardController {
 
   @Delete('remove')
   @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
-  @UseGuards(JwtGuard, RoleGuard)
+  @Permission(EPermission.REMOVE)
+  @UseGuards(JwtGuard, RoleGuard, PermissionGuard)
   @HttpCode(HttpStatus.OK)
   removeWards(@Query() query: QueryDto) {
     return this.wardService.removeWards(query);

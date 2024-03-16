@@ -18,10 +18,12 @@ import { QueryPaging } from 'src/common/decorator/query.decorator';
 import { RoleGuard } from 'src/common/guard/role.guard';
 import { JwtGuard } from 'src/common/guard/jwt.guard';
 import { Roles } from 'src/common/decorator/role.decorator';
-import { ERole } from 'src/common/enum/base';
+import { EPermission, ERole } from 'src/common/enum/base';
 import { UserDto } from 'src/modules/user/user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerOption } from 'src/common/config/multer.config';
+import { PermissionGuard } from 'src/common/guard/permission.guard';
+import { Permission } from 'src/common/decorator/permission.decorator';
 
 @Controller('api/user')
 export class UserController {
@@ -41,7 +43,8 @@ export class UserController {
 
   @Post('create')
   @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
-  @UseGuards(JwtGuard, RoleGuard)
+  @Permission(EPermission.CREATE)
+  @UseGuards(JwtGuard, RoleGuard, PermissionGuard)
   @UseInterceptors(FileInterceptor('image', multerOption()))
   @HttpCode(HttpStatus.CREATED)
   createUser(@Query() query: QueryDto, @UploadedFile() file: Express.Multer.File, @Body() user: UserDto) {
@@ -50,7 +53,8 @@ export class UserController {
 
   @Put('update')
   @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
-  @UseGuards(JwtGuard, RoleGuard)
+  @Permission(EPermission.UPDATE)
+  @UseGuards(JwtGuard, RoleGuard, PermissionGuard)
   @UseInterceptors(FileInterceptor('image', multerOption()))
   @HttpCode(HttpStatus.OK)
   updateUser(@Query() query: QueryDto, @UploadedFile() file: Express.Multer.File, @Body() user: UserDto) {
@@ -59,7 +63,8 @@ export class UserController {
 
   @Delete('remove')
   @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
-  @UseGuards(JwtGuard, RoleGuard)
+  @Permission(EPermission.REMOVE)
+  @UseGuards(JwtGuard, RoleGuard, PermissionGuard)
   @HttpCode(HttpStatus.OK)
   removeUsers(@Query() query: QueryDto) {
     return this.userService.removeUsers(query);
@@ -67,7 +72,8 @@ export class UserController {
 
   @Delete('removeAddress')
   @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
-  @UseGuards(JwtGuard, RoleGuard)
+  @Permission(EPermission.REMOVE)
+  @UseGuards(JwtGuard, RoleGuard, PermissionGuard)
   @HttpCode(HttpStatus.OK)
   removeAddress(@Query() query: QueryDto) {
     return this.userService.removeAddress(query);
@@ -75,7 +81,7 @@ export class UserController {
 
   @Delete('removePermanent')
   @Roles(ERole.MANAGER)
-  // @UseGuards(JwtGuard, RoleGuard)
+  @UseGuards(JwtGuard, RoleGuard)
   @HttpCode(HttpStatus.OK)
   removeUsersPermanent(@Query() query: QueryDto) {
     return this.userService.removeUsersPermanent(query);

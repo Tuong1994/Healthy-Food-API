@@ -1,4 +1,4 @@
-import { ForbiddenException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueryDto } from 'src/common/dto/query.dto';
 import { Paging } from 'src/common/type/base';
@@ -143,15 +143,17 @@ export class UserService {
 
     if (newUser) {
       let responseUser: any;
-      await this.prisma.userPermission.create({
-        data: {
-          create: false,
-          update: false,
-          remove: false,
-          isDelete: false,
-          userId: newUser.id,
-        },
-      });
+      if (newUser.role !== ERole.CUSTOMER) {
+        await this.prisma.userPermission.create({
+          data: {
+            create: false,
+            update: false,
+            remove: false,
+            isDelete: false,
+            userId: newUser.id,
+          },
+        });
+      }
       if (address) {
         const addressJson = utils.parseJSON<UserAddress>(address);
         const { addressEn, addressVn, cityCode, districtCode, wardCode } = addressJson;

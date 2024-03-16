@@ -16,12 +16,14 @@ import { ProductService } from './product.service';
 import { QueryDto } from 'src/common/dto/query.dto';
 import { QueryPaging } from 'src/common/decorator/query.decorator';
 import { Roles } from 'src/common/decorator/role.decorator';
-import { ERole } from 'src/common/enum/base';
+import { EPermission, ERole } from 'src/common/enum/base';
 import { JwtGuard } from 'src/common/guard/jwt.guard';
 import { RoleGuard } from 'src/common/guard/role.guard';
 import { ProductDto } from './product.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerOption } from 'src/common/config/multer.config';
+import { Permission } from 'src/common/decorator/permission.decorator';
+import { PermissionGuard } from 'src/common/guard/permission.guard';
 
 @Controller('api/product')
 export class ProductController {
@@ -47,7 +49,8 @@ export class ProductController {
 
   @Post('create')
   @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
-  @UseGuards(JwtGuard, RoleGuard)
+  @Permission(EPermission.CREATE)
+  @UseGuards(JwtGuard, RoleGuard, PermissionGuard)
   @UseInterceptors(FileInterceptor('image', multerOption()))
   @HttpCode(HttpStatus.CREATED)
   createProduct(@UploadedFile() file: Express.Multer.File, @Body() product: ProductDto) {
@@ -56,7 +59,8 @@ export class ProductController {
 
   @Put('update')
   @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
-  @UseGuards(JwtGuard, RoleGuard)
+  @Permission(EPermission.UPDATE)
+  @UseGuards(JwtGuard, RoleGuard, PermissionGuard)
   @UseInterceptors(FileInterceptor('image', multerOption()))
   @HttpCode(HttpStatus.OK)
   updateProduct(
@@ -69,7 +73,8 @@ export class ProductController {
 
   @Delete('remove')
   @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
-  @UseGuards(JwtGuard, RoleGuard)
+  @Permission(EPermission.REMOVE)
+  @UseGuards(JwtGuard, RoleGuard, PermissionGuard)
   @HttpCode(HttpStatus.OK)
   removeProducts(@Query() query: QueryDto) {
     return this.productService.removeProducts(query);

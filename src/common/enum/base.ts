@@ -5,6 +5,12 @@ export enum ERole {
   CUSTOMER = 4,
 }
 
+export enum EPermission {
+  CREATE = "create",
+  UPDATE = 'update',
+  REMOVE = 'remove',
+}
+
 export enum ELang {
   EN = 'en',
   VN = 'vn',

@@ -35,24 +35,12 @@ export class AuthService {
 
     const exist = await this.prisma.user.findUnique({ where: { email } });
     if (exist) throw new ForbiddenException('Email is already exist');
-
+    
     const hashPass = utils.bcryptHash(password);
     const newAccount = await this.prisma.user.create({
       data: { email, password: hashPass, phone, isDelete: false, role: ERole.CUSTOMER },
     });
-    if (newAccount) {
-      await this.prisma.userPermission.create({
-        data: {
-          create: false,
-          update: false,
-          remove: false,
-          isDelete: false,
-          userId: newAccount.id,
-        },
-      });
-      return newAccount;
-    }
-    throw new HttpException('Sign up failed', HttpStatus.BAD_REQUEST);
+    return newAccount;
   }
 
   async signIn(res: Response, query: QueryDto, auth: AuthDto) {
