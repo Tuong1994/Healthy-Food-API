@@ -203,13 +203,8 @@ export class UserService {
   }
 
   async updateUser(query: QueryDto, file: Express.Multer.File, user: UserDto) {
-    const { userId, admin, langCode } = query;
+    const { userId, langCode } = query;
     const { role, firstName, lastName, phone, gender, birthday, address } = user;
-
-    if (admin) {
-      const isAuthorized = [ERole.STAFF, ERole.LEADER, ERole.MANAGER].includes(role);
-      if (!isAuthorized) throw new ForbiddenException("You're not authorize to proccess");
-    }
 
     const fullName = this.userHelper.getFullName(firstName, lastName, langCode);
     await this.prisma.user.update({

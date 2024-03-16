@@ -49,7 +49,8 @@ export class UserController {
   }
 
   @Put('update')
-  @UseGuards(JwtGuard)
+  @Roles(ERole.STAFF, ERole.LEADER, ERole.MANAGER)
+  @UseGuards(JwtGuard, RoleGuard)
   @UseInterceptors(FileInterceptor('image', multerOption()))
   @HttpCode(HttpStatus.OK)
   updateUser(@Query() query: QueryDto, @UploadedFile() file: Express.Multer.File, @Body() user: UserDto) {
