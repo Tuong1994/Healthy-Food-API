@@ -69,52 +69,38 @@ export class ProductService {
     }));
   }
 
-  async getProducts(query: QueryDto) {
-    const {
-      langCode,
-      categoryId,
-      subCategoryId,
-      productStatus,
-      productUnit,
-      inventoryStatus,
-      origin,
-      sortBy,
-      keywords,
-      hasCate,
-      hasLike,
-    } = query;
+  async getProductsWithCategories(query: QueryDto) {
+    const { langCode, sortBy, hasCate, hasLike } = query;
 
-    const products = await this.prisma.product.findMany({
-      where: {
-        AND: [
-          { categoryId },
-          { subCategoryId },
-          { isDelete: { equals: false } },
-          { origin: origin && Number(origin) },
-          { unit: productUnit && Number(productUnit) },
-          { inventoryStatus: inventoryStatus && Number(inventoryStatus) },
-          productStatus
-            ? Number(productStatus) !== ERecordStatus.ALL
-              ? { status: Number(productStatus) }
-              : {}
-            : { status: ERecordStatus.ACTIVE },
-        ],
-      },
-      orderBy: [
-        { totalPrice: utils.getSortBy(sortBy) ?? 'asc' },
-        { updatedAt: utils.getSortBy(sortBy) ?? 'asc' },
-      ],
-      select: { ...this.getSelectFields(langCode, { hasCate, hasLike, convertName: true }) },
+    const categories = await this.prisma.category.findMany({
+      where: { isDelete: { equals: false } },
+      select: { id: true },
     });
-    let filterProducts: Product[] = [];
-    if (keywords)
-      filterProducts = products.filter((product) =>
-        ELang.EN
-          ? product.nameEn.toLowerCase().includes(keywords.toLowerCase())
-          : product.nameVn.toLowerCase().includes(keywords.toLowerCase()),
+
+    if (categories && categories.length) {
+      const items = await Promise.all(
+        categories.map(async (category) => {
+          const products = await this.prisma.product.findMany({
+            where: {
+              AND: [
+                { categoryId: category.id },
+                { isDelete: { equals: false } },
+                { status: ERecordStatus.ACTIVE },
+              ],
+            },
+            orderBy: [
+              { totalPrice: utils.getSortBy(sortBy) ?? 'asc' },
+              { updatedAt: utils.getSortBy(sortBy) ?? 'asc' },
+            ],
+            select: { ...this.getSelectFields(langCode, { hasCate, hasLike, convertName: true }) },
+          });
+          const convertProducts = this.convertCollection(products, langCode);
+          const collection = utils.paging<Product>(convertProducts, '1', '10');
+          return collection;
+        }),
       );
-    const items = this.convertCollection(keywords ? filterProducts : products, langCode);
-    return { totalItems: keywords ? filterProducts.length : products.length, items };
+      return { totalItems: items.length, items };
+    }
   }
 
   async getProductsPaging(query: QueryDto) {
@@ -240,7 +226,7 @@ export class ProductService {
       });
       return resProduct;
     }
-    throw new HttpException('Create failed', HttpStatus.BAD_REQUEST)
+    throw new HttpException('Create failed', HttpStatus.BAD_REQUEST);
   }
 
   async updateProduct(query: QueryDto, file: Express.Multer.File, product: ProductDto) {

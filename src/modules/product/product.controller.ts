@@ -32,7 +32,7 @@ export class ProductController {
   @Get('list')
   @HttpCode(HttpStatus.OK)
   getProducts(@Query() query: QueryDto) {
-    return this.productService.getProducts(query);
+    return this.productService.getProductsWithCategories(query);
   }
 
   @Get('listPaging')
