@@ -56,15 +56,13 @@ export class CartService {
       include: { items: { select: { ...this.getSelectFields(langCode) } } },
     });
     if (!cart) throw new HttpException('Id not match', HttpStatus.NOT_FOUND);
-    const collection = utils.paging(
-      cart.items.map((item) => ({
-        ...item,
-        product: { ...utils.convertRecordsName(item.product, langCode) },
-      })),
-      page,
-      limit,
-    );
-    const responseCart = { ...cart, items: collection.items };
+    const isPaging = Boolean(page) && Boolean(limit);
+    const cartItems = cart.items.map((item) => ({
+      ...item,
+      product: { ...utils.convertRecordsName(item.product, langCode) },
+    }));
+    const collection = utils.paging(cartItems, page, limit);
+    const responseCart = { ...cart, items: !isPaging ? cartItems : collection.items };
     return { totalItems: collection.totalItems, detail: responseCart };
   }
 
