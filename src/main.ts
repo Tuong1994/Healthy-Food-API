@@ -12,7 +12,7 @@ async function bootstrap() {
     origin: [
       'http://localhost:3000',
       'http://localhost:5173',
-      'https://heathy-food-page.vercel.app',
+      'https://healthy-food-main.vercel.app',
       'https://healthy-food-admin.vercel.app',
     ],
     credentials: true,
