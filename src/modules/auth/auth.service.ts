@@ -79,7 +79,7 @@ export class AuthService {
       update: { token: refreshToken },
     });
     if (!admin)
-      res.cookie('token', accessToken, { httpOnly: true, secure: false, maxAge: 24 * 60 * 60 * 1000 });
+      res.cookie('token', accessToken, { httpOnly: false, secure: true, maxAge: 24 * 60 * 60 * 1000 });
 
     return res.json({
       accessToken: accessToken.token,
