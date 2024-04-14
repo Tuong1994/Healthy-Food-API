@@ -35,7 +35,7 @@ export class AuthService {
 
     const exist = await this.prisma.user.findUnique({ where: { email } });
     if (exist) throw new ForbiddenException('Email is already exist');
-    
+
     const hashPass = utils.bcryptHash(password);
     const newAccount = await this.prisma.user.create({
       data: { email, password: hashPass, phone, isDelete: false, role: ERole.CUSTOMER },
@@ -78,7 +78,9 @@ export class AuthService {
       create: { token: refreshToken, userId: login.id },
       update: { token: refreshToken },
     });
-    res.cookie('token', accessToken, { httpOnly: true, secure: false, maxAge: 24 * 60 * 60 * 1000 });
+    if (!admin)
+      res.cookie('token', accessToken, { httpOnly: true, secure: false, maxAge: 24 * 60 * 60 * 1000 });
+
     return res.json({
       accessToken: accessToken.token,
       expired: accessToken.expirationTimeInSeconds,
@@ -229,5 +231,14 @@ export class AuthService {
     await this.prisma.auth.delete({ where: { id: auth.id } });
     res.cookie('token', '', { maxAge: 0, httpOnly: true });
     throw new HttpException('Logout success', HttpStatus.OK);
+  }
+
+  async example(query: QueryDto) {
+    const { userId } = query;
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { resetToken: null, resetTokenExpires: null },
+    });
+    throw new HttpException('Update success', HttpStatus.OK);
   }
 }

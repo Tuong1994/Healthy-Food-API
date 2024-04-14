@@ -69,4 +69,10 @@ export class AuthController {
   logout(@Res() res: Response, @Query() query: QueryDto) {
     return this.authService.logout(res, query);
   }
+
+  @Post('example')
+  @HttpCode(HttpStatus.OK)
+  example(@Query() query: QueryDto) {
+    return this.authService.example(query);
+  }
 }
