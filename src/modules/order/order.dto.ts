@@ -57,6 +57,9 @@ export class OrderDto {
   @IsNotEmpty()
   userId: string;
 
+  @IsNotEmpty()
+  creatorId: string;
+
   @IsOptional()
   note: string;
 

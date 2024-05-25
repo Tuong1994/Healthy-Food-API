@@ -29,15 +29,16 @@ model User {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  address    UserAddress?
-  permission UserPermission?
-  image      Image?
-  cart       Cart?
-  auth       Auth?
-  orders     Order[]
-  comments   Comment[]
-  rates      Rate[]
-  likes      Like[]
+  address       UserAddress?
+  permission    UserPermission?
+  image         Image?
+  cart          Cart?
+  auth          Auth?
+  orders        Order[]         @relation(name: "orders")
+  ordersCreated Order[]         @relation(name: "ordersCreated")
+  comments      Comment[]
+  rates         Rate[]
+  likes         Like[]
 }
 
 model UserAddress {
@@ -188,8 +189,10 @@ model Order {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User   @relation(name: "orders", fields: [userId], references: [id], onDelete: Cascade)
+  creatorId String
+  creator   User   @relation(name: "ordersCreated", fields: [creatorId], references: [id], onDelete: Cascade)
 
   shipment Shipment?
   items    OrderItem[]

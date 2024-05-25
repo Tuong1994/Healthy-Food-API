@@ -59,6 +59,7 @@ export class OrderService {
       orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
       include: {
         user: { select: { id: true, fullName: true } },
+        creator: { select: { id: true, fullName: true } },
         items: { select: { ...this.getSelectFields(langCode) } },
       },
     });
@@ -149,6 +150,7 @@ export class OrderService {
       shipmentFee,
       totalPayment,
       userId,
+      creatorId,
       note,
       items,
       shipment,
@@ -162,6 +164,7 @@ export class OrderService {
         shipmentFee,
         totalPayment,
         userId,
+        creatorId,
         note,
         isDelete: false,
         orderNumber: `#O_${Date.now()}`,
@@ -201,7 +204,7 @@ export class OrderService {
         })),
       };
     }
-    throw new HttpException('Create failed', HttpStatus.BAD_REQUEST)
+    throw new HttpException('Create failed', HttpStatus.BAD_REQUEST);
   }
 
   async updateOrder(query: QueryDto, order: OrderDto) {
