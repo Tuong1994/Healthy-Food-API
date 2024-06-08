@@ -4421,6 +4421,7 @@ const products: Product[] = [...items].map((item, idx) => ({
   costPrice: 0,
   profit: 0,
   totalPrice: item.totalPrice,
+  description: '',
   unit: item.unit ?? EProductUnit.KG,
   status: ERecordStatus.ACTIVE,
   inventoryStatus: EInventoryStatus.IN_STOCK,

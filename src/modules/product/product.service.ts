@@ -22,6 +22,7 @@ export class ProductService {
       id: true,
       nameEn: options?.convertName ? langCode === ELang.EN : true,
       nameVn: options?.convertName ? langCode === ELang.VN : true,
+      description: true,
       image: true,
       costPrice: true,
       profit: true,
@@ -182,6 +183,7 @@ export class ProductService {
     const {
       nameEn,
       nameVn,
+      description,
       costPrice,
       profit,
       totalPrice,
@@ -199,6 +201,7 @@ export class ProductService {
       data: {
         nameEn,
         nameVn,
+        description,
         costPrice: Number(costPrice),
         profit: Number(profit),
         totalPrice: Number(totalPrice),
@@ -234,6 +237,7 @@ export class ProductService {
     const {
       nameEn,
       nameVn,
+      description,
       costPrice,
       profit,
       totalPrice,
@@ -253,6 +257,7 @@ export class ProductService {
       data: {
         nameEn,
         nameVn,
+        description,
         costPrice: Number(costPrice),
         profit: Number(profit),
         totalPrice: Number(totalPrice),

@@ -130,9 +130,10 @@ model Product {
   supplier        String
   isNew           Boolean
 
-  isDelete  Boolean?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  description String?  @db.VarChar(10000)
+  isDelete    Boolean?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   categoryId    String
   category      Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)

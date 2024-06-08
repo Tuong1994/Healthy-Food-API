@@ -108,6 +108,7 @@ CREATE TABLE `Product` (
     `origin` INTEGER NOT NULL,
     `supplier` VARCHAR(191) NOT NULL,
     `isNew` BOOLEAN NOT NULL,
+    `description` VARCHAR(10000) NULL,
     `isDelete` BOOLEAN NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
