@@ -20,9 +20,10 @@ export class ProductService {
   private getSelectFields(langCode: ELang, options?: SelectFieldsOptions) {
     return {
       id: true,
-      nameEn: options?.convertName ? langCode === ELang.EN : true,
-      nameVn: options?.convertName ? langCode === ELang.VN : true,
-      description: true,
+      nameEn: options?.convertLang ? langCode === ELang.EN : true,
+      nameVn: options?.convertLang ? langCode === ELang.VN : true,
+      descriptionEn: options?.convertLang ? langCode === ELang.EN : true,
+      descriptionVn: options?.convertLang ? langCode === ELang.VN : true,
       image: true,
       costPrice: true,
       profit: true,
@@ -60,14 +61,32 @@ export class ProductService {
     };
   }
 
+  private convertDescription<M>(record: M, langCode: ELang) {
+    if (!record) return null;
+    const recordClone = { ...record };
+    delete record['descriptionEn'];
+    delete record['descriptionVn'];
+    const data = {
+      description: langCode === ELang.EN ? recordClone['descriptionEn'] : recordClone['descriptionVn'],
+      ...record,
+    };
+    return data;
+  }
+
   private convertCollection(products: Product[], langCode: ELang) {
-    return products.map((product) => ({
-      ...utils.convertRecordsName<Product>(product, langCode),
-      category:
-        'category' in product
-          ? utils.convertRecordsName<Category>(product.category as Category, langCode)
-          : null,
-    }));
+    return products.map((product) => {
+      const convertProduct = { ...utils.convertRecordsName<Product>(product, langCode) };
+      delete convertProduct['descriptionEn'];
+      delete convertProduct['descriptionVn'];
+      return {
+        ...convertProduct,
+        ...this.convertDescription<Product>(product, langCode),
+        category:
+          'category' in product
+            ? utils.convertRecordsName<Category>(product.category as Category, langCode)
+            : null,
+      };
+    });
   }
 
   async getProductsWithCategories(query: QueryDto) {
@@ -93,7 +112,7 @@ export class ProductService {
               { totalPrice: utils.getSortBy(sortBy) ?? 'asc' },
               { updatedAt: utils.getSortBy(sortBy) ?? 'asc' },
             ],
-            select: { ...this.getSelectFields(langCode, { hasCate, hasLike, convertName: true }) },
+            select: { ...this.getSelectFields(langCode, { hasCate, hasLike, convertLang: true }) },
           });
           const convertProducts = this.convertCollection(products, langCode);
           const collection = utils.paging<Product>(convertProducts, '1', '10');
@@ -142,7 +161,7 @@ export class ProductService {
         { updatedAt: utils.getSortBy(sortBy) ?? 'desc' },
         { totalPrice: utils.getSortBy(sortBy) ?? 'asc' },
       ],
-      select: { ...this.getSelectFields(langCode, { hasCate, hasLike, convertName: true }) },
+      select: { ...this.getSelectFields(langCode, { hasCate, hasLike, convertLang: true }) },
     });
 
     if (keywords) {
@@ -158,10 +177,10 @@ export class ProductService {
   }
 
   async getProduct(query: QueryDto) {
-    const { productId, langCode, hasCate, hasLike, convertName } = query;
+    const { productId, langCode, hasCate, hasLike, convertLang } = query;
     const product = await this.prisma.product.findUnique({
       where: { id: productId, isDelete: { equals: false } },
-      select: { ...this.getSelectFields(langCode, { hasCate, hasLike, convertName }), rates: true },
+      select: { ...this.getSelectFields(langCode, { hasCate, hasLike, convertLang }), rates: true },
     });
     const response = {
       ...product,
@@ -171,19 +190,23 @@ export class ProductService {
     delete response.rates;
     const convertResponse = {
       ...utils.convertRecordsName<Product>({ ...response }, langCode),
+      ...this.convertDescription<Product>({ ...response }, langCode),
       category:
         'category' in response
           ? { ...utils.convertRecordsName<Category>(response.category as Category, langCode) }
           : null,
     };
-    return convertName ? convertResponse : response;
+    delete convertResponse['descriptionEn'];
+    delete convertResponse['descriptionVn'];
+    return convertLang ? convertResponse : response;
   }
 
   async createProduct(file: Express.Multer.File, product: ProductDto) {
     const {
       nameEn,
       nameVn,
-      description,
+      descriptionEn,
+      descriptionVn,
       costPrice,
       profit,
       totalPrice,
@@ -201,7 +224,8 @@ export class ProductService {
       data: {
         nameEn,
         nameVn,
-        description,
+        descriptionEn,
+        descriptionVn,
         costPrice: Number(costPrice),
         profit: Number(profit),
         totalPrice: Number(totalPrice),
@@ -237,7 +261,8 @@ export class ProductService {
     const {
       nameEn,
       nameVn,
-      description,
+      descriptionEn,
+      descriptionVn,
       costPrice,
       profit,
       totalPrice,
@@ -257,7 +282,8 @@ export class ProductService {
       data: {
         nameEn,
         nameVn,
-        description,
+        descriptionEn,
+        descriptionVn,
         costPrice: Number(costPrice),
         profit: Number(profit),
         totalPrice: Number(totalPrice),

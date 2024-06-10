@@ -11,5 +11,5 @@ export type SelectFieldsOptions = {
   hasCate?: boolean;
   hasLike?: boolean;
   hasSub?: boolean;
-  convertName?: boolean;
+  convertLang?: boolean;
 };

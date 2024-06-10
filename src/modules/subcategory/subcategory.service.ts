@@ -19,8 +19,8 @@ export class SubCategoryService {
     return {
       id: true,
       image: true,
-      nameVn: options?.convertName ? langCode === ELang.VN : true,
-      nameEn: options?.convertName ? langCode === ELang.EN : true,
+      nameVn: options?.convertLang ? langCode === ELang.VN : true,
+      nameEn: options?.convertLang ? langCode === ELang.EN : true,
       categoryId: true,
       status: true,
       isDelete: true,
@@ -30,8 +30,8 @@ export class SubCategoryService {
         ? {
             select: {
               id: true,
-              nameVn: options?.convertName ? langCode === ELang.VN : true,
-              nameEn: options?.convertName ? langCode === ELang.EN : true,
+              nameVn: options?.convertLang ? langCode === ELang.VN : true,
+              nameEn: options?.convertLang ? langCode === ELang.EN : true,
             },
           }
         : false,
@@ -107,13 +107,13 @@ export class SubCategoryService {
   }
 
   async getSubCategory(query: QueryDto) {
-    const { subCategoryId, langCode, convertName } = query;
+    const { subCategoryId, langCode, convertLang } = query;
     const subCategory = await this.prisma.subCategory.findUnique({
       where: { id: subCategoryId, isDelete: { equals: false } },
-      select: { ...this.getSelectFields(langCode, { convertName }) },
+      select: { ...this.getSelectFields(langCode, { convertLang }) },
     });
     const convertResponse = utils.convertRecordsName<SubCategory>({ ...subCategory }, langCode);
-    return convertName ? convertResponse : subCategory;
+    return convertLang ? convertResponse : subCategory;
   }
 
   async createSubCategory(file: Express.Multer.File, subCategory: SubCategoryDto) {

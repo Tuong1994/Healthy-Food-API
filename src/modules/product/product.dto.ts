@@ -46,5 +46,8 @@ export class ProductDto {
   isNew: boolean;
 
   @IsOptional()
-  description: string;
+  descriptionEn: string;
+
+  @IsOptional()
+  descriptionVn: string;
 }

@@ -38,7 +38,7 @@ export class QueryDto {
   hasCate?: boolean;
   hasLike?: boolean;
   staffOnly?: boolean
-  convertName?: boolean;
+  convertLang?: boolean;
   admin?: boolean;
 
   role?: ERole;

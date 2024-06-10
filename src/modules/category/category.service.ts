@@ -19,8 +19,8 @@ export class CategoryService {
     return {
       id: true,
       image: true,
-      nameVn: options.convertName ? langCode === ELang.VN : true,
-      nameEn: options.convertName ? langCode === ELang.EN : true,
+      nameVn: options.convertLang ? langCode === ELang.VN : true,
+      nameEn: options.convertLang ? langCode === ELang.EN : true,
       status: true,
       isDelete: true,
       createdAt: true,
@@ -30,8 +30,8 @@ export class CategoryService {
             select: {
               id: true,
               image: true,
-              nameVn: options.convertName ? langCode === ELang.VN : true,
-              nameEn: options.convertName ? langCode === ELang.EN : true,
+              nameVn: options.convertLang ? langCode === ELang.VN : true,
+              nameEn: options.convertLang ? langCode === ELang.EN : true,
               status: true,
               isDelete: true,
               createdAt: true,
@@ -68,7 +68,7 @@ export class CategoryService {
         ],
       },
       orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
-      select: { ...this.getSelectFields(langCode, { hasSub, convertName: true }) },
+      select: { ...this.getSelectFields(langCode, { hasSub, convertLang: true }) },
     });
     let filterCategories: Category[] = [];
     if (keywords)
@@ -96,7 +96,7 @@ export class CategoryService {
         ],
       },
       orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
-      select: { ...this.getSelectFields(langCode, { hasSub, convertName: true }) },
+      select: { ...this.getSelectFields(langCode, { hasSub, convertLang: true }) },
     });
     if (keywords) {
       const filterCategories = categories.filter((category) =>
@@ -111,13 +111,13 @@ export class CategoryService {
   }
 
   async getCategory(query: QueryDto) {
-    const { categoryId, langCode, hasSub, convertName } = query;
+    const { categoryId, langCode, hasSub, convertLang } = query;
     const category = await this.prisma.category.findUnique({
       where: { id: categoryId, isDelete: false },
-      select: { ...this.getSelectFields(langCode, { hasSub, convertName }) },
+      select: { ...this.getSelectFields(langCode, { hasSub, convertLang }) },
     });
     const convertResponse = utils.convertRecordsName<Category>({ ...category }, langCode);
-    return convertName ? convertResponse : category;
+    return convertLang ? convertResponse : category;
   }
 
   async createCategory(file: Express.Multer.File, category: CategoryDto) {
