@@ -22,6 +22,7 @@ import { ExcelModule } from './excel/excel.module';
 import { ExportModule } from './export/export.module';
 import { EmailModule } from './email/email.module';
 import { SettingModule } from './setting/setting.module';
+import { GlobalModule } from './global/global.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { SettingModule } from './setting/setting.module';
     UploadModule,
     ExportModule,
     SettingModule,
+    GlobalModule,
   ],
 })
 export class AppModule {}
