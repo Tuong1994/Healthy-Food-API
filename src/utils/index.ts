@@ -128,6 +128,10 @@ const utils = {
     const totalPayment = paymentBeforeTax + taxFee;
     return { paymentBeforeTax, taxFee, totalPayment };
   },
+
+  filterByKeywords: (value: string, keywords: string) => {
+    return value.toLowerCase().includes(keywords.toLowerCase());
+  },
 };
 
 export default utils;
