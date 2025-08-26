@@ -7,7 +7,11 @@ import { CategoryDto } from './category.dto';
 import { CategoryHelper } from './category.helper';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { ELang, ERecordStatus } from 'src/common/enum/base';
+import responseMessage from 'src/common/message';
 import utils from 'src/utils';
+
+const { CREATE_ERROR, UPDATE_SUCCESS, REMOVE_SUCCESS, RESTORE_SUCCESS, NOT_FOUND, NO_DATA_RESTORE } =
+  responseMessage;
 
 @Injectable()
 export class CategoryService {
@@ -90,7 +94,7 @@ export class CategoryService {
       });
       return resCategory;
     }
-    throw new HttpException('Create failed', HttpStatus.BAD_REQUEST);
+    throw new HttpException(CREATE_ERROR, HttpStatus.BAD_REQUEST);
   }
 
   async updateCategory(query: QueryDto, file: Express.Multer.File, category: CategoryDto) {
@@ -114,7 +118,7 @@ export class CategoryService {
         await this.prisma.image.create({ data: { ...image, isDelete: false } });
       }
     }
-    throw new HttpException('Updated success', HttpStatus.OK);
+    throw new HttpException(UPDATE_SUCCESS, HttpStatus.OK);
   }
 
   async removeCategories(query: QueryDto) {
@@ -124,7 +128,7 @@ export class CategoryService {
       where: { id: { in: listIds } },
       select: { ...this.categoryHelper.getSelectFields(ELang.EN, {}) },
     });
-    if (categories && !categories.length) throw new HttpException('Category not found', HttpStatus.NOT_FOUND);
+    if (categories && !categories.length) throw new HttpException(NOT_FOUND, HttpStatus.NOT_FOUND);
     await this.prisma.category.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
     await Promise.all(
       categories.map(async (category) => {
@@ -133,7 +137,7 @@ export class CategoryService {
           await this.categoryHelper.handleUpdateIsDeleteSubCategories(category, true);
       }),
     );
-    throw new HttpException('Removed success', HttpStatus.OK);
+    throw new HttpException(REMOVE_SUCCESS, HttpStatus.OK);
   }
 
   async removeCategoriesPermanent(query: QueryDto) {
@@ -143,7 +147,7 @@ export class CategoryService {
       where: { id: { in: listIds } },
       include: { image: true },
     });
-    if (categories && !categories.length) throw new HttpException('Category not found', HttpStatus.NOT_FOUND);
+    if (categories && !categories.length) throw new HttpException(NOT_FOUND, HttpStatus.NOT_FOUND);
     await this.prisma.category.deleteMany({ where: { id: { in: listIds } } });
     await Promise.all(
       categories.map(async (category) => {
@@ -151,7 +155,7 @@ export class CategoryService {
         await this.cloudinary.destroy(category.image.publicId);
       }),
     );
-    throw new HttpException('Removed success', HttpStatus.OK);
+    throw new HttpException(REMOVE_SUCCESS, HttpStatus.OK);
   }
 
   async restoreCategories() {
@@ -160,7 +164,7 @@ export class CategoryService {
       select: { ...this.categoryHelper.getSelectFields(ELang.EN, {}) },
     });
     if (categories && !categories.length)
-      throw new HttpException('There are no data to restored', HttpStatus.OK);
+      throw new HttpException(NO_DATA_RESTORE, HttpStatus.OK);
     await Promise.all(
       categories.map(async (category) => {
         await this.categoryHelper.handleRestoreCategory(category);
@@ -169,6 +173,6 @@ export class CategoryService {
           await this.categoryHelper.handleUpdateIsDeleteSubCategories(category, false);
       }),
     );
-    throw new HttpException('Restored success', HttpStatus.OK);
+    throw new HttpException(RESTORE_SUCCESS, HttpStatus.OK);
   }
 }

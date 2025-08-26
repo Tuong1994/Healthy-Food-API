@@ -1,78 +1,54 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueryDto } from 'src/common/dto/query.dto';
-import { Paging, SelectFieldsOptions } from 'src/common/type/base';
-import { Category, SubCategory } from '@prisma/client';
+import { Paging } from 'src/common/type/base';
+import { SubCategory } from '@prisma/client';
 import { SubCategoryDto } from './subcategory.dto';
+import { SubCategoryHelper } from './subcategory.helper';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { ELang, ERecordStatus } from 'src/common/enum/base';
+import responseMessage from 'src/common/message';
 import utils from 'src/utils';
+
+const { CREATE_ERROR, UPDATE_SUCCESS, REMOVE_SUCCESS, RESTORE_SUCCESS, NOT_FOUND, NO_DATA_RESTORE } =
+  responseMessage;
 
 @Injectable()
 export class SubCategoryService {
   constructor(
     private prisma: PrismaService,
     private cloudinary: CloudinaryService,
+    private subCategoryHelper: SubCategoryHelper,
   ) {}
 
-  private getSelectFields(langCode: ELang, options?: SelectFieldsOptions) {
-    return {
-      id: true,
-      image: true,
-      nameVn: options?.convertLang ? langCode === ELang.VN : true,
-      nameEn: options?.convertLang ? langCode === ELang.EN : true,
-      categoryId: true,
-      status: true,
-      isDelete: true,
-      createdAt: true,
-      updatedAt: true,
-      category: options?.hasCate
-        ? {
-            select: {
-              id: true,
-              nameVn: options?.convertLang ? langCode === ELang.VN : true,
-              nameEn: options?.convertLang ? langCode === ELang.EN : true,
-            },
-          }
-        : false,
-    };
-  }
-
-  private convertCollection(subCategories: SubCategory[], langCode: ELang) {
-    return subCategories.map((subCategory) => ({
-      ...utils.convertRecordsName<SubCategory>(subCategory, langCode),
-      category:
-        'category' in subCategory
-          ? { ...utils.convertRecordsName<Category>(subCategory.category as Category, langCode) }
-          : null,
-    }));
-  }
+  private queryFiler = (categoryId: string, subCateStatus: ERecordStatus) => [
+    { categoryId },
+    { isDelete: { equals: false } },
+    subCateStatus
+      ? Number(subCateStatus) !== ERecordStatus.ALL
+        ? { status: Number(subCateStatus) }
+        : {}
+      : { status: ERecordStatus.ACTIVE },
+  ];
 
   async getSubCategories(query: QueryDto) {
     const { keywords, sortBy, categoryId, langCode, hasCate, subCateStatus } = query;
     const subCategories = await this.prisma.subCategory.findMany({
-      where: {
-        AND: [
-          { categoryId },
-          { isDelete: { equals: false } },
-          subCateStatus
-            ? Number(subCateStatus) !== ERecordStatus.ALL
-              ? { status: Number(subCateStatus) }
-              : {}
-            : { status: ERecordStatus.ACTIVE },
-        ],
-      },
+      where: { AND: this.queryFiler(categoryId, subCateStatus) },
       orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
-      select: { ...this.getSelectFields(langCode, { hasCate }) },
+      select: { ...this.subCategoryHelper.getSelectFields(langCode, { hasCate }) },
     });
     let filterSubCategories: SubCategory[] = [];
     if (keywords)
       filterSubCategories = subCategories.filter((subCategory) =>
         langCode === ELang.EN
-          ? subCategory.nameEn.toLowerCase().includes(keywords.toLowerCase())
-          : subCategory.nameVn.toLowerCase().includes(keywords.toLowerCase()),
+          ? utils.filterByKeywords(subCategory.nameEn, keywords)
+          : utils.filterByKeywords(subCategory.nameVn, keywords),
       );
-    const items = this.convertCollection(keywords ? filterSubCategories : subCategories, langCode);
+    const items = this.subCategoryHelper.convertCollection(
+      keywords ? filterSubCategories : subCategories,
+      langCode,
+    );
     return { totalItems: keywords ? filterSubCategories.length : subCategories.length, items };
   }
 
@@ -80,29 +56,19 @@ export class SubCategoryService {
     const { page, limit, keywords, sortBy, categoryId, langCode, subCateStatus } = query;
     let collection: Paging<SubCategory> = utils.defaultCollection();
     const subCategories = await this.prisma.subCategory.findMany({
-      where: {
-        AND: [
-          { categoryId },
-          { isDelete: { equals: false } },
-          subCateStatus
-            ? Number(subCateStatus) !== ERecordStatus.ALL
-              ? { status: Number(subCateStatus) }
-              : {}
-            : { status: ERecordStatus.ACTIVE },
-        ],
-      },
+      where: { AND: this.queryFiler(categoryId, subCateStatus) },
       orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
-      select: { ...this.getSelectFields(langCode, { hasCate: true }) },
+      select: { ...this.subCategoryHelper.getSelectFields(langCode, { hasCate: true }) },
     });
     if (keywords) {
       const filterSubCategories = subCategories.filter((subCategory) =>
         langCode === ELang.EN
-          ? subCategory.nameEn.toLowerCase().includes(keywords.toLowerCase())
-          : subCategory.nameVn.toLowerCase().includes(keywords.toLowerCase()),
+          ? utils.filterByKeywords(subCategory.nameEn, keywords)
+          : utils.filterByKeywords(subCategory.nameVn, keywords),
       );
       collection = utils.paging<SubCategory>(filterSubCategories, page, limit);
     } else collection = utils.paging<SubCategory>(subCategories, page, limit);
-    const items = this.convertCollection(collection.items, langCode);
+    const items = this.subCategoryHelper.convertCollection(collection.items, langCode);
     return { ...collection, items };
   }
 
@@ -110,7 +76,7 @@ export class SubCategoryService {
     const { subCategoryId, langCode, convertLang } = query;
     const subCategory = await this.prisma.subCategory.findUnique({
       where: { id: subCategoryId, isDelete: { equals: false } },
-      select: { ...this.getSelectFields(langCode, { convertLang }) },
+      select: { ...this.subCategoryHelper.getSelectFields(langCode, { convertLang }) },
     });
     const convertResponse = utils.convertRecordsName<SubCategory>({ ...subCategory }, langCode);
     return convertLang ? convertResponse : subCategory;
@@ -129,7 +95,7 @@ export class SubCategoryService {
       const resSubCategory = await this.prisma.subCategory.findUnique({ where: { id: newSubCategory.id } });
       return resSubCategory;
     }
-    throw new HttpException('Create failed', HttpStatus.BAD_REQUEST)
+    throw new HttpException(CREATE_ERROR, HttpStatus.BAD_REQUEST);
   }
 
   async updateSubCategory(query: QueryDto, file: Express.Multer.File, subCategory: SubCategoryDto) {
@@ -153,7 +119,7 @@ export class SubCategoryService {
         await this.prisma.image.create({ data: { ...image, isDelete: false } });
       }
     }
-    throw new HttpException('Updated success', HttpStatus.OK);
+    throw new HttpException(UPDATE_SUCCESS, HttpStatus.OK);
   }
 
   async removeSubCategories(query: QueryDto) {
@@ -161,21 +127,18 @@ export class SubCategoryService {
     const listIds = ids.split(',');
     const subCategories = await this.prisma.subCategory.findMany({
       where: { id: { in: listIds } },
-      select: { id: true, image: true },
+      select: { ...this.subCategoryHelper.getSelectFields(ELang.EN, {}) },
     });
     if (subCategories && !subCategories.length)
-      throw new HttpException('Subcategory not found', HttpStatus.NOT_FOUND);
+      throw new HttpException(NOT_FOUND, HttpStatus.NOT_FOUND);
     await this.prisma.subCategory.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
     await Promise.all(
       subCategories.map(async (subCategory) => {
         if (!subCategory.image) return;
-        await this.prisma.image.update({
-          where: { subCategoryId: subCategory.id },
-          data: { isDelete: true },
-        });
+        await this.subCategoryHelper.handleUpdateIsDeleteSubCategoryImage(subCategory, true);
       }),
     );
-    throw new HttpException('Removed success', HttpStatus.OK);
+    throw new HttpException(REMOVE_SUCCESS, HttpStatus.OK);
   }
 
   async removeSubCategoriesPermanent(query: QueryDto) {
@@ -186,7 +149,7 @@ export class SubCategoryService {
       include: { image: true },
     });
     if (subCategories && !subCategories.length)
-      throw new HttpException('Subcategory not found', HttpStatus.NOT_FOUND);
+      throw new HttpException(NOT_FOUND, HttpStatus.NOT_FOUND);
     await this.prisma.subCategory.deleteMany({ where: { id: { in: listIds } } });
     await Promise.all(
       subCategories.map(async (subCategory) => {
@@ -194,27 +157,24 @@ export class SubCategoryService {
         await this.cloudinary.destroy(subCategory.image.publicId);
       }),
     );
-    throw new HttpException('Removed success', HttpStatus.OK);
+    throw new HttpException(REMOVE_SUCCESS, HttpStatus.OK);
   }
 
   async restoreSubCategories() {
     const subCategories = await this.prisma.subCategory.findMany({
       where: { isDelete: { equals: true } },
-      select: { id: true, image: true },
+      select: { ...this.subCategoryHelper.getSelectFields(ELang.EN, {}) },
     });
     if (subCategories && !subCategories.length)
-      throw new HttpException('There are no data to restored', HttpStatus.OK);
+      throw new HttpException(NO_DATA_RESTORE, HttpStatus.OK);
     await Promise.all(
       subCategories.map(async (subCategory) => {
-        await this.prisma.subCategory.update({ where: { id: subCategory.id }, data: { isDelete: false } });
+        await this.subCategoryHelper.handleRestoreSubCategory(subCategory);
         if (subCategory.image)
-          await this.prisma.image.update({
-            where: { subCategoryId: subCategory.id },
-            data: { isDelete: false },
-          });
+          await this.subCategoryHelper.handleUpdateIsDeleteSubCategoryImage(subCategory, false);
       }),
     );
 
-    throw new HttpException('Restored success', HttpStatus.OK);
+    throw new HttpException(RESTORE_SUCCESS, HttpStatus.OK);
   }
 }
