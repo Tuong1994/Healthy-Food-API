@@ -5,30 +5,18 @@ import { Paging } from 'src/common/type/base';
 import { Ward } from '@prisma/client';
 import { WardDto } from './ward.dto';
 import { ELang } from 'src/common/enum/base';
+import { WardHelper } from './ward.helper';
+import responseMessage from 'src/common/message';
 import utils from 'src/utils';
+
+const { UPDATE_SUCCESS, REMOVE_SUCCESS, RESTORE_SUCCESS, NOT_FOUND, NO_DATA_RESTORE } = responseMessage;
 
 @Injectable()
 export class WardService {
-  constructor(private prisma: PrismaService) {}
-
-  private getSelectFields(langCode: ELang) {
-    return {
-      id: true,
-      nameEn: langCode === ELang.EN,
-      nameVn: langCode === ELang.VN,
-      code: true,
-      districtCode: true,
-      isDelete: true,
-      createdAt: true,
-      updatedAt: true,
-    };
-  }
-
-  private convertCollection(wards: Ward[], langCode: ELang) {
-    return wards.map((ward) => ({
-      ...utils.convertRecordsName<Ward>(ward, langCode),
-    }));
-  }
+  constructor(
+    private prisma: PrismaService,
+    private wardHelper: WardHelper,
+  ) {}
 
   async getWards(query: QueryDto) {
     const { keywords, sortBy, langCode, districtCode } = query;
@@ -37,16 +25,16 @@ export class WardService {
         AND: [{ districtCode: districtCode && Number(districtCode) }, { isDelete: { equals: false } }],
       },
       orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
-      select: { ...this.getSelectFields(langCode) },
+      select: { ...this.wardHelper.getSelectFields(langCode) },
     });
     let filterWards: Ward[] = [];
     if (keywords)
       filterWards = wards.filter((ward) =>
         langCode === ELang.EN
-          ? ward.nameEn.toLowerCase().includes(keywords.toLowerCase())
-          : ward.nameVn.toLowerCase().includes(keywords.toLowerCase()),
+          ? utils.filterByKeywords(ward.nameEn, keywords)
+          : utils.filterByKeywords(ward.nameVn, keywords),
       );
-    const items = this.convertCollection(keywords ? filterWards : wards, langCode);
+    const items = this.wardHelper.convertCollection(keywords ? filterWards : wards, langCode);
     return { totalItems: keywords ? filterWards.length : wards.length, items };
   }
 
@@ -58,17 +46,17 @@ export class WardService {
         AND: [{ districtCode: districtCode && Number(districtCode) }, { isDelete: { equals: false } }],
       },
       orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
-      select: { ...this.getSelectFields(langCode) },
+      select: { ...this.wardHelper.getSelectFields(langCode) },
     });
     if (keywords) {
       const filterWards = wards.filter((ward) =>
         langCode === ELang.EN
-          ? ward.nameEn.toLowerCase().includes(keywords.toLowerCase())
-          : ward.nameVn.toLowerCase().includes(keywords.toLowerCase()),
+          ? utils.filterByKeywords(ward.nameEn, keywords)
+          : utils.filterByKeywords(ward.nameVn, keywords),
       );
       collection = utils.paging<Ward>(filterWards, page, limit);
     } else collection = utils.paging<Ward>(wards, page, limit);
-    const items = this.convertCollection(collection.items, langCode);
+    const items = this.wardHelper.convertCollection(collection.items, langCode);
     return { ...collection, items };
   }
 
@@ -76,7 +64,7 @@ export class WardService {
     const { wardId, langCode } = query;
     const ward = await this.prisma.ward.findUnique({
       where: { id: wardId, isDelete: { equals: false } },
-      select: { ...this.getSelectFields(langCode) },
+      select: { ...this.wardHelper.getSelectFields(langCode) },
     });
     return utils.convertRecordsName<Ward>(ward, langCode);
   }
@@ -96,35 +84,35 @@ export class WardService {
       where: { id: wardId },
       data: { nameEn, nameVn, code, districtCode },
     });
-    throw new HttpException('Updated success', HttpStatus.OK);
+    throw new HttpException(UPDATE_SUCCESS, HttpStatus.OK);
   }
 
   async removeWards(query: QueryDto) {
     const { ids } = query;
     const listIds = ids.split(',');
     const wards = await this.prisma.ward.findMany({ where: { id: { in: listIds } } });
-    if (wards && !wards.length) throw new HttpException('Ward not found', HttpStatus.NOT_FOUND);
+    if (wards && !wards.length) throw new HttpException(NOT_FOUND, HttpStatus.NOT_FOUND);
     await this.prisma.ward.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
-    throw new HttpException('Removed success', HttpStatus.OK);
+    throw new HttpException(REMOVE_SUCCESS, HttpStatus.OK);
   }
 
   async removeWardsPermanent(query: QueryDto) {
     const { ids } = query;
     const listIds = ids.split(',');
     const wards = await this.prisma.ward.findMany({ where: { id: { in: listIds } } });
-    if (wards && !wards.length) throw new HttpException('Ward not found', HttpStatus.NOT_FOUND);
+    if (wards && !wards.length) throw new HttpException(NOT_FOUND, HttpStatus.NOT_FOUND);
     await this.prisma.ward.deleteMany({ where: { id: { in: listIds } } });
-    throw new HttpException('Removed success', HttpStatus.OK);
+    throw new HttpException(REMOVE_SUCCESS, HttpStatus.OK);
   }
 
   async restoreWards() {
     const wards = await this.prisma.ward.findMany({ where: { isDelete: { equals: true } } });
-    if (wards && !wards.length) throw new HttpException('There are no data to restored', HttpStatus.OK);
+    if (wards && !wards.length) throw new HttpException(NO_DATA_RESTORE, HttpStatus.OK);
     await Promise.all(
       wards.map(async (ward) => {
         await this.prisma.ward.update({ where: { id: ward.id }, data: { isDelete: false } });
       }),
     );
-    throw new HttpException('Restored success', HttpStatus.OK);
+    throw new HttpException(RESTORE_SUCCESS, HttpStatus.OK);
   }
 }

@@ -3,10 +3,11 @@ import { WardController } from './ward.controller';
 import { WardService } from './ward.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CheckIdMiddleware } from 'src/common/middleware/checkId.middleware';
+import { WardHelper } from './ward.helper';
 
 @Module({
   controllers: [WardController],
-  providers: [WardService],
+  providers: [WardService, WardHelper],
 })
 export class WardModule implements NestModule {
   constructor(private prisma: PrismaService) {}
