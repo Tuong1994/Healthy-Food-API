@@ -2,7 +2,7 @@ import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/c
 import { RateController } from './rate.controller';
 import { RateService } from './rate.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { CheckIdMiddleware } from 'src/common/middleware/checkId.middleware';
+import { applyCheckIdMiddleware } from 'src/common/middleware/applyFn.middleware';
 
 @Module({
   controllers: [RateController],
@@ -12,19 +12,24 @@ export class RateModule implements NestModule {
   constructor(private prisma: PrismaService) {}
 
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(new CheckIdMiddleware(this.prisma, 'rate').use).forRoutes(
-      {
-        path: 'api/rate/listByUser',
-        method: RequestMethod.GET,
-      },
-      {
-        path: 'api/rate/detail',
-        method: RequestMethod.GET,
-      },
-      {
-        path: 'api/rate/update',
-        method: RequestMethod.PUT,
-      },
-    );
+    applyCheckIdMiddleware({
+      consumer,
+      prisma: this.prisma,
+      schema: 'rate',
+      routes: [
+        {
+          path: 'api/rate/listByUser',
+          method: RequestMethod.GET,
+        },
+        {
+          path: 'api/rate/detail',
+          method: RequestMethod.GET,
+        },
+        {
+          path: 'api/rate/update',
+          method: RequestMethod.PUT,
+        },
+      ],
+    });
   }
 }

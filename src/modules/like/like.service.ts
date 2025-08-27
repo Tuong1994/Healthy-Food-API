@@ -5,7 +5,10 @@ import { LikeDto } from './like.dto';
 import { Like, Product } from '@prisma/client';
 import { Paging } from 'src/common/type/base';
 import { ELang } from 'src/common/enum/base';
+import responseMessage from 'src/common/message';
 import utils from 'src/utils';
+
+const { UPDATE_SUCCESS, REMOVE_SUCCESS, NOT_FOUND } = responseMessage;
 
 @Injectable()
 export class LikeService {
@@ -25,8 +28,7 @@ export class LikeService {
   private convertCollection(likes: Like[], langCode: ELang) {
     return likes.map((like) => ({
       ...like,
-      product:
-        'product' in like ? utils.convertRecordsName<Product>(like.product as Product, langCode) : null,
+      product: 'product' in like ? utils.convertRecordsName<Product>(like.product as Product, langCode) : null,
     }));
   }
 
@@ -73,15 +75,15 @@ export class LikeService {
     const { likeId } = query;
     const { userId, productId } = like;
     await this.prisma.like.update({ where: { id: likeId }, data: { userId, productId } });
-    throw new HttpException('Updated success', HttpStatus.OK);
+    throw new HttpException(UPDATE_SUCCESS, HttpStatus.OK);
   }
 
   async removeLikes(query: QueryDto) {
     const { ids } = query;
     const listIds = ids.split(',');
     const likes = await this.prisma.like.findMany({ where: { id: { in: listIds } } });
-    if (likes && !likes.length) throw new HttpException('Like not found', HttpStatus.NOT_FOUND);
+    if (likes && !likes.length) throw new HttpException(NOT_FOUND, HttpStatus.NOT_FOUND);
     await this.prisma.like.deleteMany({ where: { id: { in: listIds } } });
-    throw new HttpException('Removed success', HttpStatus.OK);
+    throw new HttpException(REMOVE_SUCCESS, HttpStatus.OK);
   }
 }

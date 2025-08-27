@@ -2,7 +2,7 @@ import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/c
 import { LikeController } from './like.controller';
 import { LikeService } from './like.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { CheckIdMiddleware } from 'src/common/middleware/checkId.middleware';
+import { applyCheckIdMiddleware } from 'src/common/middleware/applyFn.middleware';
 
 @Module({
   controllers: [LikeController],
@@ -12,15 +12,20 @@ export class LikeModule implements NestModule {
   constructor(private prisma: PrismaService) {}
 
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(new CheckIdMiddleware(this.prisma, 'like').use).forRoutes(
-      {
-        path: 'api/like/detail',
-        method: RequestMethod.GET,
-      },
-      {
-        path: 'api/like/update',
-        method: RequestMethod.POST,
-      },
-    );
+    applyCheckIdMiddleware({
+      consumer,
+      prisma: this.prisma,
+      schema: 'like',
+      routes: [
+        {
+          path: 'api/like/detail',
+          method: RequestMethod.GET,
+        },
+        {
+          path: 'api/like/update',
+          method: RequestMethod.POST,
+        },
+      ],
+    });
   }
 }
