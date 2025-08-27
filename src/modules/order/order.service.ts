@@ -3,64 +3,48 @@ import { PrismaService } from '../prisma/prisma.service';
 import { QueryDto } from 'src/common/dto/query.dto';
 import { Paging } from 'src/common/type/base';
 import { ELang } from 'src/common/enum/base';
-import { Order, OrderItem } from '@prisma/client';
+import { Order } from '@prisma/client';
 import { OrderDto } from './order.dto';
+import { OrderHelper } from './order.helper';
+import { OrderItems } from './order.type';
+import responseMessage from 'src/common/message';
 import utils from 'src/utils';
 
-type OrderItems = Array<Omit<OrderItem, 'createdAt' | 'updatedAt'>>;
+const { CREATE_ERROR, UPDATE_SUCCESS, REMOVE_SUCCESS, RESTORE_SUCCESS, NOT_FOUND, NO_DATA_RESTORE } = responseMessage;
 
 @Injectable()
 export class OrderService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private orderHelper: OrderHelper,
+  ) {}
 
-  private getSelectFields = (langCode: ELang) => {
-    return {
-      id: true,
-      quantity: true,
-      productId: true,
-      orderId: true,
-      product: {
-        select: {
-          id: true,
-          nameEn: langCode === ELang.EN,
-          nameVn: langCode === ELang.VN,
-          image: true,
-          totalPrice: true,
-        },
-      },
-    };
-  };
+  private queryFilter = (
+    userId: string,
+    paymentMethod: number,
+    paymentStatus: number,
+    receivedType: number,
+    orderStatus: number,
+  ) => [
+    { userId },
+    { paymentMethod: paymentMethod && Number(paymentMethod) },
+    { paymentStatus: paymentStatus && Number(paymentStatus) },
+    { receivedType: receivedType && Number(receivedType) },
+    { status: orderStatus && Number(orderStatus) },
+    { isDelete: { equals: false } },
+  ];
 
   async getOrders(query: QueryDto) {
-    const {
-      page,
-      limit,
-      langCode,
-      keywords,
-      sortBy,
-      userId,
-      orderStatus,
-      paymentStatus,
-      paymentMethod,
-      receivedType,
-    } = query;
+    const { page, limit, langCode, keywords, sortBy, userId, orderStatus, paymentStatus, paymentMethod, receivedType } =
+      query;
     let collection: Paging<Order> = utils.defaultCollection();
     const orders = await this.prisma.order.findMany({
-      where: {
-        AND: [
-          { userId },
-          { paymentMethod: paymentMethod && Number(paymentMethod) },
-          { paymentStatus: paymentStatus && Number(paymentStatus) },
-          { receivedType: receivedType && Number(receivedType) },
-          { status: orderStatus && Number(orderStatus) },
-          { isDelete: { equals: false } },
-        ],
-      },
+      where: { AND: this.queryFilter(userId, paymentMethod, paymentStatus, receivedType, orderStatus) },
       orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
       include: {
         user: { select: { id: true, fullName: true } },
         creator: { select: { id: true, fullName: true } },
-        items: { select: { ...this.getSelectFields(langCode) } },
+        items: { select: { ...this.orderHelper.getSelectItemFields(langCode) } },
       },
     });
     const convertOrders = orders.map((order) => ({
@@ -71,41 +55,20 @@ export class OrderService {
       })),
     }));
     if (keywords) {
-      const filterOrders = convertOrders.filter((order) =>
-        order.orderNumber.toLowerCase().includes(keywords.toLowerCase()),
-      );
+      const filterOrders = convertOrders.filter((order) => utils.filterByKeywords(order.orderNumber, keywords));
       collection = utils.paging<Order>(filterOrders, page, limit);
     } else collection = utils.paging<Order>(convertOrders, page, limit);
     return collection;
   }
 
   async getOrdersByUser(query: QueryDto) {
-    const {
-      page,
-      limit,
-      langCode,
-      keywords,
-      sortBy,
-      orderStatus,
-      paymentStatus,
-      paymentMethod,
-      receivedType,
-      userId,
-    } = query;
+    const { page, limit, langCode, keywords, sortBy, orderStatus, paymentStatus, paymentMethod, receivedType, userId } =
+      query;
     let collection: Paging<Order> = utils.defaultCollection();
     const orders = await this.prisma.order.findMany({
-      where: {
-        AND: [
-          { userId },
-          { paymentMethod: paymentMethod && Number(paymentMethod) },
-          { paymentStatus: paymentStatus && Number(paymentStatus) },
-          { receivedType: receivedType && Number(receivedType) },
-          { status: orderStatus && Number(orderStatus) },
-          { isDelete: { equals: false } },
-        ],
-      },
+      where: { AND: this.queryFilter(userId, paymentMethod, paymentStatus, receivedType, orderStatus) },
       orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
-      include: { items: { select: { ...this.getSelectFields(langCode) } } },
+      include: { items: { select: { ...this.orderHelper.getSelectItemFields(langCode) } } },
     });
     const convertOrders = orders.map((order) => ({
       ...order,
@@ -115,9 +78,7 @@ export class OrderService {
       })),
     }));
     if (keywords) {
-      const filterOrders = convertOrders.filter((order) =>
-        order.orderNumber.toLowerCase().includes(keywords.toLowerCase()),
-      );
+      const filterOrders = convertOrders.filter((order) => utils.filterByKeywords(order.orderNumber, keywords));
       collection = utils.paging<Order>(filterOrders, page, limit);
     } else collection = utils.paging<Order>(convertOrders, page, limit);
     return collection;
@@ -129,7 +90,7 @@ export class OrderService {
       where: { id: orderId, isDelete: { equals: false } },
       include: {
         shipment: { where: { isDelete: { equals: false } } },
-        items: { select: { ...this.getSelectFields(langCode) } },
+        items: { select: { ...this.orderHelper.getSelectItemFields(langCode) } },
       },
     });
     return {
@@ -204,7 +165,7 @@ export class OrderService {
         })),
       };
     }
-    throw new HttpException('Create failed', HttpStatus.BAD_REQUEST);
+    throw new HttpException(CREATE_ERROR, HttpStatus.BAD_REQUEST);
   }
 
   async updateOrder(query: QueryDto, order: OrderDto) {
@@ -251,14 +212,13 @@ export class OrderService {
         where: { id: orderId },
         select: { shipment: true },
       });
-      if (order.shipment)
-        await this.prisma.shipment.update({ where: { id: order.shipment.id }, data: shipment });
+      if (order.shipment) await this.prisma.shipment.update({ where: { id: order.shipment.id }, data: shipment });
       else
         await this.prisma.shipment.create({
           data: { ...shipment, orderId, shipmentNumber: `#S_${Date.now()}`, isDelete: false },
         });
     }
-    throw new HttpException('Updated success', HttpStatus.OK);
+    throw new HttpException(UPDATE_SUCCESS, HttpStatus.OK);
   }
 
   async removeOrders(query: QueryDto) {
@@ -268,39 +228,39 @@ export class OrderService {
       where: { id: { in: listIds } },
       select: { id: true, items: true, shipment: true },
     });
-    if (orders && !orders.length) throw new HttpException('Order not found', HttpStatus.NOT_FOUND);
+    if (orders && !orders.length) throw new HttpException(NOT_FOUND, HttpStatus.NOT_FOUND);
     await Promise.all(
       orders.map(async (order) => {
-        await this.prisma.order.update({ where: { id: order.id }, data: { isDelete: true } });
-        await this.prisma.shipment.update({ where: { orderId: order.id }, data: { isDelete: true } });
-        await this.prisma.orderItem.updateMany({ where: { orderId: order.id }, data: { isDelete: true } });
+        await this.orderHelper.handleUpdateIsDeleteOrder(order, true);
+        await this.orderHelper.handleUpdateIsDeleteOrderShipment(order, true);
+        await this.orderHelper.handleUpdateIsDeleteOrderItems(order, true);
       }),
     );
-    throw new HttpException('Removed success', HttpStatus.OK);
+    throw new HttpException(REMOVE_SUCCESS, HttpStatus.OK);
   }
 
   async removeOrdersPermanent(query: QueryDto) {
     const { ids } = query;
     const listIds = ids.split(',');
     const orders = await this.prisma.order.findMany({ where: { id: { in: listIds } } });
-    if (orders && !orders.length) throw new HttpException('Order not found', HttpStatus.NOT_FOUND);
+    if (orders && !orders.length) throw new HttpException(NOT_FOUND, HttpStatus.NOT_FOUND);
     await this.prisma.order.deleteMany({ where: { id: { in: listIds } } });
-    throw new HttpException('Removed success', HttpStatus.OK);
+    throw new HttpException(REMOVE_SUCCESS, HttpStatus.OK);
   }
 
   async restoreOrders() {
     const orders = await this.prisma.order.findMany({
       where: { isDelete: { equals: true } },
-      select: { id: true, items: true },
+      select: { id: true, items: true, shipment: true },
     });
-    if (orders && !orders.length) throw new HttpException('There are no data to restored', HttpStatus.OK);
+    if (orders && !orders.length) throw new HttpException(NO_DATA_RESTORE, HttpStatus.OK);
     await Promise.all(
       orders.map(async (order) => {
-        await this.prisma.order.update({ where: { id: order.id }, data: { isDelete: false } });
-        await this.prisma.shipment.update({ where: { orderId: order.id }, data: { isDelete: false } });
-        await this.prisma.orderItem.updateMany({ where: { orderId: order.id }, data: { isDelete: false } });
+        await this.orderHelper.handleUpdateIsDeleteOrder(order, false);
+        await this.orderHelper.handleUpdateIsDeleteOrderShipment(order, false);
+        await this.orderHelper.handleUpdateIsDeleteOrderItems(order, false);
       }),
     );
-    throw new HttpException('Restored success', HttpStatus.OK);
+    throw new HttpException(RESTORE_SUCCESS, HttpStatus.OK);
   }
 }

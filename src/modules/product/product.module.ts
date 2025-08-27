@@ -13,15 +13,20 @@ export class ProductModule implements NestModule {
   constructor(private prisma: PrismaService) {}
 
   configure(consumer: MiddlewareConsumer) {
-    applyCheckIdMiddleware(consumer, this.prisma, {
-      type: 'product',
-      route: 'api/product/detail',
-      method: RequestMethod.GET,
-    });
-    applyCheckIdMiddleware(consumer, this.prisma, {
-      type: 'product',
-      route: 'api/product/update',
-      method: RequestMethod.PUT,
+    applyCheckIdMiddleware({
+      consumer,
+      prisma: this.prisma,
+      schema: 'product',
+      routes: [
+        {
+          path: 'api/product/detail',
+          method: RequestMethod.GET,
+        },
+        {
+          path: 'api/product/update',
+          method: RequestMethod.PUT,
+        },
+      ],
     });
   }
 }

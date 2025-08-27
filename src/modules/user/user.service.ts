@@ -8,7 +8,10 @@ import { UserResponse } from './user.type';
 import { UserDto } from 'src/modules/user/user.dto';
 import { UserHelper } from './user.helper';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import responseMessage from 'src/common/message';
 import utils from 'src/utils';
+
+const { CREATE_ERROR, UPDATE_SUCCESS, REMOVE_SUCCESS, RESTORE_SUCCESS, NOT_FOUND, NO_DATA_RESTORE } = responseMessage;
 
 @Injectable()
 export class UserService {
@@ -161,7 +164,7 @@ export class UserService {
       }
       return responseUser ? responseUser : newUser;
     }
-    throw new HttpException('Create failed', HttpStatus.BAD_REQUEST);
+    throw new HttpException(CREATE_ERROR, HttpStatus.BAD_REQUEST);
   }
 
   async updateUser(query: QueryDto, file: Express.Multer.File, user: UserDto) {
@@ -236,7 +239,7 @@ export class UserService {
       }
     }
 
-    throw new HttpException('Updated success', HttpStatus.OK);
+    throw new HttpException(UPDATE_SUCCESS, HttpStatus.OK);
   }
 
   async removeUsers(query: QueryDto) {
@@ -246,7 +249,7 @@ export class UserService {
       where: { id: { in: listIds } },
       select: { id: true, image: true, address: true, comments: true, rates: true, likes: true },
     });
-    if (users && !users.length) throw new HttpException('Users not found', HttpStatus.NOT_FOUND);
+    if (users && !users.length) throw new HttpException(NOT_FOUND, HttpStatus.NOT_FOUND);
     await this.prisma.user.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
     await Promise.all(
       users.map(async (user) => {
@@ -257,15 +260,15 @@ export class UserService {
         if (user.likes.length > 0) await this.userHelper.handleUpdateIsDeleteUserLikes(user, true);
       }),
     );
-    throw new HttpException('Removed success', HttpStatus.OK);
+    throw new HttpException(REMOVE_SUCCESS, HttpStatus.OK);
   }
 
   async removeAddress(query: QueryDto) {
     const { userId } = query;
     const address = await this.prisma.userAddress.findUnique({ where: { userId } });
-    if (!address) throw new HttpException('Address not found', HttpStatus.NOT_FOUND);
+    if (!address) throw new HttpException(NOT_FOUND, HttpStatus.NOT_FOUND);
     await this.prisma.userAddress.delete({ where: { userId } });
-    throw new HttpException('Removed susscess', HttpStatus.OK);
+    throw new HttpException(REMOVE_SUCCESS, HttpStatus.OK);
   }
 
   async removeUsersPermanent(query: QueryDto) {
@@ -275,7 +278,7 @@ export class UserService {
       where: { id: { in: listIds } },
       include: { image: true },
     });
-    if (users && !users.length) throw new HttpException('Users not found', HttpStatus.NOT_FOUND);
+    if (users && !users.length) throw new HttpException(NOT_FOUND, HttpStatus.NOT_FOUND);
     await this.prisma.user.deleteMany({ where: { id: { in: listIds } } });
     await Promise.all(
       users.map(async (user) => {
@@ -283,7 +286,7 @@ export class UserService {
         await this.cloudinary.destroy(user.image.publicId);
       }),
     );
-    throw new HttpException('Removed success', HttpStatus.OK);
+    throw new HttpException(REMOVE_SUCCESS, HttpStatus.OK);
   }
 
   async restoreUsers() {
@@ -291,7 +294,7 @@ export class UserService {
       where: { isDelete: { equals: true } },
       select: { id: true, address: true, image: true, comments: true, rates: true, likes: true },
     });
-    if (users && !users.length) throw new HttpException('There are no data to restored', HttpStatus.OK);
+    if (users && !users.length) throw new HttpException(NO_DATA_RESTORE, HttpStatus.OK);
     await Promise.all(
       users.map(async (user) => {
         await this.userHelper.handleRestoreUser(user);
@@ -302,6 +305,6 @@ export class UserService {
         if (user.likes.length > 0) await this.userHelper.handleUpdateIsDeleteUserLikes(user, false);
       }),
     );
-    throw new HttpException('Restored success', HttpStatus.OK);
+    throw new HttpException(RESTORE_SUCCESS, HttpStatus.OK);
   }
 }
