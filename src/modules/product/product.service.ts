@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueryDto } from 'src/common/dto/query.dto';
 import { ELang, ERecordStatus } from 'src/common/enum/base';
-import { Paging, SelectFieldsOptions } from 'src/common/type/base';
+import { Paging } from 'src/common/type/base';
 import { Category, Product } from '@prisma/client';
 import { ProductDto } from './product.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
@@ -17,78 +17,6 @@ export class ProductService {
     private productHelper: ProductHelper,
   ) {}
 
-  private getSelectFields(langCode: ELang, options?: SelectFieldsOptions) {
-    return {
-      id: true,
-      nameEn: options?.convertLang ? langCode === ELang.EN : true,
-      nameVn: options?.convertLang ? langCode === ELang.VN : true,
-      descriptionEn: options?.convertLang ? langCode === ELang.EN : true,
-      descriptionVn: options?.convertLang ? langCode === ELang.VN : true,
-      image: true,
-      costPrice: true,
-      profit: true,
-      totalPrice: true,
-      unit: true,
-      status: true,
-      inventoryStatus: true,
-      inventory: true,
-      supplier: true,
-      origin: true,
-      subCategoryId: true,
-      categoryId: true,
-      isNew: true,
-      isDelete: true,
-      createdAt: true,
-      updatedAt: true,
-      category: options?.hasCate
-        ? {
-            select: {
-              id: true,
-              nameEn: langCode === ELang.EN,
-              nameVn: langCode === ELang.VN,
-            },
-          }
-        : false,
-      likes: options?.hasLike
-        ? {
-            select: {
-              id: true,
-              productId: true,
-              userId: true,
-            },
-          }
-        : false,
-    };
-  }
-
-  private convertDescription<M>(record: M, langCode: ELang) {
-    if (!record) return null;
-    const recordClone = { ...record };
-    delete record['descriptionEn'];
-    delete record['descriptionVn'];
-    const data = {
-      description: langCode === ELang.EN ? recordClone['descriptionEn'] : recordClone['descriptionVn'],
-      ...record,
-    };
-    return data;
-  }
-
-  private convertCollection(products: Product[], langCode: ELang) {
-    return products.map((product) => {
-      const convertProduct = { ...utils.convertRecordsName<Product>(product, langCode) };
-      delete convertProduct['descriptionEn'];
-      delete convertProduct['descriptionVn'];
-      return {
-        ...convertProduct,
-        ...this.convertDescription<Product>(product, langCode),
-        category:
-          'category' in product
-            ? utils.convertRecordsName<Category>(product.category as Category, langCode)
-            : null,
-      };
-    });
-  }
-
   async getProductsWithCategories(query: QueryDto) {
     const { langCode, sortBy, hasCate, hasLike } = query;
 
@@ -102,19 +30,17 @@ export class ProductService {
         categories.map(async (category) => {
           const products = await this.prisma.product.findMany({
             where: {
-              AND: [
-                { categoryId: category.id },
-                { isDelete: { equals: false } },
-                { status: ERecordStatus.ACTIVE },
-              ],
+              AND: [{ categoryId: category.id }, { isDelete: { equals: false } }, { status: ERecordStatus.ACTIVE }],
             },
             orderBy: [
               { totalPrice: utils.getSortBy(sortBy) ?? 'asc' },
               { updatedAt: utils.getSortBy(sortBy) ?? 'asc' },
             ],
-            select: { ...this.getSelectFields(langCode, { hasCate, hasLike, convertLang: true }) },
+            select: {
+              ...this.productHelper.getSelectFields(langCode, { hasCate, hasLike, convertLang: true }),
+            },
           });
-          const convertProducts = this.convertCollection(products, langCode);
+          const convertProducts = this.productHelper.convertCollection(products, langCode);
           const collection = utils.paging<Product>(convertProducts, '1', '10');
           return collection;
         }),
@@ -157,11 +83,8 @@ export class ProductService {
             : { status: ERecordStatus.ACTIVE },
         ],
       },
-      orderBy: [
-        { updatedAt: utils.getSortBy(sortBy) ?? 'desc' },
-        { totalPrice: utils.getSortBy(sortBy) ?? 'asc' },
-      ],
-      select: { ...this.getSelectFields(langCode, { hasCate, hasLike, convertLang: true }) },
+      orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }, { totalPrice: utils.getSortBy(sortBy) ?? 'asc' }],
+      select: { ...this.productHelper.getSelectFields(langCode, { hasCate, hasLike, convertLang: true }) },
     });
 
     if (keywords) {
@@ -172,7 +95,7 @@ export class ProductService {
       );
       collection = utils.paging<Product>(filterProducts, page, limit);
     } else collection = utils.paging<Product>(products, page, limit);
-    const items = this.convertCollection(collection.items, langCode);
+    const items = this.productHelper.convertCollection(collection.items, langCode);
     return { ...collection, items };
   }
 
@@ -180,7 +103,10 @@ export class ProductService {
     const { productId, langCode, hasCate, hasLike, convertLang } = query;
     const product = await this.prisma.product.findUnique({
       where: { id: productId, isDelete: { equals: false } },
-      select: { ...this.getSelectFields(langCode, { hasCate, hasLike, convertLang }), rates: true },
+      select: {
+        ...this.productHelper.getSelectFields(langCode, { hasCate, hasLike, convertLang }),
+        rates: true,
+      },
     });
     const response = {
       ...product,
@@ -190,7 +116,7 @@ export class ProductService {
     delete response.rates;
     const convertResponse = {
       ...utils.convertRecordsName<Product>({ ...response }, langCode),
-      ...this.convertDescription<Product>({ ...response }, langCode),
+      ...this.productHelper.convertDescription<Product>({ ...response }, langCode),
       category:
         'category' in response
           ? { ...utils.convertRecordsName<Category>(response.category as Category, langCode) }
@@ -328,23 +254,10 @@ export class ProductService {
     await this.prisma.product.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
     await Promise.all(
       products.map(async (product) => {
-        if (product.image)
-          await this.prisma.image.update({ where: { productId: product.id }, data: { isDelete: true } });
-        if (product.comments.length > 0)
-          await this.prisma.comment.updateMany({
-            where: { productId: product.id },
-            data: { isDelete: true },
-          });
-        if (product.rates.length > 0)
-          await this.prisma.rate.updateMany({
-            where: { productId: product.id },
-            data: { isDelete: true },
-          });
-        if (product.likes.length > 0)
-          await this.prisma.like.updateMany({
-            where: { productId: product.id },
-            data: { isDelete: true },
-          });
+        if (product.image) await this.productHelper.handleUpdateIsDeleteProductImage(product, true);
+        if (product.comments.length > 0) await this.productHelper.handleUpdateIsDeleteProductComment(product, true);
+        if (product.rates.length > 0) await this.productHelper.handleUpdateIsDeleteProductRate(product, true);
+        if (product.likes.length > 0) await this.productHelper.handleUpdateIsDeleteProductLike(product, true);
       }),
     );
     throw new HttpException('Removed success', HttpStatus.OK);
@@ -376,24 +289,11 @@ export class ProductService {
     if (products && !products.length) throw new HttpException('There are no data to restored', HttpStatus.OK);
     await Promise.all(
       products.map(async (product) => {
-        await this.prisma.product.update({ where: { id: product.id }, data: { isDelete: false } });
-        if (product.image)
-          await this.prisma.image.update({ where: { productId: product.id }, data: { isDelete: false } });
-        if (product.comments.length > 0)
-          await this.prisma.comment.updateMany({
-            where: { productId: product.id },
-            data: { isDelete: false },
-          });
-        if (product.rates.length > 0)
-          await this.prisma.rate.updateMany({
-            where: { productId: product.id },
-            data: { isDelete: false },
-          });
-        if (product.likes.length > 0)
-          await this.prisma.like.updateMany({
-            where: { productId: product.id },
-            data: { isDelete: false },
-          });
+        await this.productHelper.handleRestoreProduct(product);
+        if (product.image) await this.productHelper.handleUpdateIsDeleteProductImage(product, false);
+        if (product.comments.length > 0) await this.productHelper.handleUpdateIsDeleteProductComment(product, false);
+        if (product.rates.length > 0) await this.productHelper.handleUpdateIsDeleteProductRate(product, false);
+        if (product.likes.length > 0) await this.productHelper.handleUpdateIsDeleteProductLike(product, false);
       }),
     );
     throw new HttpException('Restored success', HttpStatus.OK);

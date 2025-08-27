@@ -2,8 +2,8 @@ import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/c
 import { ProductController } from './product.controller';
 import { ProductService } from './product.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { CheckIdMiddleware } from 'src/common/middleware/checkId.middleware';
 import { ProductHelper } from './product.helper';
+import { applyCheckIdMiddleware } from 'src/common/middleware/applyFn.middleware';
 
 @Module({
   controllers: [ProductController],
@@ -13,15 +13,15 @@ export class ProductModule implements NestModule {
   constructor(private prisma: PrismaService) {}
 
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(new CheckIdMiddleware(this.prisma, 'product').use).forRoutes(
-      {
-        path: 'api/product/detail',
-        method: RequestMethod.GET,
-      },
-      {
-        path: 'api/product/update',
-        method: RequestMethod.PUT,
-      },
-    );
+    applyCheckIdMiddleware(consumer, this.prisma, {
+      type: 'product',
+      route: 'api/product/detail',
+      method: RequestMethod.GET,
+    });
+    applyCheckIdMiddleware(consumer, this.prisma, {
+      type: 'product',
+      route: 'api/product/update',
+      method: RequestMethod.PUT,
+    });
   }
 }
