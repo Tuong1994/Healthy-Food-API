@@ -18,46 +18,6 @@ export class UserService {
     private userHelper: UserHelper,
   ) {}
 
-  private getSelectFields() {
-    return {
-      id: true,
-      email: true,
-      phone: true,
-      firstName: true,
-      lastName: true,
-      fullName: true,
-      gender: true,
-      birthday: true,
-      role: true,
-      createdAt: true,
-      updatedAt: true,
-    };
-  }
-
-  private getSelectAddressFields(langCode: ELang) {
-    return {
-      id: true,
-      addressEn: true,
-      addressVn: true,
-      fullAddressEn: langCode === ELang.EN,
-      fullAddressVn: langCode === ELang.VN,
-      cityCode: true,
-      districtCode: true,
-      wardCode: true,
-      userId: true,
-    };
-  }
-
-  private convertCollection(users: UserResponse[], langCode: ELang) {
-    return users.map((user) => ({
-      ...user,
-      address:
-        'address' in user
-          ? this.userHelper.convertAddress<UserAddress>(user.address as UserAddress, langCode)
-          : null,
-    }));
-  }
-
   async getUsers(query: QueryDto) {
     const { page, limit, langCode, keywords, sortBy, gender, role, staffOnly } = query;
     let collection: Paging<UserResponse> = utils.defaultCollection();
@@ -74,8 +34,8 @@ export class UserService {
         ],
       },
       select: {
-        ...this.getSelectFields(),
-        address: { select: { ...this.getSelectAddressFields(langCode) } },
+        ...this.userHelper.getSelectFields(),
+        address: { select: { ...this.userHelper.getSelectAddressFields(langCode) } },
         image: { select: { id: true, path: true, size: true, publicId: true } },
       },
       orderBy: [{ updatedAt: utils.getSortBy(sortBy) ?? 'desc' }],
@@ -83,15 +43,15 @@ export class UserService {
     if (keywords) {
       const filterUsers = users.filter(
         (user) =>
-          user.firstName.toLowerCase().includes(keywords.toLowerCase()) ||
-          user.lastName.toLowerCase().includes(keywords.toLowerCase()) ||
-          user.fullName.toLowerCase().includes(keywords.toLowerCase()) ||
-          user.phone.toLowerCase().includes(keywords.toLowerCase()) ||
-          user.email.toLowerCase().includes(keywords.toLowerCase()),
+          utils.filterByKeywords(user.firstName, keywords) ||
+          utils.filterByKeywords(user.lastName, keywords) ||
+          utils.filterByKeywords(user.fullName, keywords) ||
+          utils.filterByKeywords(user.phone, keywords) ||
+          utils.filterByKeywords(user.email, keywords),
       );
       collection = utils.paging<UserResponse>(filterUsers, page, limit);
     } else collection = utils.paging<UserResponse>(users, page, limit);
-    const items = this.convertCollection(collection.items, langCode);
+    const items = this.userHelper.convertCollection(collection.items, langCode);
     return { ...collection, items };
   }
 
@@ -100,8 +60,8 @@ export class UserService {
     const user = await this.prisma.user.findUnique({
       where: { id: userId, isDelete: { equals: false } },
       select: {
-        ...this.getSelectFields(),
-        address: { select: { ...this.getSelectAddressFields(langCode) } },
+        ...this.userHelper.getSelectFields(),
+        address: { select: { ...this.userHelper.getSelectAddressFields(langCode) } },
         image: { select: { id: true, path: true, size: true, publicId: true } },
       },
     });
@@ -290,28 +250,11 @@ export class UserService {
     await this.prisma.user.updateMany({ where: { id: { in: listIds } }, data: { isDelete: true } });
     await Promise.all(
       users.map(async (user) => {
-        if (user.image)
-          await this.prisma.image.update({ where: { userId: user.id }, data: { isDelete: true } });
-        if (user.address)
-          await this.prisma.userAddress.update({
-            where: { userId: user.id },
-            data: { isDelete: true },
-          });
-        if (user.comments.length > 0)
-          await this.prisma.comment.updateMany({
-            where: { userId: user.id },
-            data: { isDelete: true },
-          });
-        if (user.rates.length > 0)
-          await this.prisma.rate.updateMany({
-            where: { userId: user.id },
-            data: { isDelete: true },
-          });
-        if (user.likes.length > 0)
-          await this.prisma.like.updateMany({
-            where: { userId: user.id },
-            data: { isDelete: true },
-          });
+        if (user.image) await this.userHelper.handleUpdateIsDeleteUserImage(user, true);
+        if (user.address) await this.userHelper.handleUpdateIsDeleteUserAddress(user, true);
+        if (user.comments.length > 0) await this.userHelper.handleUpdateIsDeleteUserComments(user, true);
+        if (user.rates.length > 0) await this.userHelper.handleUpdateIsDeleteUserRates(user, true);
+        if (user.likes.length > 0) await this.userHelper.handleUpdateIsDeleteUserLikes(user, true);
       }),
     );
     throw new HttpException('Removed success', HttpStatus.OK);
@@ -351,29 +294,12 @@ export class UserService {
     if (users && !users.length) throw new HttpException('There are no data to restored', HttpStatus.OK);
     await Promise.all(
       users.map(async (user) => {
-        await this.prisma.user.update({ where: { id: user.id }, data: { isDelete: false } });
-        if (user.image)
-          await this.prisma.image.update({ where: { userId: user.id }, data: { isDelete: false } });
-        if (user.address)
-          await this.prisma.userAddress.update({
-            where: { userId: user.id },
-            data: { isDelete: false },
-          });
-        if (user.comments.length > 0)
-          await this.prisma.comment.updateMany({
-            where: { userId: user.id },
-            data: { isDelete: false },
-          });
-        if (user.rates.length > 0)
-          await this.prisma.rate.updateMany({
-            where: { userId: user.id },
-            data: { isDelete: false },
-          });
-        if (user.likes.length > 0)
-          await this.prisma.like.updateMany({
-            where: { userId: user.id },
-            data: { isDelete: false },
-          });
+        await this.userHelper.handleRestoreUser(user);
+        if (user.image) await this.userHelper.handleUpdateIsDeleteUserImage(user, false);
+        if (user.address) await this.userHelper.handleUpdateIsDeleteUserAddress(user, false);
+        if (user.comments.length > 0) await this.userHelper.handleUpdateIsDeleteUserComments(user, false);
+        if (user.rates.length > 0) await this.userHelper.handleUpdateIsDeleteUserRates(user, false);
+        if (user.likes.length > 0) await this.userHelper.handleUpdateIsDeleteUserLikes(user, false);
       }),
     );
     throw new HttpException('Restored success', HttpStatus.OK);

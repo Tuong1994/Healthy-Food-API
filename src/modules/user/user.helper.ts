@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ELang } from 'src/common/enum/base';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma, UserAddress } from '@prisma/client';
+import { UserResponse, UserWithPayload } from './user.type';
 
 @Injectable()
 export class UserHelper {
@@ -59,5 +61,67 @@ export class UserHelper {
       ...record,
     };
     return data;
+  }
+
+  getSelectFields(): Prisma.UserSelect {
+    return {
+      id: true,
+      email: true,
+      phone: true,
+      firstName: true,
+      lastName: true,
+      fullName: true,
+      gender: true,
+      birthday: true,
+      role: true,
+      createdAt: true,
+      updatedAt: true,
+    };
+  }
+
+  getSelectAddressFields(langCode: ELang): Prisma.UserAddressSelect {
+    return {
+      id: true,
+      addressEn: true,
+      addressVn: true,
+      fullAddressEn: langCode === ELang.EN,
+      fullAddressVn: langCode === ELang.VN,
+      cityCode: true,
+      districtCode: true,
+      wardCode: true,
+      userId: true,
+    };
+  }
+
+  convertCollection(users: UserResponse[], langCode: ELang) {
+    return users.map((user) => ({
+      ...user,
+      address:
+        'address' in user ? this.convertAddress<UserAddress>(user.address as UserAddress, langCode) : null,
+    }));
+  }
+
+  async handleUpdateIsDeleteUserImage(user: UserWithPayload, isDelete: boolean) {
+    await this.prisma.image.update({ where: { userId: user.id }, data: { isDelete } });
+  }
+
+  async handleUpdateIsDeleteUserAddress(user: UserWithPayload, isDelete: boolean) {
+    await this.prisma.userAddress.update({ where: { userId: user.id }, data: { isDelete } });
+  }
+
+  async handleUpdateIsDeleteUserComments(user: UserWithPayload, isDelete: boolean) {
+    await this.prisma.comment.updateMany({ where: { userId: user.id }, data: { isDelete } });
+  }
+
+  async handleUpdateIsDeleteUserRates(user: UserWithPayload, isDelete: boolean) {
+    await this.prisma.rate.updateMany({ where: { userId: user.id }, data: { isDelete } });
+  }
+
+  async handleUpdateIsDeleteUserLikes(user: UserWithPayload, isDelete: boolean) {
+    await this.prisma.like.updateMany({ where: { userId: user.id }, data: { isDelete } });
+  }
+
+  async handleRestoreUser(user: UserWithPayload) {
+    await this.prisma.user.update({ where: { id: user.id }, data: { isDelete: false } });
   }
 }

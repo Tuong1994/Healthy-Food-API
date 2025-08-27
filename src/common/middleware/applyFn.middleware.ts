@@ -8,12 +8,10 @@ type MiddlewareConfig = {
   method: RequestMethod;
 };
 
-const applyMiddleware = (consumer: MiddlewareConsumer, prisma: PrismaService, config: MiddlewareConfig) => {
+export const applyCheckIdMiddleware = (consumer: MiddlewareConsumer, prisma: PrismaService, config: MiddlewareConfig) => {
   const { type, route, method } = config;
   consumer.apply(new CheckIdMiddleware(prisma, type).use).forRoutes({
     path: route,
     method,
   });
 };
-
-export default applyMiddleware;
