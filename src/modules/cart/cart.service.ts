@@ -6,8 +6,7 @@ import { Paging } from 'src/common/type/base';
 import { ELang } from 'src/common/enum/base';
 import { CartDto } from './cart.dto';
 import utils from 'src/utils';
-
-type CartItems = Array<Omit<CartItem, 'createdAt' | 'updatedAt'>>;
+import { CartItems } from './cart.type';
 
 @Injectable()
 export class CartService {
@@ -121,10 +120,7 @@ export class CartService {
     const cartItems = await this.prisma.cartItem.findMany({ where: { id: { in: listIds } } });
     if (cartItems && !cartItems.length) throw new HttpException('Cart item not found', HttpStatus.NOT_FOUND);
     await this.prisma.cartItem.deleteMany({ where: { id: { in: listIds } } });
-    const cart = await this.prisma.cart.findUnique({
-      where: { id: cartId },
-      select: { id: true, items: true },
-    });
+    const cart = await this.prisma.cart.findUnique({ where: { id: cartId }, select: { id: true, items: true } });
     if (cart && cart.items.length === 0) await this.prisma.cart.delete({ where: { id: cart.id } });
     throw new HttpException('Removed success', HttpStatus.OK);
   }
