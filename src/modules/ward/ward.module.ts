@@ -2,8 +2,8 @@ import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/c
 import { WardController } from './ward.controller';
 import { WardService } from './ward.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { CheckIdMiddleware } from 'src/common/middleware/checkId.middleware';
 import { WardHelper } from './ward.helper';
+import { applyCheckIdMiddleware } from 'src/common/middleware/applyFn.middleware';
 
 @Module({
   controllers: [WardController],
@@ -13,15 +13,20 @@ export class WardModule implements NestModule {
   constructor(private prisma: PrismaService) {}
 
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(new CheckIdMiddleware(this.prisma, 'ward').use).forRoutes(
-      {
-        path: 'api/ward/detail',
-        method: RequestMethod.GET,
-      },
-      {
-        path: 'api/ward/update',
-        method: RequestMethod.PUT,
-      },
-    );
+    applyCheckIdMiddleware({
+      consumer,
+      prisma: this.prisma,
+      schema: 'ward',
+      routes: [
+        {
+          path: 'api/ward/detail',
+          method: RequestMethod.GET,
+        },
+        {
+          path: 'api/ward/update',
+          method: RequestMethod.PUT,
+        },
+      ],
+    });
   }
 }
