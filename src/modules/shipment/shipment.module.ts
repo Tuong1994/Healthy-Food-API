@@ -2,7 +2,7 @@ import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/c
 import { ShipmentController } from './shipment.controller';
 import { ShipmentService } from './shipment.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { CheckIdMiddleware } from 'src/common/middleware/checkId.middleware';
+import { applyCheckIdMiddleware } from 'src/common/middleware/applyFn.middleware';
 
 @Module({
   controllers: [ShipmentController],
@@ -12,15 +12,20 @@ export class ShipmentModule implements NestModule {
   constructor(private prisma: PrismaService) {}
 
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(new CheckIdMiddleware(this.prisma, 'shipment').use).forRoutes(
-      {
-        path: 'api/shipment/detail',
-        method: RequestMethod.GET,
-      },
-      {
-        path: 'api/shipment/update',
-        method: RequestMethod.PUT,
-      },
-    );
+    applyCheckIdMiddleware({
+      consumer,
+      prisma: this.prisma,
+      schema: 'shipment',
+      routes: [
+        {
+          path: 'api/shipment/detail',
+          method: RequestMethod.GET,
+        },
+        {
+          path: 'api/shipment/update',
+          method: RequestMethod.PUT,
+        },
+      ],
+    });
   }
 }
