@@ -2,7 +2,7 @@ import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/c
 import { SettingController } from './setting.controller';
 import { SettingService } from './setting.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { CheckIdMiddleware } from 'src/common/middleware/checkId.middleware';
+import { applyCheckIdMiddleware } from 'src/common/middleware/applyFn.middleware';
 
 @Module({
   controllers: [SettingController],
@@ -12,9 +12,17 @@ export class SettingModule implements NestModule {
   constructor(private primsa: PrismaService) {}
 
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(new CheckIdMiddleware(this.primsa, 'userPermission', 'userId').use).forRoutes({
-      path: 'api/setting/user',
-      method: RequestMethod.GET,
+    applyCheckIdMiddleware({
+      consumer,
+      prisma: this.primsa,
+      schema: 'usePermission',
+      fieldCheck: 'userId',
+      routes: [
+        {
+          path: 'api/setting/user',
+          method: RequestMethod.GET,
+        },
+      ],
     });
   }
 }

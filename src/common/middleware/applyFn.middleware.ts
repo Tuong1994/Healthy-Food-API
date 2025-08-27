@@ -12,10 +12,11 @@ type MiddlewareConfig = {
   prisma: PrismaService;
   schema: string;
   routes: MiddlewareRoute[];
+  fieldCheck?: string;
 };
 
 export const applyCheckIdMiddleware = (config: MiddlewareConfig) => {
-  const { consumer, prisma, schema, routes } = config;
+  const { consumer, prisma, schema, routes, fieldCheck } = config;
   const mapRoutes = routes.map((route) => ({ path: route.path, method: route.method }));
-  consumer.apply(new CheckIdMiddleware(prisma, schema).use).forRoutes(...mapRoutes);
+  consumer.apply(new CheckIdMiddleware(prisma, schema, fieldCheck).use).forRoutes(...mapRoutes);
 };
