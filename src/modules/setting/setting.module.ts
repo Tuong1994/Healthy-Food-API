@@ -15,7 +15,7 @@ export class SettingModule implements NestModule {
     applyCheckIdMiddleware({
       consumer,
       prisma: this.primsa,
-      schema: 'usePermission',
+      schema: 'userPermission',
       fieldCheck: 'userId',
       routes: [
         {
