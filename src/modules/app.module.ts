@@ -24,7 +24,8 @@ import { ExportModule } from './export/export.module';
 import { EmailModule } from './email/email.module';
 import { SettingModule } from './setting/setting.module';
 import { GlobalModule } from './global/global.module';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { MethodBasedThrottlerGuard } from 'src/common/guard/throllter.guard';
 
 @Module({
   imports: [
@@ -64,7 +65,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
   providers: [
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: MethodBasedThrottlerGuard,
     },
   ],
 })
