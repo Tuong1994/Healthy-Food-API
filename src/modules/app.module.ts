@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
@@ -23,10 +24,19 @@ import { ExportModule } from './export/export.module';
 import { EmailModule } from './email/email.module';
 import { SettingModule } from './setting/setting.module';
 import { GlobalModule } from './global/global.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60000,
+          limit: 20,
+        },
+      ],
+    }),
     PrismaModule,
     CloudinaryModule,
     ExcelModule,
@@ -50,6 +60,12 @@ import { GlobalModule } from './global/global.module';
     ExportModule,
     SettingModule,
     GlobalModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}
