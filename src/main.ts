@@ -19,6 +19,7 @@ async function bootstrap() {
     exposedHeaders: ['set-cookie'],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
   };
+  app.set('trust proxy', 1);
   app.useGlobalPipes(new ValidationPipe());
   app.use(cookieParser());
   app.use(cors(corsOptions));
