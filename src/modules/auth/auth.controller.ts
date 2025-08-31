@@ -1,21 +1,10 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Query,
-  HttpCode,
-  HttpStatus,
-  UseGuards,
-  Put,
-  Res,
-  Req,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, HttpCode, HttpStatus, UseGuards, Put, Res, Req } from '@nestjs/common';
 import { AuthDto, AuthChangePasswordDto, AuthForgotPasswordDto, AuthResetPasswordDto } from './auth.dto';
 import { AuthService } from './auth.service';
 import { QueryDto } from 'src/common/dto/query.dto';
 import { JwtGuard } from 'src/common/guard/jwt.guard';
 import { Request, Response } from 'express';
+import { GoogleGuard } from 'src/common/guard/google.guard';
 
 @Controller('api/auth')
 export class AuthController {
@@ -31,6 +20,18 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   signIn(@Res() res: Response, @Query() query: QueryDto, @Body() auth: AuthDto) {
     return this.authService.signIn(res, query, auth);
+  }
+
+  @Get('google')
+  @UseGuards(GoogleGuard)
+  googleSignIn() {
+    return this.authService.googleSignIn();
+  }
+
+  @Get('google/callback')
+  @UseGuards(GoogleGuard)
+  googleCallback(@Req() req: Request, @Res() res: Response) {
+    return this.authService.googleCallback(req, res);
   }
 
   @Get('authenticate')

@@ -1,12 +1,6 @@
 import * as bcryptjs from 'bcryptjs';
 import * as crypto from 'crypto';
-import {
-  ForbiddenException,
-  HttpException,
-  HttpStatus,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { ForbiddenException, HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
@@ -59,8 +53,7 @@ export class AuthService {
     const isAuth = bcryptjs.compareSync(password, login.password);
     if (!isAuth) throw new ForbiddenException('Password is not correct');
 
-    if (admin && login.role === ERole.CUSTOMER)
-      throw new UnauthorizedException("You're not authorize to proccess");
+    if (admin && login.role === ERole.CUSTOMER) throw new UnauthorizedException("You're not authorize to proccess");
 
     const info = { ...login };
     delete info.password;
@@ -93,6 +86,10 @@ export class AuthService {
       info,
     });
   }
+
+  async googleSignIn() {}
+
+  async googleCallback(req: Request, res: Response) {}
 
   async refresh(query: QueryDto) {
     const { userId } = query;
