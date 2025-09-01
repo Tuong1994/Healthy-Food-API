@@ -12,6 +12,18 @@ const responseMessage = {
   NO_ID: 'No id was provided',
   NO_DATA_RESTORE: 'There are no data to restore',
   SERVER_ERROR: 'Something wrong',
+  NOT_AUTHORIZED: "You're not authorize to proccess",
+  NO_TOKEN: 'Token not found',
+  TOKEN_EXPIRED: 'Token is expired',
+  RESET_TOKEN_EXPIRED: "Reset token has been expires or invalid",
+  EMAIL_EXIST: 'Email is already exist',
+  EMAIL_NOT_MATCH: 'Email is not correct',
+  EMAIL_SENT: 'Email has been sent',
+  PASSWORD_NOT_MATCH: 'Password is not correct',
+  CONFIRM_PASSWORD_NOT_MATCH: 'Old password is not correct',
+  CHANGE_PASSWORD_SUCCESS: 'Password has successfully changed',
+  RESET_PASSWORD_SUCCESS: 'Password has been reset',
+  LOGOUT_SUCCESS: 'Logout success',
 } as const;
 
 export default responseMessage;

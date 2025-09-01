@@ -34,6 +34,11 @@ export class AuthController {
     return this.authService.googleCallback(req, res);
   }
 
+  @Get('oauthInfo')
+  getOAuthInfo(@Req() req: Request, @Res() res: Response) {
+    return this.authService.getOAuthInfo(req, res);
+  }
+
   @Get('authenticate')
   @HttpCode(HttpStatus.OK)
   authenticate(@Req() req: Request) {
@@ -42,8 +47,8 @@ export class AuthController {
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  refresh(@Query() query: QueryDto) {
-    return this.authService.refresh(query);
+  refresh(@Req() req: Request) {
+    return this.authService.refresh(req);
   }
 
   @Post('changePassword')

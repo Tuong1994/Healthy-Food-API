@@ -1,6 +1,9 @@
 import * as nodemailer from 'nodemailer';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import envKeys from 'src/common/env';
+
+const { APP_EMAIL, APP_EMAIL_PASS } = envKeys;
 
 @Injectable()
 export class EmailHelper {
@@ -12,8 +15,8 @@ export class EmailHelper {
       port: 587,
       secure: false,
       auth: {
-        user: this.config.get('APP_EMAIL'),
-        pass: this.config.get('APP_EMAIL_PASS'),
+        user: this.config.get(APP_EMAIL),
+        pass: this.config.get(APP_EMAIL_PASS),
       },
     });
     const emailOptions: nodemailer.SendMailOptions = {

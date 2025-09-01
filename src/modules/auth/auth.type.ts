@@ -5,3 +5,11 @@ export type TokenPayload = {
   iat?: number;
   exp?: number;
 };
+
+export type GooglePayload = {
+  email: string;
+  name: string;
+  googleId: string;
+  picture?: string;
+  accessToken?: string;
+};

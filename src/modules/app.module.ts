@@ -29,12 +29,12 @@ import { MethodBasedThrottlerGuard } from 'src/common/guard/throllter.guard';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: [`.env.${process.env.NODE_ENV}`] }),
     ThrottlerModule.forRoot({
       throttlers: [
         {
           ttl: 60000,
-          limit: 20,
+          limit: 40,
         },
       ],
     }),

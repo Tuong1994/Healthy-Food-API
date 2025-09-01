@@ -23,6 +23,8 @@ model User {
   gender    Int?
   birthday  String?
 
+  googleId String? @unique
+
   isDelete          Boolean?
   resetToken        String?
   resetTokenExpires BigInt?

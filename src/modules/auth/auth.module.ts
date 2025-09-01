@@ -8,11 +8,13 @@ import { AuthHelper } from './auth.helper';
 import { EmailHelper } from '../email/email.helper';
 import { applyCheckIdMiddleware } from 'src/common/middleware/applyFn.middleware';
 import { PassportModule } from '@nestjs/passport';
+import { GoogleStrategy } from 'src/common/strategy/google.strategy';
+import { UserHelper } from '../user/user.helper';
 
 @Module({
   imports: [PassportModule.register({ defaultStrategy: 'google' }), JwtModule.register({})],
   controllers: [AuthController],
-  providers: [AuthService, AuthHelper, EmailHelper, JwtService, JwtStategy],
+  providers: [AuthService, AuthHelper, EmailHelper, UserHelper, JwtService, JwtStategy, GoogleStrategy],
 })
 export class AuthModule implements NestModule {
   constructor(private prisma: PrismaService) {}
@@ -23,10 +25,6 @@ export class AuthModule implements NestModule {
       prisma: this.prisma,
       schema: 'user',
       routes: [
-        {
-          path: 'api/auth/refresh',
-          method: RequestMethod.POST,
-        },
         {
           path: 'api/auth/logout',
           method: RequestMethod.POST,
