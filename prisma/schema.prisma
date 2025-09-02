@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,40 +8,38 @@ datasource db {
 }
 
 model User {
-  id       String @id @default(uuid())
-  email    String @unique
-  password String
-  phone    String
-  role     Int
-
-  firstName String?
-  lastName  String?
-  fullName  String?
-  gender    Int?
-  birthday  String?
-
-  googleId String? @unique
-
+  id                String          @id @default(uuid())
+  email             String          @unique
+  password          String
+  phone             String
+  role              Int
+  firstName         String?
+  lastName          String?
+  fullName          String?
+  gender            Int?
+  birthday          String?
   isDelete          Boolean?
+  googleId          String?         @unique()
   resetToken        String?
   resetTokenExpires BigInt?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  auth              Auth?
+  cart              Cart?
+  comments          Comment[]
+  image             Image?
+  likes             Like[]
+  ordersCreated     Order[]         @relation("ordersCreated")
+  orders            Order[]         @relation("orders")
+  rates             Rate[]
+  address           UserAddress?
+  permission        UserPermission?
 
-  address       UserAddress?
-  permission    UserPermission?
-  image         Image?
-  cart          Cart?
-  auth          Auth?
-  orders        Order[]         @relation(name: "orders")
-  ordersCreated Order[]         @relation(name: "ordersCreated")
-  comments      Comment[]
-  rates         Rate[]
-  likes         Like[]
+  @@map("user")
 }
 
 model UserAddress {
-  id            String @id @default(uuid())
+  id            String   @id @default(uuid())
   addressEn     String
   addressVn     String
   fullAddressEn String
@@ -52,27 +47,27 @@ model UserAddress {
   cityCode      Int
   districtCode  Int
   wardCode      Int
+  isDelete      Boolean?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  isDelete  Boolean?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("user_address")
 }
 
 model UserPermission {
-  id     String  @id @default(uuid())
-  create Boolean
-  update Boolean
-  remove Boolean
-
+  id        String   @id @default(uuid())
+  create    Boolean
+  update    Boolean
+  remove    Boolean
   isDelete  Boolean?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("user_permission")
 }
 
 model Auth {
@@ -80,45 +75,46 @@ model Auth {
   token     String   @db.VarChar(3000)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("auth")
 }
 
 model Category {
-  id     String @id @default(uuid())
-  nameEn String
-  nameVn String
-  status Int
-
-  isDelete  Boolean?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id            String        @id @default(uuid())
+  nameEn        String
+  nameVn        String
+  status        Int
+  isDelete      Boolean?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   image         Image?
-  subCategories SubCategory[]
   products      Product[]
+  subCategories SubCategory[]
+
+  @@map("category")
 }
 
 model SubCategory {
-  id     String @id @default(uuid())
-  nameEn String
-  nameVn String
-  status Int
-
-  isDelete  Boolean?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id         String    @id @default(uuid())
+  nameEn     String
+  nameVn     String
+  status     Int
+  isDelete   Boolean?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
   categoryId String
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  image      Image?
+  products   Product[]
+  category   Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
-  image    Image?
-  products Product[]
+  @@index([categoryId], map: "SubCategory_categoryId_fkey")
+  @@map("sub_category")
 }
 
 model Product {
-  id              String  @id @default(uuid())
+  id              String      @id @default(uuid())
   nameEn          String
   nameVn          String
   unit            Int
@@ -131,37 +127,37 @@ model Product {
   origin          Int
   supplier        String
   isNew           Boolean
+  descriptionEn   String?     @db.Text
+  descriptionVn   String?     @db.Text
+  isDelete        Boolean?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  categoryId      String
+  subCategoryId   String
+  cartItem        CartItem[]
+  comments        Comment[]
+  image           Image?
+  likes           Like[]
+  items           OrderItem[]
+  category        Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  subCategory     SubCategory @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
+  rates           Rate[]
 
-  descriptionEn String?  @db.Text
-  descriptionVn String?  @db.Text
-  isDelete      Boolean?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  categoryId    String
-  category      Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  subCategoryId String
-  subCategory   SubCategory @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
-
-  image    Image?
-  items    OrderItem[]
-  cartItem CartItem[]
-  comments Comment[]
-  rates    Rate[]
-  likes    Like[]
+  @@index([categoryId], map: "Product_categoryId_fkey")
+  @@index([subCategoryId], map: "Product_subCategoryId_fkey")
+  @@map("product")
 }
 
 model Cart {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        String     @id @default(uuid())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  isDelete  Boolean?
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
 
-  isDelete Boolean?
-
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  items CartItem[]
+  @@map("cart")
 }
 
 model CartItem {
@@ -169,17 +165,19 @@ model CartItem {
   quantity  Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  isDelete Boolean?
-
+  isDelete  Boolean?
   cartId    String
-  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
   productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([cartId], map: "CartItem_cartId_fkey")
+  @@index([productId], map: "CartItem_productId_fkey")
+  @@map("cart_item")
 }
 
 model Order {
-  id            String @id @default(uuid())
+  id            String      @id @default(uuid())
   orderNumber   String
   status        Int
   paymentMethod Int
@@ -187,114 +185,124 @@ model Order {
   receivedType  Int
   shipmentFee   Int
   totalPayment  Int
+  note          String?     @db.VarChar(3000)
+  isDelete      Boolean?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  userId        String
+  creatorId     String
+  creator       User        @relation("ordersCreated", fields: [creatorId], references: [id], onDelete: Cascade)
+  user          User        @relation("orders", fields: [userId], references: [id], onDelete: Cascade)
+  items         OrderItem[]
+  shipment      Shipment?
 
-  note      String?  @db.VarChar(3000)
-  isDelete  Boolean?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  userId    String
-  user      User   @relation(name: "orders", fields: [userId], references: [id], onDelete: Cascade)
-  creatorId String
-  creator   User   @relation(name: "ordersCreated", fields: [creatorId], references: [id], onDelete: Cascade)
-
-  shipment Shipment?
-  items    OrderItem[]
+  @@index([creatorId], map: "Order_creatorId_fkey")
+  @@index([userId], map: "Order_userId_fkey")
+  @@map("order")
 }
 
 model OrderItem {
-  id       String @id @default(uuid())
-  quantity Int
-
+  id        String   @id @default(uuid())
+  quantity  Int
   isDelete  Boolean?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
   orderId   String
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([orderId], map: "OrderItem_orderId_fkey")
+  @@index([productId], map: "OrderItem_productId_fkey")
+  @@map("order_item")
 }
 
 model Shipment {
-  id       String @id @default(uuid())
-  fullName String
-  phone    String
-  email    String
-  address  String
-
+  id             String   @id @default(uuid())
+  fullName       String
+  phone          String
+  email          String
+  address        String
   shipmentNumber String?
   isDelete       Boolean?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  orderId        String   @unique
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  orderId String @unique
-  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  @@map("shipment")
 }
 
 model City {
-  id     String @id @default(uuid())
-  nameEn String
-  nameVn String
-  code   Int
-
+  id        String   @id @default(uuid())
+  nameEn    String
+  nameVn    String
+  code      Int
   isDelete  Boolean?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("city")
 }
 
 model District {
-  id       String @id @default(uuid())
-  nameEn   String
-  nameVn   String
-  code     Int
-  cityCode Int
-
+  id        String   @id @default(uuid())
+  nameEn    String
+  nameVn    String
+  code      Int
+  cityCode  Int
   isDelete  Boolean?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("district")
 }
 
 model Ward {
-  id           String @id @default(uuid())
+  id           String   @id @default(uuid())
   nameEn       String
   nameVn       String
   code         Int
   districtCode Int
+  isDelete     Boolean?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  isDelete  Boolean?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  @@map("ward")
 }
 
 model Comment {
-  id      String @id @default(uuid())
-  content String @db.VarChar(3000)
-
+  id        String   @id @default(uuid())
+  content   String   @db.VarChar(3000)
   parentId  String?
   isDelete  Boolean?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
   userId    String
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([productId], map: "Comment_productId_fkey")
+  @@index([userId], map: "Comment_userId_fkey")
+  @@map("comment")
 }
 
 model Rate {
-  id    String @id @default(uuid())
-  point Int
-  note  String @db.VarChar(3000)
-
+  id        String   @id @default(uuid())
+  point     Int
+  note      String   @db.VarChar(3000)
   isDelete  Boolean?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
   userId    String
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([productId], map: "Rate_productId_fkey")
+  @@index([userId], map: "Rate_userId_fkey")
+  @@map("rate")
 }
 
 model Like {
@@ -302,29 +310,32 @@ model Like {
   isDelete  Boolean?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
   userId    String
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([productId], map: "Like_productId_fkey")
+  @@index([userId], map: "Like_userId_fkey")
+  @@map("like")
 }
 
 model Image {
-  id       String @id @default(uuid())
-  path     String
-  size     Int
-  publicId String
-
-  isDelete  Boolean?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id            String       @id @default(uuid())
+  path          String
+  size          Int
+  publicId      String
+  isDelete      Boolean?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
   userId        String?      @unique
-  user          User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
   categoryId    String?      @unique
-  category      Category?    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   subCategoryId String?      @unique
-  subCategory   SubCategory? @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
   productId     String?      @unique
+  category      Category?    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   product       Product?     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  subCategory   SubCategory? @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
+  user          User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("image")
 }
