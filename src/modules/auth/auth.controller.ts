@@ -41,14 +41,14 @@ export class AuthController {
 
   @Get('authenticate')
   @HttpCode(HttpStatus.OK)
-  authenticate(@Req() req: Request) {
-    return this.authService.authenticate(req);
+  authenticate(@Req() req: Request, @Res() res: Response) {
+    return this.authService.authenticate(req, res);
   }
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  refresh(@Req() req: Request) {
-    return this.authService.refresh(req);
+  refresh(@Req() req: Request, @Res() res: Response) {
+    return this.authService.refresh(req, res);
   }
 
   @Post('changePassword')

@@ -103,7 +103,7 @@ export class AuthService {
     let tokenPayload: TokenPayload;
     if (!user) {
       const newUser = await this.prisma.user.create({
-        data: { fullName: name, email, googleId, password: '', phone: '', role: ERole.CUSTOMER },
+        data: { fullName: name, email, googleId, password: '', phone: '', role: ERole.CUSTOMER, isDelete: false },
       });
       tokenPayload = { id: newUser.id, email: newUser.email, role: newUser.role };
     } else {
@@ -123,7 +123,7 @@ export class AuthService {
 
   async getOAuthInfo(req: Request, res: Response) {
     if (!req.cookies.tokenPayload) throw new ForbiddenException(NO_TOKEN);
-    const { token: accessToken } = req.cookies.tokenPayload;
+    const { token: accessToken, expirationTimeInSeconds } = req.cookies.tokenPayload;
     if (!accessToken) throw new ForbiddenException(NO_TOKEN);
     const decode = this.jwt.verify(accessToken, { secret: this.config.get(ACCESS_TOKEN) }) as TokenPayload;
     const info = await this.prisma.user.findUnique({
@@ -131,32 +131,34 @@ export class AuthService {
       select: { ...this.userHelper.getSelectFields() },
     });
     return res.json({
-      expired: accessToken.expirationTimeInSeconds,
+      expired: expirationTimeInSeconds,
       isAuth: true,
       info,
     });
   }
 
-  async refresh(req: Request) {
-    if (!req.cookies.tokenPayload) throw new ForbiddenException(NO_TOKEN);
-    const { token: accessToken } = req.cookies.tokenPayload;
-    if (!accessToken) throw new ForbiddenException(NO_TOKEN);
-    const decode = this.jwt.verify(accessToken, { secret: this.config.get(ACCESS_TOKEN) }) as TokenPayload;
-    const auth = await this.prisma.auth.findUnique({ where: { userId: decode.id } });
-    if (!auth) throw new ForbiddenException(NO_TOKEN);
+  async refresh(req: Request, res: Response) {
     try {
-      const decode = this.jwt.verify(auth.token, { secret: this.config.get(REFRESH_TOKEN) });
-      if (decode) {
-        const payload = this.authHelper.getDecodePayload(decode);
-        const { expirationTimeInSeconds } = await this.authHelper.getAccessToken(payload);
-        return { expired: expirationTimeInSeconds };
+      if (!req.cookies.tokenPayload) throw new ForbiddenException(NO_TOKEN);
+      const { token: accessToken } = req.cookies.tokenPayload;
+      if (!accessToken) throw new ForbiddenException(NO_TOKEN);
+      const accessDecode = this.jwt.verify(accessToken, { secret: this.config.get(ACCESS_TOKEN) }) as TokenPayload;
+      const auth = await this.prisma.auth.findUnique({ where: { userId: accessDecode.id } });
+      if (!auth) throw new ForbiddenException(NO_TOKEN);
+      const refreshDecode = this.jwt.verify(auth.token, { secret: this.config.get(REFRESH_TOKEN) });
+      if (refreshDecode) {
+        const payload = this.authHelper.getDecodePayload(refreshDecode);
+        const tokenPayload = await this.authHelper.getAccessToken(payload);
+        res.cookie(COOKIE_NAME, tokenPayload, this.authHelper.getCookiesOptions());
+        res.json({ expired: tokenPayload.expirationTimeInSeconds });
+        return { expired: tokenPayload.expirationTimeInSeconds };
       }
     } catch (error) {
       if (error instanceof TokenExpiredError) throw new ForbiddenException(TOKEN_EXPIRED);
     }
   }
 
-  async authenticate(req: Request) {
+  async authenticate(req: Request, res: Response) {
     if (!req.cookies.tokenPayload) throw new ForbiddenException(NO_TOKEN);
     const { token: loginToken } = req.cookies.tokenPayload;
     if (!loginToken) throw new ForbiddenException(NO_TOKEN);
@@ -184,7 +186,7 @@ export class AuthService {
     } catch (error) {
       if (error instanceof TokenExpiredError) {
         try {
-          const response = await this.refresh(req);
+          const response = await this.refresh(req, res);
           return {
             expired: response.expired,
             isAuth: true,

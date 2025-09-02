@@ -74,6 +74,7 @@ export class UserHelper {
       gender: true,
       birthday: true,
       role: true,
+      googleId: true,
       createdAt: true,
       updatedAt: true,
     };
