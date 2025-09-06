@@ -24,11 +24,13 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { multerOption } from 'src/common/config/multer.config';
 import { Permission } from 'src/common/decorator/permission.decorator';
 import { PermissionGuard } from 'src/common/guard/permission.guard';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @Controller('api/category')
 export class CategoryController {
   constructor(private categoryService: CategoryService) {}
 
+  @SkipThrottle()
   @Get('list')
   @HttpCode(HttpStatus.OK)
   getCategories(@Query() query: QueryDto) {

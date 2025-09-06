@@ -24,17 +24,20 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { multerOption } from 'src/common/config/multer.config';
 import { Permission } from 'src/common/decorator/permission.decorator';
 import { PermissionGuard } from 'src/common/guard/permission.guard';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @Controller('api/product')
 export class ProductController {
   constructor(private productService: ProductService) {}
 
+  @SkipThrottle()
   @Get('list')
   @HttpCode(HttpStatus.OK)
   getProducts(@Query() query: QueryDto) {
     return this.productService.getProductsWithCategories(query);
   }
 
+  @SkipThrottle()
   @Get('listPaging')
   @HttpCode(HttpStatus.OK)
   getProductsPaging(@QueryPaging() query: QueryDto) {
