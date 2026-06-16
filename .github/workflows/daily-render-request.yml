@@ -1,15 +1,16 @@
-# Simulated daily request to your render project so that the service doesn't go down
-name: Daily render ping
+name: Daily Render Ping
 
 on:
   schedule:
-    - cron: '*/12 * * * *'  # Runs daily at midnight UTC
-  workflow_dispatch:  # Allows manual triggering
+    - cron: '*/12 * * * *'   # every 12 minutes
+  workflow_dispatch:
 
 jobs:
-  curl-website:
+  ping:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Run cURL on Website
-        run: curl -I https://healthy-food-api-g4t7.onrender.com
+      - name: Ping Render service
+        run: |
+          echo "Pinging at $(date)"
+          curl -s -o /dev/null -w "%{http_code}" -I https://healthy-food-api-g4t7.onrender.com || echo "Curl failed"
+          echo "Ping completed"
